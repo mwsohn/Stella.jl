@@ -1,0 +1,8 @@
+julia 0.5
+
+DataFrames
+Distributions
+GLM
+StatsBase
+FreqTables
+DataStructures
