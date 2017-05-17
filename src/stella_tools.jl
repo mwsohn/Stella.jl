@@ -84,7 +84,7 @@ in the input DataArray), `N_Missing` (number of rows with NA's), `N_Used` (numbe
 """
 function univariate(da::AbstractArray)
 	n_all = size(da,1)
-	da2 = da[!isna(da)]
+	da2 = da[!isna.(da)]
 	return DataFrame(
 		Statistic = [:N_Total,
 			:N_Missing,
@@ -175,8 +175,6 @@ function tabv2(df::DataFrame,args::Symbol...;rmna = true, weights::AbstractVecto
     # combine them
     # indices
     a_dimnames = [string.(x) for x in names(a)]
-
-
 
     setdimnames!(a,args)
     return a
