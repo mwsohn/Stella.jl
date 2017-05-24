@@ -479,3 +479,58 @@ function duplicates(df::DataFrame, args::Symbol... ; cmd::Symbol = :report) #; e
     return df[ba,collect(names(df[1:end-1]))]
 end
 #duplicates(df::DataFrame,arg::Symbol; cmd::Symbol = :report) = duplicates(df,Tuple(arg),cmd=cmd)
+
+"""
+    sampleselect(df::DataFrame,num::Union{Int64,Float64})
+
+Creates a dataframe with a randomly selected sample from the input dataframe. `num`
+specifies the sample size. If `num` is an integer, it indicates the number of rows to be selected.
+If it is a float, it indicates the percentage of the input dataframe to be randomly selected.
+
+##Example
+To select 100 rows, use
+
+```jldoctest
+julia> df2 = sampleselect(df,100)
+```
+
+To select 20% of the original dataframe, use
+
+```jldoctest
+julia> df2 = sampleselect(df,20.)
+```
+
+or
+
+```jldoctest
+julia> df2 = sampleselect(df,.2)
+```
+
+"""
+function sampleselect(df::DataFrame,num::Union{Int64,Float64})
+
+    df2 = DataFrame()
+    df2[:___ran_num___] = rand(Uniform(),size(df,1))
+    df2[:___obs___] = collect(1:size(df,1))
+
+    if typeof(num) <: AbstractFloat
+
+        if 1. <= num < 100.
+            num /= 100.
+        elseif num >= 100
+            error("A percentage value in floating point number (e.g., 10.0 or .1) is required.")
+        end
+
+        num2 = round(Int,num*size(df,1))
+    else
+        # number of obserations
+        if num > size(df,1)
+            error(num, " is greater than the total number of rows in the input dataframe.")
+        end
+        num2 = num
+    end
+
+    sort!(df2,cols=[:___ran_num___])
+    a = convert(Vector,df2[1:num2,:___obs___])
+    return df[sort(a),:]
+end
