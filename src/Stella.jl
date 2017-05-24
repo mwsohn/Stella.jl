@@ -1,4 +1,4 @@
-VERSION >= v"0.5.0"
+VERSION >= v"0.5.0" && __precompile__(true)
 
 module Stella
 
@@ -46,7 +46,12 @@ export  read_stata,  # read stata 13 and 14 files into DF
         renvars!,    # change variable names to either lower or upper case
         recode,      # recode values in a variable
         eform,       # coeftable output to eform
-        anova, anovap # ANOVA table and p-value from ANOVA
+        anova, anovap, # ANOVA table and p-value from ANOVA
+        univariatexls, # output univariate statistics in an excel worksheet
+        bivariatesxls, # output bivariate statistics in an excel worksheet
+        glmxls, # output GLM output in an excel worksheet
+        dfxls # output dataframe in an excel file
+
 
 
 ##############################################################################
@@ -59,5 +64,6 @@ include("stella_tools.jl")
 include("DataFrame_tools.jl")
 include("Stata_Reader.jl")
 include("PrintNamedArrays.jl")
+include("xlsout.jl")
 
 end
