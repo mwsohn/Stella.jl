@@ -195,7 +195,7 @@ function desc(df::DataFrame;label_dict::Union{Void,Dict}=nothing)
     varlen = zeros(Int,size(df,2)) # length of variable names
     lablen = zeros(Int,size(df,2)) # length of value labels
     forlen = zeros(Int,size(df,2)) # length of display formats
-    for i = 1:size(df,1)
+    for i = 1:size(df,2)
         varlen[i] = length(string(varnames[i]))
         if label_dict != nothing
             if haskey(label_dict["variable"],string(varnames[i]))
