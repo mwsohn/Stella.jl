@@ -103,7 +103,6 @@ function get_disp_length(dat::AbstractVector; precision = 2)
     error(eltype(dat)," is not recognized.")
 end
 
-
 function dflist(df::DataFrame; precision = 2, n = 10)
 
     nvars = size(df,2)
