@@ -287,7 +287,7 @@ function desc(df::DataFrame;label_dict::Union{Void,Dict}=nothing)
             if haskey(forlab,v_str)
                 print(append_spaces(forlab[v_str],maxformat),"  ")
             else
-                print(repeat(" ",maxformat+1))
+                print(repeat(" ",maxformat+2))
             end
 
             if haskey(varlab,v_str)
