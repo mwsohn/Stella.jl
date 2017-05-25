@@ -237,7 +237,8 @@ function desc(df::DataFrame;label_dict::Union{Void,Dict}=nothing)
 
     # width for the variable index - minimum 3 spaces
     maxobs = length(string(numvar))
-    print(prepend_spaces("Num",maxobs < 3 ? 3 : maxobs),"  ")
+    maxobs = maxobs < 3 ? 3 : maxobs
+    print(prepend_spaces("Num",maxobs),"  ")
 
     # variable name
     print(append_spaces("Variable",maxval),"  ")
