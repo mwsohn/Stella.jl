@@ -277,20 +277,20 @@ function desc(df::DataFrame;label_dict::Union{Void,Dict}=nothing)
         print(prepend_spaces(string(i),maxobs),"  ",append_spaces(v_str,maxval),"  ",append_spaces(string(eltyp[i]),maxtype),"  ")
 
         if label_dict != nothing
-            if haskey(label_dict["value"],v_str)
-                print(append_spaces(label_dict["value"][v_str],maxlab),"  ")
+            if haskey(lablab,v_str)
+                print(append_spaces(lablab[v_str],maxlab),"  ")
             else
                 print(repeat(" ",maxlab+2))
             end
 
-            if haskey(label_dict["format"],v_str)
-                print(append_spaces(label_dict["format"][v_str],maxformat),"  ")
+            if haskey(forlab,v_str)
+                print(append_spaces(forlab[v_str],maxformat),"  ")
             else
                 print(repeat(" ",maxformat+1))
             end
 
-            if haskey(label_dict["variable"],v_str)
-                print(label_dict["variable"][v_str])
+            if haskey(varlab,v_str)
+                print(varlab[v_str])
             end
         end
 
