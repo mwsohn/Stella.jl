@@ -523,6 +523,7 @@ end
 Creates a dataframe with a randomly selected sample from the input dataframe. `num`
 specifies the sample size. If `num` is an integer, it indicates the number of rows to be selected.
 If it is a float, it indicates the percentage of the input dataframe to be randomly selected.
+Use `srand()` to set a seed before running `sampleselect()`.
 
 ##Example
 To select 100 rows, use
@@ -570,4 +571,53 @@ function sampleselect(df::DataFrame,num::Union{Int64,Float64})
     sort!(df2,cols=[:___ran_num___])
     a = convert(Vector,df2[1:num2,:___obs___])
     return df[sort(a),:]
+end
+
+"""
+    dfmerge(df1::DataFrame,df2::DataFrame,linkers::Union{Symbol,Vector}; kind::Symbol = :outer)
+
+Produces a merged dataframe with a `:_merge` variable indicating how the merge was done.
+This function is a wrapper for `join` in the DataFrames package.
+Currently, it supports a merge of two sources only.
+
+The default merge is a `outer` join that keeps records from both sources in the merged
+dataframe. `:_merge` values indicates:
+
+- `1`: in the first source alone
+- `2`: in the second source alone
+- `3`: in both sources. A successful merge was achieved.
+
+It is the responsibility of the user to keep or discard records with `:_merge` values 1 or 2.
+
+The third argument can be either a single symbol or a vector of symbols to be used as the
+linkage variables.
+
+Optionally, `kind` argument can be specified. Available options are
+`:left`, `:right`, `:inner`,`:outer`,`:semi`, and `:anti`. Consult the documentation for
+the `join` function in the DataFrames package.
+"""
+function dfmerge(df1::DataFrame,df2::DataFrame,linkers::Union{Symbol,Vector};kind::Symbol = :outer)
+    if in(:_merge,names(df1))
+        error("`:_merge' exists in the first dataframe")
+    end
+    if in(:_merge,names(df2))
+        error("`:_merge' exists in the second dataframe")
+    end
+
+    df1[:___mergeleft___] = ones(Int8,size(df1,1))
+    df2[:___mergeright___] = ones(Int8,size(df2,1))
+
+    df_merged = join(df1,df2,on = linkers,kind=kind)
+    df_merged[:_merge] = zeros(Int8,size(df_merged,1))
+    for i = 1:size(df_merged,1)
+        if isna(df_merged[i,:___mergeright___])
+            df_merged[i,:_merge] = 1
+        elseif isna(df_merged[i,:___mergeleft___])
+            df_merged[i,:_merge] = 2
+        elseif df_merged[i,:___mergeleft___] == 1 && df_merged[i,:___mergeright___] == 1
+            df_merged[i,:_merge] = 3
+        end
+    end
+    delete!(df_merged,[:___mergeleft___,:___mergeright___])
+    return df_merged
 end
