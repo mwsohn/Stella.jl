@@ -207,7 +207,7 @@ function desc(df::DataFrame;label_dict::Union{Void,Dict}=nothing)
                 varlen[i] = tmplen > 0 ? tmplen : varlen[i]
             end
             if haskey(lablab,string(varnames[i]))
-                tmplen = length(labla[string(varnames[i])])
+                tmplen = length(lablab[string(varnames[i])])
                 lablen[i] = length(lablab[string(varnames[i])])
             end
             if haskey(forlab,string(varnames[i]))
