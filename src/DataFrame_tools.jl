@@ -192,23 +192,27 @@ function desc(df::DataFrame;label_dict::Union{Void,Dict}=nothing)
 
     varnames = names(df)
 
+    varlab = label_dict != nothing && haskey(label_dict,"variable") ? label_dict["variable"] : Dict()
+    lablab = label_dict != nothing && haskey(label_dict,"label") ? label_dict["label"] : Dict()
+    forlab = label_dict != nothing && haskey(label_dict,"format") ? label_dict["format"] : Dict()
+
     varlen = zeros(Int,size(df,2)) # length of variable names
     lablen = zeros(Int,size(df,2)) # length of value labels
     forlen = zeros(Int,size(df,2)) # length of display formats
     for i = 1:size(df,2)
         varlen[i] = length(string(varnames[i]))
         if label_dict != nothing
-            if haskey(label_dict["variable"],string(varnames[i]))
-                tmplen = length(label_dict["variable"][string(varnames[i])])
+            if haskey(varlab,string(varnames[i]))
+                tmplen = length(varlab[string(varnames[i])])
                 varlen[i] = tmplen > 0 ? tmplen : varlen[i]
             end
-            if haskey(label_dict["label"],string(varnames[i]))
-                tmplen = length(label_dict["label"][string(varnames[i])])
-                lablen[i] = length(label_dict["label"][string(varnames[i])])
+            if haskey(lablab,string(varnames[i]))
+                tmplen = length(labla[string(varnames[i])])
+                lablen[i] = length(lablab[string(varnames[i])])
             end
-            if haskey(label_dict["format"],string(varnames[i]))
-                tmplen = length(label_dict["format"][string(varnames[i])])
-                forlen[i] = length(label_dict["format"][string(varnames[i])])
+            if haskey(forlab,string(varnames[i]))
+                tmplen = length(forlab[string(varnames[i])])
+                forlen[i] = length(forlab[string(varnames[i])])
             end
         end
     end
@@ -255,7 +259,7 @@ function desc(df::DataFrame;label_dict::Union{Void,Dict}=nothing)
     print("\n")
 
     # dashes for a line by itself -- assume 20 characters for "label"
-    if label_dict != nothing
+    if label_dict == nothing
         println(repeat("-",maxobs+maxval+maxtype+4))
     else
         println(repeat("-",maxobs+maxval+maxtype+maxlab+maxformat+30))
