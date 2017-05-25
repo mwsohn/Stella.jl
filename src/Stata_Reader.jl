@@ -403,8 +403,13 @@ function read_stata!(fn,df::DataFrame,label::Dict; categorize=true, verbose=fals
         skip(fh,6) # </lbl>
     end
 
+    # variable labels
 	variable_dict = Dict()
+
+    # display formats
     format_dict = Dict()
+
+    # value labels
     labname_dict = Dict()
     for i in 1:nvar
         variable_dict[varlist[i]] = varlabels[i]

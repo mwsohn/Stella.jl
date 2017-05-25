@@ -28,20 +28,6 @@ function strval(val::Integer)
   return @sprintf("%.0d",val)
 end
 
-function strtonull(str)
-
-    idx = endof(str)
-
-    for i in 1:endof(str)
-        if isvalid(str,i) && UInt32(str[i]) == 0x00
-            idx = i-1
-            break
-        end
-    end
-
-    return str[1:idx]
-end
-
 function chisq_2way(t::NamedArray)
 
   if length(t.dimnames) != 2
@@ -92,14 +78,14 @@ function print(na::NamedArray,flag::Symbol; rmna = true, label::Union{Void,Dict}
         end
     end
 
-    print(na,row=row,col=col,cell=cell,total=total,rmna=rmna,label=label)
+    printna(na,row=row,col=col,cell=cell,total=total,rmna=rmna,label=label)
 end
 
 function getdictval(dt::Dict,val)
     return haskey(dt,val) ? dt[val] : val
 end
 
-function print(na::NamedArray; row=false, col=false, cell=false, total=false, rmna = false, label::Union{Void,Dict} = nothing)
+function printna(na::NamedArray; row=false, col=false, cell=false, total=false, rmna = false, label::Union{Void,Dict} = nothing)
 
     if rmna == true
         na = dropna(na)

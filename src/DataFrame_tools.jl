@@ -188,20 +188,50 @@ function dflist(df::DataFrame,args::Symbol...; precision = 2, n = 10)
 end
 
 
-function desc(df::DataFrame;label_dict::Dict=Dict())
+function desc(df::DataFrame;label_dict::Union{Void,Dict}=nothing)
 
     varnames = names(df)
-    maxval = maximum(map(x->haskey(label_dict["label"],string(x)) ? length(string(x)) : 0, varnames))
+
+    varlen = zeros(Int,size(df,2)) # length of variable names
+    lablen = zeros(Int,size(df,2)) # length of value labels
+    forlen = zeros(Int,size(df,2)) # length of display formats
+    for i = 1:size(df,1)
+        varlen[i] = length(string(varnames[i]))
+        if label_dict != nothing
+            if haskey(label_dict["variable"],string(varnames[i]))
+                tmplen = length(label_dict["variable"][string(varnames[i])])
+                varlen[i] = tmplen > 0 ? tmplen : varlen[i]
+            end
+            if haskey(label_dict["label"],string(varnames[i]))
+                tmplen = length(label_dict["label"][string(varnames[i])])
+                lablen[i] = length(label_dict["label"][string(varnames[i])])
+            end
+            if haskey(label_dict["format"],string(varnames[i]))
+                tmplen = length(label_dict["format"][string(varnames[i])])
+                forlen[i] = length(label_dict["format"][string(varnames[i])])
+            end
+        end
+    end
+
+    # width for variable names
+    maxval = maximum(varlen)
     maxval = maxval < 8 ? 8 : maxval
+
+    # width for variable types
     maxtype = 7
-    maxlab = maximum(map(x->haskey(label_dict["label"],string(x)) ? length(label_dict["label"][string(x)]) : 0, varnames))
+
+    # width for value label names
+    maxlab = maximum(lablen)
     maxlab = maxlab < 11 ? 11 : maxlab
-    maxformat = maximum(map(x->haskey(label_dict["label"],string(x)) ? length(label_dict["format"][string(x)]) : 0, varnames))
+
+    # width for display formats
+    maxformat = maximum(forlen)
     maxformat = maxformat < 6 ? 6 : maxformat
 
+    # number of variables
     numvar = length(varnames)
 
-    # variable index
+    # width for the variable index - minimum 3 spaces
     maxobs = length(string(numvar))
     print(prepend_spaces("Num",maxobs < 3 ? 3 : maxobs),"  ")
 
@@ -211,7 +241,7 @@ function desc(df::DataFrame;label_dict::Dict=Dict())
     # type (eltype)
     print(append_spaces("Type",maxtype),"  ")
 
-    if isempty(label_dict) == false
+    if label_dict != nothing
         # value label
         print(append_spaces("Value Label",maxlab),"  ")
 
@@ -225,37 +255,39 @@ function desc(df::DataFrame;label_dict::Dict=Dict())
     print("\n")
 
     # dashes for a line by itself -- assume 20 characters for "label"
-    if isempty(label_dict) == true
+    if label_dict != nothing
         println(repeat("-",maxobs+maxval+maxtype+4))
     else
         println(repeat("-",maxobs+maxval+maxtype+maxlab+maxformat+30))
     end
 
     i=1
+    eltyp = eltypes(df)
     for v::Symbol in names(df)
-        eltyp = eltype(df[v])
 
-        if eltyp <: AbstractString
-            eltyp = "String"
+        if eltyp[i] <: AbstractString
+            eltyp[i] = "String"
         end
 
         v_str = string(v)
-        print(prepend_spaces(string(i),maxobs),"  ",append_spaces(v_str,maxval),"  ",append_spaces(string(eltyp),maxtype),"  ")
+        print(prepend_spaces(string(i),maxobs),"  ",append_spaces(v_str,maxval),"  ",append_spaces(string(eltyp[i]),maxtype),"  ")
 
-        if haskey(label_dict["value"],v_str)
-            print(append_spaces(label_dict["value"][v_str],maxlab),"  ")
-        else
-            print(repeat(" ",maxlab+2))
-        end
+        if label_dict != nothing
+            if haskey(label_dict["value"],v_str)
+                print(append_spaces(label_dict["value"][v_str],maxlab),"  ")
+            else
+                print(repeat(" ",maxlab+2))
+            end
 
-        if haskey(label_dict["format"],v_str)
-            print(append_spaces(label_dict["format"][v_str],maxformat),"  ")
-        else
-            print(repeat(" ",maxformat+1))
-        end
+            if haskey(label_dict["format"],v_str)
+                print(append_spaces(label_dict["format"][v_str],maxformat),"  ")
+            else
+                print(repeat(" ",maxformat+1))
+            end
 
-        if haskey(label_dict["variable"],v_str)
-            print(label_dict["variable"][v_str])
+            if haskey(label_dict["variable"],v_str)
+                print(label_dict["variable"][v_str])
+            end
         end
 
         print("\n")
