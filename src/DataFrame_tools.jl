@@ -108,7 +108,7 @@ function dflist(df::DataFrame; precision = 2, n = 10)
     nvars = size(df,2)
     vars = names(df)
 
-    lenvec = [ get_disp_length(df[y], precision = precision) for y in 1:nvars ]
+    lenvec = [ get_disp_length(df[y], precision = precision) for y in vars ]
     # println(lenvec)
 
     # change lenvec to account for column names up to 8 characters
@@ -186,7 +186,35 @@ function dflist(df::DataFrame; precision = 2, n = 10)
     end
 end
 
+"""
+    desc(df::DataFrame; label_dict::Union{Void,Dict}=nothing)
 
+Displays variables in a dataframe much like `showcols`. It can display additional
+attributes such as variable labels, value labels and display formats (not used in Julia)
+if an optional `label_dict` is specified. It mimics Stata's `describe` command.
+`label_dict` is automatically converted from a stata file by `read_stata` function. Or one can
+be easily created as follows:
+
+## Label Dictionary Format
+
+```jldoctest
+label = Dict()
+label["variable"] = Dict(
+    "id" => "Identification Number",
+    "age" => "Age in year at time of interview"),
+    "sex" => "Respondent sex"
+    )
+
+label["value"] = Dict()
+label["value"]["sexlabel"] = Dict(
+    1 => "Female",
+    2 => "Male"
+    )
+
+label["label"] = Dict(
+    "sex" => "sexlabel"
+    )
+"""
 function desc(df::DataFrame;label_dict::Union{Void,Dict}=nothing)
 
     varnames = names(df)
@@ -576,8 +604,8 @@ end
     dfmerge(df1::DataFrame,df2::DataFrame,linkers::Union{Symbol,Vector}; kind::Symbol = :outer)
 
 Produces a merged dataframe with a `:_merge` variable indicating how the merge was done.
-This function is a wrapper for `join` in the DataFrames package.
-Currently, it supports a merge of two sources only.
+This function is a wrapper for `join` in the DataFrames package and mimics `merge ... using ...`
+command in Stata. Currently, it supports a merge of two sources only.
 
 The default merge is a `outer` join that keeps records from both sources in the merged
 dataframe. `:_merge` values indicates:
@@ -619,4 +647,14 @@ function dfmerge(df1::DataFrame,df2::DataFrame,linkers::Union{Symbol,Vector};kin
     end
     delete!(df_merged,[:___mergeleft___,:___mergeright___])
     return df_merged
+end
+
+"""
+    dfappend(df1::DataFrame,df2::DataFrame)
+
+Produces a dataframe with two sources stacked together. It is simply a wrapper
+for `[df1;df2]` operation to micmic `append using ...` command in Stata.
+"""
+function dfappend(df1::DataFrame,df2::DataFrame)
+    return [df1;df2]
 end
