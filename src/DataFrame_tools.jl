@@ -83,7 +83,8 @@ function get_disp_length(dat::AbstractVector; precision = 2)
     end
 
     if vtype <: Number
-        _max = maximum(dropna(dat))
+        da = dropna(dat)
+        _max = size(da,1) == 0 ? 0 : maximum(da)
         for k = 1:30
             if _max < 10^k
                 if vtype <: Integer || precision == 0
@@ -97,11 +98,12 @@ function get_disp_length(dat::AbstractVector; precision = 2)
     end
 
     if vtype <: AbstractString
-        return getmaxlength(dat)
+        return Stella.getmaxlength(dat)
     end
 
     error(eltype(dat)," is not recognized.")
 end
+
 
 function dflist(df::DataFrame; precision = 2, n = 10)
 
@@ -112,18 +114,17 @@ function dflist(df::DataFrame; precision = 2, n = 10)
     # println(lenvec)
 
     # change lenvec to account for column names up to 8 characters
-
     vtypes =eltypes(df)
 
     #headers
     for i = 1:nvars
         if vtypes[i] <: Number || vtypes[i] == Date || vtypes[i] == DateTime
-            print(prepend_spaces(string(args[i]),lenvec[i]))
+            print(prepend_spaces(string(vars[i]),lenvec[i]))
         else
-            print(append_spaces(string(args[i]),lenvec[i]))
+            print(append_spaces(string(vars[i]),lenvec[i]))
         end
 
-        if i < vars
+        if i < nvars
             print("  ")
         end
     end
@@ -186,6 +187,7 @@ function dflist(df::DataFrame; precision = 2, n = 10)
     end
 end
 
+
 """
     desc(df::DataFrame; label_dict::Union{Void,Dict}=nothing)
 
@@ -214,6 +216,7 @@ label["value"]["sexlabel"] = Dict(
 label["label"] = Dict(
     "sex" => "sexlabel"
     )
+```
 """
 function desc(df::DataFrame;label_dict::Union{Void,Dict}=nothing)
 
@@ -429,7 +432,6 @@ function ds(df::DataFrame, typ::Type, args...)
     return dslist
 
 end
-
 function ds(df::DataFrame,re::Regex)
     dslist = Array{Symbol,1}()
 
@@ -545,34 +547,34 @@ end
 #duplicates(df::DataFrame,arg::Symbol; cmd::Symbol = :report) = duplicates(df,Tuple(arg),cmd=cmd)
 
 """
-    sampleselect(df::DataFrame,num::Union{Int64,Float64})
+    dfsample(df::DataFrame,num::Union{Int64,Float64})
 
 Creates a dataframe with a randomly selected sample from the input dataframe. `num`
 specifies the sample size. If `num` is an integer, it indicates the number of rows to be selected.
 If it is a float, it indicates the percentage of the input dataframe to be randomly selected.
-Use `srand()` to set a seed before running `sampleselect()`.
+Use `srand()` to set a seed before running `dfsample()`.
 
 ##Example
 To select 100 rows, use
 
 ```jldoctest
-julia> df2 = sampleselect(df,100)
+julia> df2 = dfsample(df,100)
 ```
 
 To select 20% of the original dataframe, use
 
 ```jldoctest
-julia> df2 = sampleselect(df,20.)
+julia> df2 = dfsample(df,20.)
 ```
 
 or
 
 ```jldoctest
-julia> df2 = sampleselect(df,.2)
+julia> df2 = dfsample(df,.2)
 ```
 
 """
-function sampleselect(df::DataFrame,num::Union{Int64,Float64})
+function dfsample(df::DataFrame,num::Union{Int64,Float64})
 
     df2 = DataFrame()
     df2[:___ran_num___] = rand(Uniform(),size(df,1))
