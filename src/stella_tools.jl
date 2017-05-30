@@ -875,18 +875,18 @@ function pwcorr(a::AbstractArray; p::Bool = false)
 end
 pwcorr(a::AbstractArray...; p::Bool = false) = pwcorr(hcat(a...), p = p)
 function pwcorr(a::DataFrame; p::Bool = false, out = true)
-    b = pwcorr(Array(a[completecases[a],:]), p = p)
+    b = pwcorr(Array(dropna(a)), p = p)
 
     if out == false
         return b
     end
 
-    pwcorr_print(b, p, string.(names(a)))
+    print(b, p, string.(names(a)))
     return b
 end
 pwcorr(a::DataFrame, args::Symbol...; p::Bool = false, out=true) = pwcorr(df[collect(args)], p = p, out = out)
 
-function pwcorr_print(b::Array, p::Bool, column_names::AbstractVector{String}; width::Int = 9)
+function print(b::Array, p::Bool, column_names::AbstractVector{String}; width::Int = 9)
 
     if p == true
         bc = b[1]
@@ -925,4 +925,48 @@ function pwcorr_print(b::Array, p::Bool, column_names::AbstractVector{String}; w
             end
         end
     end
+end
+
+function get_class(val::Real,thresholds::Vector,lower::Bool)
+    if lower == false
+        for i = 1:length(thresholds)
+            if i == 1 && val < thresholds[1]
+                return 1
+            elseif i > 1 && thresholds[i-1] < val <= thresholds[i]
+                return i
+            end
+        end
+        return length(thresholds)+1
+    else
+        for i = 1:length(thresholds)
+            if i == 1 && val <= thresholds[1]
+                return 1
+            elseif i > 1 && thresholds[i-1] <= val < thresholds[i]
+                return i
+            end
+        end
+        return length(thresholds)+1
+    end
+end
+
+"""
+    classify(da::DataArray,thresholds::Vector; lower::Bool = false)
+
+Produces a categorical variable based on a data array and a vector of throsholds.
+Use `lower = true` to classify the threshold value to the lower class.
+"""
+function classify(da::DataArray,thresholds::Vector; lower::Bool = false)
+    da2 = DataArray(Int8,size(da,1))
+    if length(thresholds) > 100
+        error("Cannot use more than 100 throshold values.")
+    end
+
+    for i = 1:size(da,1)
+        if isna(da[i])
+            da2[i] = NA
+        else
+            da2[i] = get_class(da[i],thresholds,lower)
+        end
+    end
+    return da2
 end
