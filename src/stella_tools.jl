@@ -881,7 +881,7 @@ function pwcorr(a::DataFrame; p::Bool = false, out = true)
         return b
     end
 
-    print(b, p, string.(names(a)))
+    Stella.print(b, p, string.(names(a)))
     return b
 end
 pwcorr(a::DataFrame, args::Symbol...; p::Bool = false, out=true) = pwcorr(df[collect(args)], p = p, out = out)
