@@ -886,6 +886,7 @@ function pwcorr(a::DataFrame; p::Bool = false, out = true)
 end
 pwcorr(a::DataFrame, args::Symbol...; p::Bool = false, out=true) = pwcorr(df[collect(args)], p = p, out = out)
 
+import Base.print
 function print(b::Array, p::Bool, column_names::AbstractVector{String}; width::Int = 9)
 
     if p == true
