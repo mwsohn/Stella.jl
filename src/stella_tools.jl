@@ -881,13 +881,12 @@ function pwcorr(a::DataFrame; p::Bool = false, out = true)
         return b
     end
 
-    Stella.print(b, p, string.(names(a)))
+    Stella.print_pwcorr(b, p, string.(names(a)))
     return b
 end
-pwcorr(a::DataFrame, args::Symbol...; p::Bool = false, out=true) = pwcorr(df[collect(args)], p = p, out = out)
+pwcorr(a::DataFrame, args::Vector{Symbol}; p::Bool = false, out=true) = pwcorr(df[args], p = p, out = out)
 
-import Base.print
-function print(b::Array, p::Bool, column_names::AbstractVector{String}; width::Int = 9)
+function print_pwcorr(b::Array, p::Bool, column_names::AbstractVector{String}; width::Int = 9)
 
     if p == true
         bc = b[1]

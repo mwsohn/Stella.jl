@@ -232,10 +232,6 @@ function desc(df::DataFrame;label_dict::Union{Void,Dict}=nothing)
     for i = 1:size(df,2)
         varlen[i] = length(string(varnames[i]))
         if label_dict != nothing
-            if haskey(varlab,string(varnames[i]))
-                tmplen = length(varlab[string(varnames[i])])
-                varlen[i] = tmplen > 0 ? tmplen : varlen[i]
-            end
             if haskey(lablab,string(varnames[i]))
                 tmplen = length(lablab[string(varnames[i])])
                 lablen[i] = length(lablab[string(varnames[i])])
