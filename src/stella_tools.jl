@@ -84,7 +84,7 @@ in the input DataArray), `N_Missing` (number of rows with NA's), `N_Used` (numbe
 """
 function univariate(da::AbstractArray)
 	n_all = size(da,1)
-	da2 = da[!isna.(da)]
+	da2 = dropna(da)
 	return DataFrame(
 		Statistic = [:N_Total,
 			:N_Missing,
