@@ -82,9 +82,14 @@ in the input DataArray), `N_Missing` (number of rows with NA's), `N_Used` (numbe
 `P25` (25th percentile), `Median` (median), `P75` (75th percentile), `Max` (maximum),
 `Skewness` (skewness), and `Kurtosis` (kurtosis).
 """
-function univariate(da::AbstractArray)
+function univariate(da::AbstractVector)
 	n_all = size(da,1)
-	da2 = dropna(da)
+    if typeof(da) <: DataArray
+	    da2 = dropna(da)
+    else
+        da2 = da
+    end
+
 	return DataFrame(
 		Statistic = [:N_Total,
 			:N_Missing,
