@@ -709,7 +709,7 @@ function eform(coeftbl::StatsBase.CoefTable)
 	coeftable2 = coeftbl
 
 	# estimates
-	coeftable2.cols[1] = exp(coeftable2.cols[1])
+	coeftable2.cols[1] = exp.(coeftable2.cols[1])
 
 	# standard errors
 	coeftable2.cols[2] = coeftable2.cols[1] .* coeftable2.cols[2]
