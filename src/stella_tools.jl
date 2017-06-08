@@ -937,21 +937,20 @@ function get_class(val::Real,thresholds::Vector,lower::Bool)
         for i = 1:length(thresholds)
             if i == 1 && val < thresholds[1]
                 return 1
-            elseif i > 1 && thresholds[i-1] < val <= thresholds[i]
-                return i
-            end
-        end
-        return length(thresholds)+1
-    else
-        for i = 1:length(thresholds)
-            if i == 1 && val <= thresholds[1]
-                return 1
             elseif i > 1 && thresholds[i-1] <= val < thresholds[i]
                 return i
             end
         end
-        return length(thresholds)+1
+    else
+        for i = 1:length(thresholds)
+            if i == 1 && val <= thresholds[1]
+                return 1
+            elseif i > 1 && thresholds[i-1] < val <= thresholds[i]
+                return i
+            end
+        end
     end
+    return length(thresholds)+1
 end
 
 """
@@ -963,7 +962,7 @@ Use `lower = true` to classify the threshold value to the lower class.
 function classify(da::DataArray,thresholds::Vector; lower::Bool = false)
     da2 = DataArray(Int8,size(da,1))
     if length(thresholds) > 100
-        error("Cannot use more than 100 throshold values.")
+        error("Cannot use more than 100 threshold values.")
     end
 
     for i = 1:size(da,1)
