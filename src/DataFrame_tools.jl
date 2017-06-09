@@ -656,3 +656,67 @@ for `[df1;df2]` operation to micmic `append using ...` command in Stata.
 function dfappend(df1::DataFrame,df2::DataFrame)
     return [df1;df2]
 end
+
+"""
+    unpool(df::DataFrame,varname::Symbol)
+
+Returns a DataArray with the original values of a PooledDataArray.
+"""
+function unpool(df::DataFrame,varname::Symbol)
+    if isa(df[varname],PooledDataArray) == false
+        error(varname," is not a PooledDataArray")
+    end
+
+    da = DataArray(eltype(df[varname].pool),size(df,1))
+    pool = df[varname].pool
+    refs = df[varname].refs
+    for i = 1:size(df,1)
+        da[i] = refs[i] == 0 ? NA : pool[refs[i]]
+    end
+    return da
+end
+
+
+
+function get_class(val::Real,thresholds::Vector,lower::Bool)
+    if lower == false
+        for i = 1:length(thresholds)
+            if i == 1 && val < thresholds[1]
+                return 1
+            elseif i > 1 && thresholds[i-1] <= val < thresholds[i]
+                return i
+            end
+        end
+    else
+        for i = 1:length(thresholds)
+            if i == 1 && val <= thresholds[1]
+                return 1
+            elseif i > 1 && thresholds[i-1] < val <= thresholds[i]
+                return i
+            end
+        end
+    end
+    return length(thresholds)+1
+end
+
+"""
+    classify(da::DataArray,thresholds::Vector; lower::Bool = false)
+
+Produces a categorical variable based on a data array and a vector of throsholds.
+Use `lower = true` to classify the threshold value to the lower class.
+"""
+function classify(da::DataArray,thresholds::Vector; lower::Bool = false)
+    da2 = DataArray(Int8,size(da,1))
+    if length(thresholds) > 100
+        error("Cannot use more than 100 threshold values.")
+    end
+
+    for i = 1:size(da,1)
+        if isna(da[i])
+            da2[i] = NA
+        else
+            da2[i] = get_class(da[i],thresholds,lower)
+        end
+    end
+    return da2
+end

@@ -932,45 +932,74 @@ function print_pwcorr(b::Array, p::Bool, column_names::AbstractVector{String}; w
     end
 end
 
-function get_class(val::Real,thresholds::Vector,lower::Bool)
-    if lower == false
-        for i = 1:length(thresholds)
-            if i == 1 && val < thresholds[1]
-                return 1
-            elseif i > 1 && thresholds[i-1] <= val < thresholds[i]
-                return i
-            end
+
+function ttest(df::DataFrame, args::Symbol...; byvar::Union{Void,Symbol} = nothing, sig = 95)
+    if length(args) == 1 && by == nothing
+        error("Two variables or one variable and a byvar variable is required")
+    end
+
+    cols = byvar == nothing ? collect(args) : [collect(args); byvar]
+
+    ary = df[completecases(df[cols]), cols]
+
+    if length(args) == 1
+        df2 = by(ary, byvar) do subdf
+            DataFrame(
+                N = size(subdf,1),
+                Mean = mean(subdf[args[1]]),
+                SD = std(subdf[args[1]])
+            )
         end
     else
-        for i = 1:length(thresholds)
-            if i == 1 && val <= thresholds[1]
-                return 1
-            elseif i > 1 && thresholds[i-1] < val <= thresholds[i]
-                return i
-            end
-        end
-    end
-    return length(thresholds)+1
-end
-
-"""
-    classify(da::DataArray,thresholds::Vector; lower::Bool = false)
-
-Produces a categorical variable based on a data array and a vector of throsholds.
-Use `lower = true` to classify the threshold value to the lower class.
-"""
-function classify(da::DataArray,thresholds::Vector; lower::Bool = false)
-    da2 = DataArray(Int8,size(da,1))
-    if length(thresholds) > 100
-        error("Cannot use more than 100 threshold values.")
+       df2 = DataFrame(
+               N = [size(ary,1),size(ary,1)],
+               Mean = [mean(ary[args[1]]), mean(ary[args[2]])],
+               SD = [std(ary[args[1]]), std(ary[args[2]])]
+       )
     end
 
-    for i = 1:size(da,1)
-        if isna(da[i])
-            da2[i] = NA
-        else
-            da2[i] = get_class(da[i],thresholds,lower)
-        end
+    # function to calculate pooled standard deviation
+    function std_pooled(n1,s1,n2,s2)
+      return sqrt(((n1-1)*s1^2 +(n2-1)*s2^2)/(n1+n2-2))
     end
-    return da2
+
+    # pooled standard deviation
+    stdevi = std_pooled(df2[1,:N], df2[1,:SD], df2[2,:N], df2[2,:SD])
+
+    # degrees of freedom
+    dof = byvar == nothing ? size(ary,1) - 1 : size(ary,1) - 2
+
+    # t-statistic
+    meandiff = df2[1,:Mean] - df2[2,:Mean]
+    t = meandiff / (stdevi*sqrt(1/df2[1,:N] + 1/df2[2,:N]))
+
+    # critical value
+    critv = 1/Distributions.cdf(Distributions.TDist(dof), (1 - sig/100)/2)
+
+    # calculate confidence intervals
+    lbname = Symbol(string("LB",sig,"%CI"))
+    ubname = Symbol(string("UB",sig,"%CI"))
+
+    # compute standard errors and confidence intervals
+    df2[:SE] = zeros(Float64,2)
+    df2[lbname] = zeros(Float64,2)
+    df2[ubname] = zeros(Float64,2)
+    for i = 1:2
+        df2[i,:SE] = df2[i,:SD] / sqrt(df2[i,:N])
+        df2[i,lbname] = df2[i,:Mean] - critv * df2[i,:SE]
+        df2[i,ubname] = df2[i,:Mean] + critv * df2[i,:SE]
+    end
+
+
+    # p value for H₀: diff < 0
+    p1 = Distributions.cdf(Distributions.TDist(dof),t)
+
+    # p value for H₀: diff ≠ 0
+    p2 = 2*Distributions.ccdf(Distributions.TDist(dof),abs(t))
+
+    # p value for H₀: diff > 0
+    p3 = Distributions.ccdf(Distributions.TDist(dof),t)
+
+    return (df2, t, dof, p1, p2, p3)
+
 end
