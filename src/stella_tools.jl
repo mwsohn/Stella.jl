@@ -1,4 +1,4 @@
-using DataFrames, FreqTables
+using DataFrames, FreqTables, HypothesisTests
 
 """
     prepend_spaces(str,maxlength)
@@ -932,74 +932,243 @@ function print_pwcorr(b::Array, p::Bool, column_names::AbstractVector{String}; w
     end
 end
 
+#--------------------------------------------------------------------------
+# t-test
+#--------------------------------------------------------------------------
+using DataFrames, HypothesisTests
 
-function ttest(df::DataFrame, args::Symbol...; byvar::Union{Void,Symbol} = nothing, sig = 95)
-    if length(args) == 1 && by == nothing
-        error("Two variables or one variable and a byvar variable is required")
+immutable t_return
+    df::DataFrame
+    t::Float64
+    dof::Int64
+    p_left::Float64
+    p_both::Float64
+    p_right::Float64
+end
+
+"""
+    ttest(df::DataFrame,varname::Symbol;byvar::Union{Void,Symbol} = nothing,sig=95)
+    ttest(df::DataFrame,varname1::Symbol,varname2::Symbol;paired::Bool=true,sig=95)
+    ttest(df::DataFrame,varname::Symbol,val::Real;sig=95)
+
+Produces t statistic, degree of freedom, and associated p-values. It returns
+a t_return type that includes a DataFrame containing univariate statistics and
+confidence intervals, t statistic, degree of freedom, and p-values.
+
+### Example 1: One sample t test comparing a variable to a value
+
+```jldoctest
+julia> t = ttest(auto, :price, 25000)
+t_return(1××6 DataFrames.DataFrame
+│ Row │  N  │ Mean    │ SD     │ SE      │ LB95%CI │ UB95%CI │
+├─────┼─────┼─────────┼────────┼─────────┼─────────┼─────────┤
+│ 1   │ 74  │ 6165.26 │ 2949.5 │ 342.872 │ 5481.91 │ 6848.6  │, -54.93229
+827384743, 73, 1.9849645235050634e-61, 3.969929047010127e-61, 1.0)
+
+julia>print(t)
+t_return(1××6 DataFrames.DataFrame
+│ Row │  N  │ Mean    │ SD     │ SE      │ LB95%CI │ UB95%CI │
+├─────┼─────┼─────────┼────────┼─────────┼─────────┼─────────┤
+│ 1   │ 74  │ 6165.26 │ 2949.5 │ 342.872 │ 5481.91 │ 6848.6  │
+
+t             = -54.9323
+df            = 73
+Pr(T < t)     = 0.0000
+Pr(|T| > |t|) = 0.0000
+Pr(T > t)     = 1.0000
+```
+
+### Example 2: Two sample t test by groups
+
+```jldoctest
+julia> print(ttest(auto, :price, byvar = :foreign))
+2×7 DataFrames.DataFrame
+│ Row │ foreign │ N  │ Mean    │ SD      │ SE      │ LB95%CI │ UB95%CI │
+├─────┼─────────┼────┼─────────┼─────────┼─────────┼─────────┼─────────┤
+│ 1   │ 0       │ 52 │ 6072.42 │ 3097.1  │ 429.491 │ 5210.18 │ 6934.66 │
+│ 2   │ 1       │ 22 │ 6384.68 │ 2621.92 │ 558.994 │ 5222.19 │ 7547.17 │
+
+t             = -0.4139
+df            = 72
+Pr(T < t)     = 0.3401
+Pr(|T| > |t|) = 0.6802
+Pr(T > t)     = 0.6599
+```
+
+### Example 3: Two sample paired t test comparing two variables
+
+```jldoctest
+julia> ttest(auto, :price, :trunk)
+2×6 DataFrames.DataFrame
+│ Row │ N  │ Mean    │ SD     │ SE       │ LB95%CI │ UB95%CI │
+├─────┼────┼─────────┼────────┼──────────┼─────────┼─────────┤
+│ 1   │ 74 │ 6165.26 │ 2949.5 │ 342.872  │ 5481.91 │ 6848.6  │
+│ 2   │ 74 │ 13.7568 │ 4.2774 │ 0.497238 │ 12.7658 │ 14.7478 │
+
+t             = 17.9493
+df            = 73
+Pr(T < t)     = 1.0000
+Pr(|T| > |t|) = 0.0000
+Pr(T > t)     = 0.0000
+```
+
+### Example 4: Two sample unpaired t test comparing two variables
+
+```jldoctest
+julia> ttest(auto, :price, :trunk, paired=false)
+2×6 DataFrames.DataFrame
+│ Row │ N  │ Mean    │ SD     │ SE       │ LB95%CI │ UB95%CI │
+├─────┼────┼─────────┼────────┼──────────┼─────────┼─────────┤
+│ 1   │ 74 │ 6165.26 │ 2949.5 │ 342.872  │ 5481.91 │ 6848.6  │
+│ 2   │ 74 │ 13.7568 │ 4.2774 │ 0.497238 │ 12.7658 │ 14.7478 │
+
+t             = 17.9411
+df            = 146
+Pr(T < t)     = 1.0000
+Pr(|T| > |t|) = 0.0000
+Pr(T > t)     = 0.0000
+```
+
+"""
+function ttest(df::DataFrame,varname::Symbol; byvar::Union{Void,Symbol} = nothing, sig = 95)
+    if byvar == nothing
+        error("`byvar` is required.")
     end
 
-    cols = byvar == nothing ? collect(args) : [collect(args); byvar]
-
-    ary = df[completecases(df[cols]), cols]
-
-    if length(args) == 1
-        df2 = by(ary, byvar) do subdf
-            DataFrame(
-                N = size(subdf,1),
-                Mean = mean(subdf[args[1]]),
-                SD = std(subdf[args[1]])
-            )
-        end
-    else
-       df2 = DataFrame(
-               N = [size(ary,1),size(ary,1)],
-               Mean = [mean(ary[args[1]]), mean(ary[args[2]])],
-               SD = [std(ary[args[1]]), std(ary[args[2]])]
-       )
-    end
-
-    # function to calculate pooled standard deviation
-    function std_pooled(n1,s1,n2,s2)
-      return sqrt(((n1-1)*s1^2 +(n2-1)*s2^2)/(n1+n2-2))
-    end
-
-    # pooled standard deviation
-    stdevi = std_pooled(df2[1,:N], df2[1,:SD], df2[2,:N], df2[2,:SD])
-
-    # degrees of freedom
-    dof = byvar == nothing ? size(ary,1) - 1 : size(ary,1) - 2
-
-    # t-statistic
-    meandiff = df2[1,:Mean] - df2[2,:Mean]
-    t = meandiff / (stdevi*sqrt(1/df2[1,:N] + 1/df2[2,:N]))
-
-    # critical value
-    critv = 1/Distributions.cdf(Distributions.TDist(dof), (1 - sig/100)/2)
+    dft = dropna(df[[varname,byvar]])
 
     # calculate confidence intervals
     lbname = Symbol(string("LB",sig,"%CI"))
     ubname = Symbol(string("UB",sig,"%CI"))
+
+    df2 = by(dft, byvar) do subdf
+        DataFrame(
+            N = size(subdf,1),
+            Mean = mean(subdf[varname]),
+            SD = std(subdf[varname])
+        )
+    end
+
+    lev = levels(dft[byvar])
+    if length(lev) != 2
+        error(byvar," must have two levels; it has ",length(lev), " levels.")
+    end
+
+    for i=1:2
+        if df2[i,:N] == 0
+            error(varname," is empty for ",byvar," = ",lev[i],".")
+        end
+    end
+
+    x = Vector(dft[dft[byvar] .== lev[1],varname])
+    y = Vector(dft[dft[byvar] .== lev[2],varname])
+
+    tt = EqualVarianceTTest(x,y)
 
     # compute standard errors and confidence intervals
     df2[:SE] = zeros(Float64,2)
     df2[lbname] = zeros(Float64,2)
     df2[ubname] = zeros(Float64,2)
     for i = 1:2
+        # critical value
+        # critv = 1/Distributions.cdf(Distributions.TDist(df2[i,:N]-1), (1 - sig/100)/2)
         df2[i,:SE] = df2[i,:SD] / sqrt(df2[i,:N])
-        df2[i,lbname] = df2[i,:Mean] - critv * df2[i,:SE]
-        df2[i,ubname] = df2[i,:Mean] + critv * df2[i,:SE]
+        (df2[i,lbname], df2[i,ubname]) = StatsBase.confint(OneSampleTTest(i == 1 ? x : y,0),sig/100)
     end
 
+    # convert it to a pooleddataarray
+    pool!(df2,[varname])
+    df2[varname].pool = Dict(lev[1] => v1,lev[2] => v2)
 
-    # p value for H₀: diff < 0
-    p1 = Distributions.cdf(Distributions.TDist(dof),t)
+    return t_return(df2, tt.t, tt.df, pvalue(tt, tail = :left),pvalue(tt),pvalue(tt, tail = :right))
+end
 
-    # p value for H₀: diff ≠ 0
-    p2 = 2*Distributions.ccdf(Distributions.TDist(dof),abs(t))
+function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = true)
 
-    # p value for H₀: diff > 0
-    p3 = Distributions.ccdf(Distributions.TDist(dof),t)
+    if paired == true
+        ba = completecases(df[[var1,var2]])
+        x = Vector(df[ba,var1])
+        y = Vector(df[ba,var2])
+    else
+        x = Vector(dropna(df[var1]))
+        y = Vector(dropna(df[var2]))
+    end
 
-    return (df2, t, dof, p1, p2, p3)
+    # calculate confidence intervals
+    lbname = Symbol(string("LB",sig,"%CI"))
+    ubname = Symbol(string("UB",sig,"%CI"))
 
+    df2 = DataFrame(
+        N = [length(x),length(y)],
+        Mean = [mean(x), mean(y)],
+        SD = [std(x), std(y)]
+    )
+
+    if df2[1,:N] == 0
+        error(var1," is empty.")
+    elseif df2[2,:N] == 0
+        error(var2," is empty.")
+    end
+
+    if paired == true
+        tt = OneSampleTTest(x, y)
+    else
+        tt = EqualVarianceTTest(x, y)
+    end
+
+    # compute standard errors and confidence intervals
+    df2[:SE] = zeros(Float64,2)
+    df2[lbname] = zeros(Float64,2)
+    df2[ubname] = zeros(Float64,2)
+    vars = [x,y]
+    for i = 1:2
+        # critical value
+        # critv = 1/Distributions.cdf(Distributions.TDist(df2[i,:N]-1), (1 - sig/100)/2)
+        df2[i,:SE] = df2[i,:SD] / sqrt(df2[i,:N])
+        (df2[i,lbname], df2[i,ubname]) = StatsBase.confint(OneSampleTTest(vars[i],0),sig/100)
+    end
+
+    return t_return(df2, tt.t, tt.df, pvalue(tt, tail = :left),pvalue(tt),pvalue(tt, tail = :right))
+end
+
+function ttest(df::DataFrame, varname::Symbol, val::Real; sig = 95)
+
+    # calculate confidence intervals
+    lbname = Symbol(string("LB",sig,"%CI"))
+    ubname = Symbol(string("UB",sig,"%CI"))
+
+    v = Vector(df[completecases(df[[varname]]),varname])
+    df2 = DataFrame(
+        N = [length(v)],
+        Mean = [mean(v)],
+        SD = [std(v)]
+    )
+
+    if df2[1,:N] == 0
+        error(varname," is empty.")
+    end
+
+    tt = OneSampleTTest(v, val)
+
+    # compute standard errors and confidence intervals
+    df2[:SE] = zeros(Float64,1)
+    df2[lbname] = zeros(Float64,1)
+    df2[ubname] = zeros(Float64,1)
+
+    df2[1,:SE] = df2[1,:SD] / sqrt(df2[1,:N])
+    (df2[1,lbname], df2[1,ubname]) = StatsBase.confint(OneSampleTTest(v,0),sig/100)
+
+    return t_return(df2, tt.t, tt.df, pvalue(tt, tail = :left),pvalue(tt),pvalue(tt, tail = :right))
+
+end
+
+import Base.print
+function print(t::t_return)
+    println(t.df)
+    print("\n")
+    @printf("t             = %.4f\n",t.t)
+    println("df            = ",t.dof)
+    @printf("Pr(T < t)     = %.4f\n",t.p_left)
+    @printf("Pr(|T| > |t|) = %.4f\n",t.p_both)
+    @printf("Pr(T > t)     = %.4f\n",t.p_right)
 end
