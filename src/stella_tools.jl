@@ -1222,10 +1222,10 @@ function print(r::ranksum_return)
     @printf("         z = %.3f\n",r.z)
     @printf("Prob > |z| = %.3f\n",r.pvalue)
     @printf("P{%s(%s == %s)} >  P{%s(%s == %s)} = %.3f\n",
-        string(r.varname)
+        string(r.varname),
         string(group),
         string(r.df[1,1]),
-        string(r.varname)
+        string(r.varname),
         string(group),
         string(r.df[2,1]),
         r.porder
