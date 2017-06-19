@@ -1028,7 +1028,6 @@ Pr(T < t)     = 1.0000
 Pr(|T| > |t|) = 0.0000
 Pr(T > t)     = 0.0000
 ```
-
 """
 function ttest(df::DataFrame,varname::Symbol; byvar::Union{Void,Symbol} = nothing, sig = 95)
     if byvar == nothing
@@ -1082,7 +1081,6 @@ function ttest(df::DataFrame,varname::Symbol; byvar::Union{Void,Symbol} = nothin
 
     return t_return(df2, tt.t, tt.df, pvalue(tt, tail = :left),pvalue(tt),pvalue(tt, tail = :right))
 end
-
 function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = true)
 
     if paired == true
@@ -1130,7 +1128,6 @@ function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = tru
 
     return t_return(df2, tt.t, tt.df, pvalue(tt, tail = :left),pvalue(tt),pvalue(tt, tail = :right))
 end
-
 function ttest(df::DataFrame, varname::Symbol, val::Real; sig = 95)
 
     # calculate confidence intervals
@@ -1171,4 +1168,177 @@ function print(t::t_return)
     @printf("Pr(T < t)     = %.4f\n",t.p_left)
     @printf("Pr(|T| > |t|) = %.4f\n",t.p_both)
     @printf("Pr(T > t)     = %.4f\n",t.p_right)
+end
+
+#--------------------------------------------------------------------------
+# ranksum(), signrank(), signtest()
+#--------------------------------------------------------------------------
+
+immutable ranksum_return
+    df::DataFrame
+    t::Float64
+    U::Float64
+    s²::Float64
+    var_t::Float64
+    z::Float64
+    pvalue::Float64
+    porder::Float64
+end
+
+function ranksum(df::DataFrame,varname::Symbol; group::Symbol = nothing)
+    if group == nothing
+        error("`group` variable is required")
+    end
+
+    df2 = df[completecases(df[[varname,group]]),[varname,group]]
+    df2[:__ranking] = tiedrank(df[varname])
+
+    df3 = by(df2,group) do subdf
+        DataFrame(
+            obs = size(subdf,1),
+            ranksum = sum(subdf[:__ranking]),
+            expected = size(subdf,1)*(size(df2,1)+1) / 2
+        )
+    end
+
+    # test statistic
+    t = df3[1,:ranksum]
+    n1 = df3[1,:obs]
+    U = t - n1*(n1+1) / 2
+    meanrank = mean(df2[:__ranking])
+    s² = var(df2[:__ranking])
+    vart = df3[1,:obs]*df3[2,:obs]*s² / size(df2,1)
+    z = (t - df3[1,:expected]) / sqrt(vart)
+    pval = ccdf()
+    porder = U / (df3[1,:obs]*df3[2,:obs])
+    pval = 2*Distributions.cdf(Distributions.Normal(), z)
+    return ranksum_return(df3,t,U,s²,vart,z,pval,porder)
+end
+
+function print(r::ranksum_return)
+    varnames = names(r.df)
+    print(r.df,"\n\n")
+    @printf("         z = %.3f\n",r.z)
+    @printf("Prob > |z| = %.3f\n",r.pvalue)
+    @printf("P{%s(%s == %s)} >  P{%s(%s == %s)} = %.3f\n",string(varnames[1]))
+end
+
+immutable signrank_return
+    df::DataFrame
+    t::Float64
+    var_t::Float64
+    z::Float64
+    p::Float64
+end
+
+function signrank(df::DataFrame,var1::Symbol,var2::Symbol)
+
+    # complete cases only
+    df2 = df[completecases(df[[var1,var2]]),[var1,var2]]
+
+    # difference
+    d = df[var1] .- df[var2]
+
+    # sign
+    s = sign.(d)
+
+    # rank the absolute difference
+    r = tiedrank(abs(d)).*s
+
+    # test statistic
+    t = sum(r)
+
+    # dataframe output
+    n = size(df2,1)
+    n0 = sum(s .== 0)
+    et = (n*(n + 1)/2 - sum(s .== 0))/2
+    df = DataFrame(
+        sign = ["positive","negative","zero"],
+        obs = [
+            sum(s .== 1),
+            sum(s .== -1),
+            n0
+        ],
+        sum_ranks = [
+            sum((s .== 1) .* r),
+            abs(sum((s .== -1) .* r)),
+            n0
+        ],
+        expected = [et,et,n0]
+    )
+
+    varadjt = sum(r.^2) / 4
+    varunadjt = (n*(n + 1)*(2n + 1))/24
+    Δvarzeroadj = -1 * n0*(n0 + 1)*(2*n0 + 1) / 24
+    Δvartiesadj = varadjt - varunadjt - Δvarzeroadj
+
+    # z-value
+    z = (df[1,:sum_ranks] - et) / sqrt(varadjt)
+
+    # p-value
+    pval = 2*Distributions.cdf(Distributions.Normal(), z)
+
+    return signrank_return(df, et, varadjt, z, pval)
+end
+
+function print(sr::signrank_return)
+    print(sr.df,"\n\n")
+    @printf("Adj variance = %.3f\n",sr.var_t)
+    @printf("           z = %.3f\n",sr.z)
+    @printf("  Prob > |z| = %.3f\n",sr.p)
+end
+
+
+immutable signtest_return
+    df::DataFrame
+    p1::Float64
+    p2::Float64
+    p3::Float64
+end
+
+function signtest(df::DataFrame,var1::Symbol,var2::Symbol)
+
+    # complete cases only
+    df2 = df[completecases(df[[var1,var2]]),[var1,var2]]
+
+    # difference
+    d = df[var1] .- df[var2]
+
+    # sign
+    s = sign.(d)
+
+    # test statistic
+    nplus = sum(s .> 0)
+    n0 = sum(s .== 0)
+    n_nonzero = size(df2,1) - n0
+    et = n_nonzero / 2
+
+    # output dataframe
+    df3 = DataFrame(
+        sign = ["positive","negative","zero"],
+        observed = [
+            sum(s .== 1),
+            sum(s .== -1),
+            n0
+        ],
+        expected = [et,et,n0]
+    )
+
+    # p1 - Ha: median of var1 - var2 > 0
+    p1 = Distributions.cdf(Distributions.Binomial(n_nonzero,.5),df3[2,:observed])
+
+    # p2 - Ha: median of var1 - var2 < 0
+    p2 = Distributions.cdf(Distributions.Binomial(n_nonzero,.5),df3[1,:observed])
+
+    # p2 - Ha: median of var1 - var2 != 0
+    p3 = min(1.0, 2.0*Distributions.cdf(Distributions.Binomial(n_nonzero,.5),df3[1,:observed]))
+
+    return signtest_return(df3, p1, p2, p3)
+end
+
+function print(sr::signtest_return)
+    print(sr.df,"\n\n")
+    @printf("Pr(#positive ≥ %d) = %.3f\n",sr.df[1,:observed],sr.p1)
+    @printf("Pr(#negative ≥ %d) = %.3f\n",sr.df[2,:observed],sr.p2)
+    @printf("Pr(#positive ≥ %d or #negative ≥ %d) = %.3f\n",sr.df[1,:observed],sr.df[2,:observed],sr.p3)
 end
