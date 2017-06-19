@@ -1176,6 +1176,7 @@ end
 
 immutable ranksum_return
     df::DataFrame
+    varname::Symbol
     t::Float64
     U::Float64
     s²::Float64
@@ -1212,15 +1213,23 @@ function ranksum(df::DataFrame,varname::Symbol; group::Symbol = nothing)
     pval = ccdf()
     porder = U / (df3[1,:obs]*df3[2,:obs])
     pval = 2*Distributions.cdf(Distributions.Normal(), z)
-    return ranksum_return(df3,t,U,s²,vart,z,pval,porder)
+    return ranksum_return(df3,varname,t,U,s²,vart,z,pval,porder)
 end
 
 function print(r::ranksum_return)
-    varnames = names(r.df)
+    group = names(r.df)[1]
     print(r.df,"\n\n")
     @printf("         z = %.3f\n",r.z)
     @printf("Prob > |z| = %.3f\n",r.pvalue)
-    #@printf("P{%s(%s == %s)} >  P{%s(%s == %s)} = %.3f\n",string(varnames[1]))
+    @printf("P{%s(%s == %s)} >  P{%s(%s == %s)} = %.3f\n",
+        string(r.varname)
+        string(group),
+        string(r.df[1,1]),
+        string(r.varname)
+        string(group),
+        string(r.df[2,1]),
+        r.porder
+        )
 end
 
 immutable signrank_return
