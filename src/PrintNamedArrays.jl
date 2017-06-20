@@ -28,68 +28,14 @@ function strval(val::Integer)
   return @sprintf("%.0d",val)
 end
 
-function chisq_2way(t::NamedArray)
-
-  if length(t.dimnames) != 2
-      error("Only two dimensional arrays are currently supported")
-  end
-
-  rowsum = Array(sum(t,2))
-  colsum = Array(sum(t,1))
-  total = sum(t)
-
-  ncol = length(colsum)
-  nrow = length(rowsum)
-
-  chisq = 0.
-  for i = 1:nrow
-    for j = 1:ncol
-      expected = rowsum[i]*colsum[j]/total
-      chisq += ((t.array[i,j] - expected)^2)/expected
-    end
-  end
-
-  # degress of freedom
-  df = (ncol-1)*(nrow-1)
-
-  # return a tuple of chisq, df, p-value
-  return (chisq,df,Distributions.ccdf(Distributions.Chisq(df),chisq))
-end
-
-function print(na::NamedArray,flag::Symbol; rmna = true, label::Union{Void,Dict} = nothing)
-
-    pattern = split(string(flag),"")
-    row = false
-    col = false
-    cell = false
-    total = false
-    rmnull = false
-    for pat in pattern
-        if pat == "r" || pat == "R"
-          row = true
-        elseif pat == "c" || pat == "C"
-          col = true
-        elseif pat == "e" || pat == "E"
-          cell = true
-        elseif pat == "t" || pat == "T"
-          total = true
-      elseif pat == "d" || pat == "D"
-            rmnull = true
-        end
-    end
-
-    printna(na,row=row,col=col,cell=cell,total=total,rmna=rmna,label=label)
-end
-
 function getdictval(dt::Dict,val)
     return haskey(dt,val) ? dt[val] : val
 end
 
-function printna(na::NamedArray; row=false, col=false, cell=false, total=false, rmna = false, label::Union{Void,Dict} = nothing)
+function print(tr::tab_return; row=false, col=false, cell=false, total=false, rmna = false, label::Union{Void,Dict} = nothing)
 
-    if rmna == true
-        na = dropna(na)
-    end
+    # named array
+    na = rmna ? dropna(tr.na) : tr.na
 
     if ndims(na.array) == 1
         return print_oneway(na, total = total, rmna = rmna, label = label)
@@ -319,6 +265,8 @@ function printna(na::NamedArray; row=false, col=false, cell=false, total=false, 
       print(" | ",lpad(val,colwidth," "),"\n")
     end
 
+    # p-value
+    println("\nPearson χ² (",tr.dof,") = ",@sprintf("%.3f",tr.chisq)," Pr = ",@sprintf("%.3f",tr.p))
 end
 
 function print_oneway(na::NamedArray; total = false, rmna = false, label::Union{Void,Dict} = nothing)
