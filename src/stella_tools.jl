@@ -1,4 +1,4 @@
-using DataFrames, FreqTables, HypothesisTests
+using DataFrames, FreqTables, HypothesisTests, NamedArrays
 
 """
     prepend_spaces(str,maxlength)
@@ -123,7 +123,12 @@ function univariate(da::AbstractVector)
 end
 univariate(df::DataFrame,var::Symbol) = univariate(df[var])
 
-
+immutable tab_return
+    na::NamedArray
+    chisq::Float64
+    dof::Int64
+    p::Float64
+end
 
 """
     tab(x::AbstractArray...; rmna::Bool = true, weights::AbstractVector = UnitWeights())
@@ -137,59 +142,31 @@ where `na` is the returned NamedArray. `na.dimnames` contain row and column valu
 When NA values are included, the `dimnames` (see `NamedArrays` package) are returned in string
 values rather than in the original data type.
 """
-function tab(df::DataFrame,args::Symbol...;rmna = true, weights::AbstractVector = FreqTables.UnitWeights())
+function tab(df::DataFrame,args::Symbol...; rmna = true, weights::AbstractVector = FreqTables.UnitWeights())
+
+    # number of complete cases
+    ba = completecases(df[collect(args)])
+    cc = sum(ba)
+
+    # remove NAs
     if rmna == true
-        df = df[completecases(df[collect(args)]),collect(args)]
+        df = df[ba,collect(args)]
     end
 
     # find out if the args columns contain any NA values
-    cc = rmna ? trues(size(df,1)) : completecases(df[collect(args)])
-    if rmna || sum(cc) == size(df,1)
-        a = freqtable([df[y] for y in args]...; weights = weights)
-        setdimnames!(a, args)
-        return a
+    if rmna || cc == size(df,1)
+        a = FreqTales.freqtable([df[y] for y in args]...; weights = weights)
+    else
+        # there are NA values and so we cannot use freqtable
+        # weights are not allowed, either
+        a = tab([df[y] for y in args]...)
     end
-
-    # there are NA values and so we cannot use freqtable
-    a = tab([df[y] for y in args]...) #; weights = weights)
-    setdimnames!(a,args)
-    return a
-end
-
-
-function tabv2(df::DataFrame,args::Symbol...;rmna = true, weights::AbstractVector = FreqTables.UnitWeights())
-    if rmna == true
-        df = df[completecases(df[collect(args)]),collect(args)]
-    end
-
-    # find out if the args columns contain any NA values
-    cc = rmna ? trues(size(df,1)) : completecases(df[collect(args)])
-    if rmna || sum(cc) == size(df,1)
-        a = freqtable([df[y] for y in args]...; weights = weights)
-        setdimnames!(a, args)
-        return a
-    end
-
-    # there are NA values and so we cannot use freqtable
-    # split the data into two and combine them later
-    df1 = df[cc,:]
-    df2 = df[cc .== false,:]
-    a = freqtable([df[y] for y in args]...)
-    b = __tab([df[y] for y in args]...)
-
-    # combine them
-    # indices
-    a_dimnames = [string.(x) for x in names(a)]
 
     setdimnames!(a,args)
-    return a
+    return tab_return(a,chisq_2way(a))
 end
-
-tab(args::AbstractVector...; weights::AbstractVector = FreqTables.UnitWeights()) = ___tab(args) #;weights=weights)
-function ___tab(x::NTuple) #; weights::AbstractVector = FreqTables.UnitWeights())
-    # if isa(weights,UnitWeights) == false
-    #     error("Frequencies with NA values cannot be weighted.")
-    # end
+tab(args::AbstractVector...; weights::AbstractVector = FreqTables.UnitWeights() ) = ___tab(args)
+function ___tab(x::NTuple)
 
     ncols = length(x)
     nrows = length(x[1])
@@ -236,9 +213,35 @@ function ___tab(x::NTuple) #; weights::AbstractVector = FreqTables.UnitWeights()
     end
 
     return NamedArray(a, tuple(dimnames...), ntuple(i -> "Dim$i", ncols))
-
 end
 
+function chisq_2way(t::NamedArray)
+
+  if length(t.dimnames) != 2
+      error("Only two dimensional arrays are currently supported")
+  end
+
+  rowsum = Array(sum(t,2))
+  colsum = Array(sum(t,1))
+  total = sum(t)
+
+  ncol = length(colsum)
+  nrow = length(rowsum)
+
+  chisq = 0.
+  for i = 1:nrow
+    for j = 1:ncol
+      expected = rowsum[i]*colsum[j]/total
+      chisq += ((t.array[i,j] - expected)^2)/expected
+    end
+  end
+
+  # degress of freedom
+  df = (ncol-1)*(nrow-1)
+
+  # return a tuple of chisq, df, p-value
+  return (chisq,df,Distributions.ccdf(Distributions.Chisq(df),chisq))
+end
 
 """
     tabstat(df::DataFrame,varname::Symbol,groupvar::Symbol)
