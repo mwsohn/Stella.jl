@@ -392,14 +392,14 @@ function bivariatexls(df::DataFrame,
     label_dict::Union{Void,Dict} = nothing,
     row::Int = 0,
     col::Int = 0)
-    #
-    # if label_dict != nothing
-    #     # variable labels
-    #     varlab = label_dict["variable"]
-    #
-    #     # value labels
-    #     vallab = label_dict["value"]
-    # end
+
+    if label_dict != nothing
+        # variable labels
+        varlab = label_dict["variable"]
+
+        # value labels
+        vallab = label_dict["value"]
+    end
 
     # create a worksheet
     t = wbook[:add_worksheet](wsheet)
@@ -412,7 +412,7 @@ function bivariatexls(df::DataFrame,
     c = col
 
     # drop NAs in colvar
-    df2 = df[completecases(df[[colvar]]),:]
+    df2 = dropna(df,colvar)
 
     # number of columns
     # column values
