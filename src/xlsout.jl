@@ -412,11 +412,11 @@ function bivariatexls(df::DataFrame,
     c = col
 
     # drop NAs in colvar
-    #df2 = df[completecases(df[colvar]),:]
+    df2 = df[completecases(df[colvar]),:]
 
     # number of columns
     # column values
-    collev = freqtable(df,colvar)
+    collev = freqtable(df2,colvar)
     nlev = length(collev.array)
     colnms = names(collev,1)
     coltot = sum(collev.array,1)
@@ -469,7 +469,7 @@ function bivariatexls(df::DataFrame,
     c = 0
     r += 2
     t[:write_string](r,c,"All",formats[:heading_left])
-    x = freqtable(df,colvar)
+    x = freqtable(df2,colvar)
     tot = sum(x.array)
     t[:write](r,c+1,tot,formats[:n_fmt_right])
     t[:write](r,c+2,1.0,formats[:pct_fmt_parens])
@@ -493,9 +493,10 @@ function bivariatexls(df::DataFrame,
         end
 
         # determine if varname is categorical or continuous
-        if typeof(df[varname]) <: PooledDataArray
+        if typeof(df2[varname]) <: PooledDataArray
             # categorial
-            x = freqtable(df,varname,colvar)
+            df3=df2[completecases(df2[:varname]),[varname,colvar]]
+            x = freqtable(df3,varname,colvar)
             rowval = names(x,1)
             rowtot = sum(x.array,2)
 
@@ -542,7 +543,8 @@ function bivariatexls(df::DataFrame,
             end
         else
             # continuous variable
-            y = tabstat(df,varname,colvar)
+            df3=df2[completecases(df2[:varname]),[varname,colvar]]
+            y = tabstat(df3,varname,colvar)
 
             # variable name
             t[:write_string](r,c,string(vars,", mean (SD)"),formats[:heading_left])

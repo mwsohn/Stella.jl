@@ -52,7 +52,7 @@ export  read_stata,  # read stata 13 and 14 files into DF
         eform,       # coeftable output to eform
         anova, anovap, # ANOVA table and p-value from ANOVA
         univariatexls, # output univariate statistics in an excel worksheet
-        bivariatesxls, # output bivariate statistics in an excel worksheet
+        bivariatexls, # output bivariate statistics in an excel worksheet
         glmxls, # output GLM output in an excel worksheet
         dfxls # output dataframe in an excel file
 

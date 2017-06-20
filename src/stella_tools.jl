@@ -846,11 +846,17 @@ end
 #--------------------------------------------------------------------------
 # pairwise correlations
 #--------------------------------------------------------------------------
+immutable pwcorr_return
+    r::AbstractArray
+    pval::AbstractArray
+    N::AbstractArray
+    colnms::Vector
+end
+
 """
-    pwcorr(a::AbstractArray; p = false)
-    pwcorr(a::AbstractArray...; p = false)
-    pwcorr(df::DataFrame; p = false, out=true)
-    pwcorr(df::DataFrame, args::Symbol...; p = false, out=true)
+    pwcorr(a::AbstractArray)
+    pwcorr(a::AbstractVector...)
+    pwcorr(df::DataFrame, args::Symbol...)
 
 Produces a n x n matrix that contain correlation coefficients between all `n` columns.
 When the option `p = true` is specified, it produces a second n x n matrix containing
@@ -858,54 +864,56 @@ p-values which is calculated using the Fisher transformation. When the option `o
 is set, pwcorr prints the correlation coeffients and p-values (if specified) to the console
 in addition to returning them in arrays.
 """
-function pwcorr(a::AbstractArray; p::Bool = false)
+function pwcorr(a::AbstractArray)
 
-    r = cor(a)
-
-    if p == false
-        return r
+    # if typeof(a) == DataFrame
+    #     a = a[completecases(a),:]
+    #     r = cor(Array(a))
+    #     colnames = string.(names(a))
+    # else
+    #     r = cor(a)
+    #     colnames = string.(1:size(a,2))
+    # end
+    #
+    cols = size(a,2)
+    N = zeros(Int64,cols,cols)
+    r = zeros(Float64,cols,cols)
+    pval = zeros(Float64,cols,cols)
+    if typeof(a) == DataFrame
+        colnames = names(a)
+    else
+        colnames = collect(1:size(a,2))
     end
 
-    (rows,cols) = size(a)
-    pval = zeros(Float64,cols,cols)
     for j = 1:cols
         for i = j:cols
             if i != j
+                if typeof(a) == DataFrame
+                    x = Array(a[completecases(a[[i,j]]),[i,j]])
+                else
+                    x = a[:,[i,j]]
+                end
+                r[i,j] = r[j,i] = cor(x)[1,2]
+                rows = N[i,j] = N[j,i] = size(x,1)
                 z = (sqrt(rows - 3) / 2)*log((1+r[i,j])/(1-r[i,j]))
                 pval[i,j] = pval[j,i] = Distributions.ccdf(Distributions.Normal(),z) / 2.0
             end
         end
     end
-    return r, pval
+    return pwcorr_return(r, pval, N, colnames)
 end
-pwcorr(a::AbstractArray...; p::Bool = false) = pwcorr(hcat(a...), p = p)
-function pwcorr(a::DataFrame; p::Bool = false, out = true)
-    b = pwcorr(Array(dropna(a)), p = p)
+pwcorr(a::AbstractArray...) = pwcorr(hcat(a...))
+pwcorr(a::DataFrame, args::Vector{Symbol}; out=true) = pwcorr(df[args], out = out)
 
-    if out == false
-        return b
-    end
+import Base.print
+function print(pr::pwcorr_return; width::Int8 = 9, precision::Int8 = 3, p = false, N = false)
 
-    Stella.print_pwcorr(b, p, string.(names(a)))
-    return b
-end
-pwcorr(a::DataFrame, args::Vector{Symbol}; p::Bool = false, out=true) = pwcorr(df[args], p = p, out = out)
+    ncol = size(pr.N,1)
 
-function print_pwcorr(b::Array, p::Bool, column_names::AbstractVector{String}; width::Int = 9)
+    print(repeat(" ",width)," ")
 
-    if p == true
-        bc = b[1]
-        bp = b[2]
-    else
-        bc = b
-    end
-
-    ncol = size(bc,1)
-
-    print(repeat(" ",width+1))
 
     for i = 1:ncol
-        print(prepend_spaces(column_names[i],width))
         if i < ncol
             print(" ")
         end
@@ -913,17 +921,18 @@ function print_pwcorr(b::Array, p::Bool, column_names::AbstractVector{String}; w
     print("\n")
 
     for i = 1:ncol
-        print(prepend_spaces(column_names[i],width)," ")
+        print(prepend_spaces(pr.colnames[i],width)," ")
         for j=1:i
-            print(@sprintf("%9.4f",bc[i,j])," ")
+            printf("%9.4f ",bc[i,j])
             if i == j
                 print("\n")
             end
         end
+    end
         if p == true
             print(repeat(" ",width+1))
             for j=1:i
-                print(@sprintf("%9.4f",bp[i,j])," ")
+                @sprintf("%9.4f ",bp[i,j])
                 if i == j
                     print("\n")
                 end
@@ -937,7 +946,7 @@ end
 #--------------------------------------------------------------------------
 using DataFrames, HypothesisTests
 
-immutable t_return
+immutable ttest_return
     df::DataFrame
     t::Float64
     dof::Int64
@@ -1160,7 +1169,7 @@ function ttest(df::DataFrame, varname::Symbol, val::Real; sig = 95)
 end
 
 import Base.print
-function print(t::t_return)
+function print(t::ttest_return)
     println(t.df)
     print("\n")
     @printf("t             = %.4f\n",t.t)
@@ -1300,9 +1309,9 @@ end
 
 immutable signtest_return
     df::DataFrame
-    p1::Float64
-    p2::Float64
-    p3::Float64
+    p_left::Float64
+    p_right::Float64
+    p_both::Float64
 end
 
 function signtest(df::DataFrame,var1::Symbol,var2::Symbol)
@@ -1347,7 +1356,7 @@ end
 
 function print(sr::signtest_return)
     print(sr.df,"\n\n")
-    @printf("Pr(#positive ≥ %d) = %.3f\n",sr.df[1,:observed],sr.p1)
-    @printf("Pr(#negative ≥ %d) = %.3f\n",sr.df[2,:observed],sr.p2)
-    @printf("Pr(#positive ≥ %d or #negative ≥ %d) = %.3f\n",sr.df[1,:observed],sr.df[2,:observed],sr.p3)
+    @printf("Pr(#positive ≥ %d) = %.3f\n",sr.df[1,:observed],sr.p_left)
+    @printf("Pr(#negative ≥ %d) = %.3f\n",sr.df[2,:observed],sr.p_right)
+    @printf("Pr(#positive ≥ %d or #negative ≥ %d) = %.3f\n",sr.df[1,:observed],sr.df[2,:observed],sr.p_both)
 end
