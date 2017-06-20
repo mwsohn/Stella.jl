@@ -493,7 +493,7 @@ function bivariatexls(df::DataFrame,
         end
 
         # determine if varname is categorical or continuous
-        if typeof(df2[varname]) <: PooledDataArray
+        if typeof(df2[varname]) <: PooledDataArray || eltype(df2[varname]) == String
             # categorial
             df3=df2[completecases(df2[[varname]]),[varname,colvar]]
             x = freqtable(df3,varname,colvar)
