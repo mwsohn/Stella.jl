@@ -495,7 +495,7 @@ function bivariatexls(df::DataFrame,
         # determine if varname is categorical or continuous
         if typeof(df2[varname]) <: PooledDataArray
             # categorial
-            df3=df2[completecases(df2[[:varname]]),[varname,colvar]]
+            df3=df2[completecases(df2[[varname]]),[varname,colvar]]
             x = freqtable(df3,varname,colvar)
             rowval = names(x,1)
             rowtot = sum(x.array,2)
@@ -543,23 +543,32 @@ function bivariatexls(df::DataFrame,
             end
         else
             # continuous variable
-            df3=df2[completecases(df2[[:varname]]),[varname,colvar]]
+            df3=df2[completecases(df2[[varname]]),[varname,colvar]]
             y = tabstat(df3,varname,colvar)
 
             # variable name
             t[:write_string](r,c,string(vars,", mean (SD)"),formats[:heading_left])
 
             # All
-            t[:write](r,c+1,mean(df[varname]),formats[:f_fmt_right])
-            t[:write](r,c+2,std(df[varname]),formats[:f_fmt_left_parens])
+            t[:write](r,c+1,mean(df3[varname]),formats[:f_fmt_right])
+            t[:write](r,c+2,std(df3[varname]),formats[:f_fmt_left_parens])
 
             # colvar levels
             for i = 1:nlev
-                t[:write](r,c+i*2+1,y[i,:mean],formats[:f_fmt_right])
-                t[:write](r,c+i*2+2,y[i,:sd],formats[:f_fmt_left_parens])
+                if i <= size(y,1) && y[i,:N] > 1
+                    t[:write](r,c+i*2+1,y[i,:mean],formats[:f_fmt_right])
+                    t[:write](r,c+i*2+2,y[i,:sd],formats[:f_fmt_left_parens])
+                else
+                    t[:write](r,c+i*2+1,"",formats[:f_fmt_right])
+                    t[:write](r,c+i*2+2,"",formats[:f_fmt_left_parens])
+                end
             end
-            pval = anovap(df,varname,colvar)
-            t[:write](r,c+(nlev+1)*2+1,pval < 0.001 ? "< 0.001" : pval,formats[:p_fmt])
+            if size(y,1) > 1
+                pval = anovap(df3,varname,colvar)
+                t[:write](r,c+(nlev+1)*2+1,pval < 0.001 ? "< 0.001" : pval,formats[:p_fmt])
+            else
+                t[:write](r,c+(nlev+1)*2+1,"",formats[:p_fmt])
+            end
 
             r += 1
         end
