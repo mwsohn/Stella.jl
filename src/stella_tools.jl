@@ -905,15 +905,14 @@ end
 pwcorr(a::AbstractArray...) = pwcorr(hcat(a...))
 pwcorr(a::DataFrame, args::Vector{Symbol}; out=true) = pwcorr(df[args], out = out)
 
+using Formatting
 import Base.print
 function print(pr::pwcorr_return; width::Int8 = 9, precision::Int8 = 3, p = false, N = false)
 
     ncol = size(pr.N,1)
 
-    print(repeat(" ",width)," ")
-
-
     for i = 1:ncol
+        print(prepend_spaces(pr.colnames[i],width))
         if i < ncol
             print(" ")
         end
