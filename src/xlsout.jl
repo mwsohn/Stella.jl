@@ -412,7 +412,7 @@ function bivariatexls(df::DataFrame,
     c = col
 
     # drop NAs in colvar
-    df2 = df[completecases(df[colvar]),:]
+    df2 = df[completecases(df[[colvar]]),:]
 
     # number of columns
     # column values
