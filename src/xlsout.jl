@@ -412,7 +412,7 @@ function bivariatexls(df::DataFrame,
     c = col
 
     # drop NAs in colvar
-    df2 = dropna(df,colvar)
+    df2 = df[!isna(df[colvar]),:]
 
     # number of columns
     # column values
