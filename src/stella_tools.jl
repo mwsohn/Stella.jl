@@ -905,40 +905,40 @@ end
 pwcorr(a::AbstractArray...) = pwcorr(hcat(a...))
 pwcorr(a::DataFrame, args::Vector{Symbol}; out=true) = pwcorr(df[args], out = out)
 
-using Formatting
-import Base.print
-function print(pr::pwcorr_return; width::Int8 = 9, precision::Int8 = 3, p = false, N = false)
-
-    ncol = size(pr.N,1)
-
-    for i = 1:ncol
-        print(prepend_spaces(pr.colnames[i],width))
-        if i < ncol
-            print(" ")
-        end
-    end
-    print("\n")
-
-    for i = 1:ncol
-        print(prepend_spaces(pr.colnames[i],width)," ")
-        for j=1:i
-            printf("%9.4f ",bc[i,j])
-            if i == j
-                print("\n")
-            end
-        end
-    end
-        if p == true
-            print(repeat(" ",width+1))
-            for j=1:i
-                @sprintf("%9.4f ",bp[i,j])
-                if i == j
-                    print("\n")
-                end
-            end
-        end
-    end
-end
+# using Formatting
+# import Base.print
+# function print(pr::pwcorr_return; width::Int8 = 9, precision::Int8 = 3, p = false, N = false)
+#
+#     ncol = size(pr.N,1)
+#
+#     for i = 1:ncol
+#         print(prepend_spaces(pr.colnames[i],width))
+#         if i < ncol
+#             print(" ")
+#         end
+#     end
+#     print("\n")
+#
+#     for i = 1:ncol
+#         print(prepend_spaces(pr.colnames[i],width)," ")
+#         for j=1:i
+#             printf("%9.4f ",bc[i,j])
+#             if i == j
+#                 print("\n")
+#             end
+#         end
+#     end
+#         if p == true
+#             print(repeat(" ",width+1))
+#             for j=1:i
+#                 @sprintf("%9.4f ",bp[i,j])
+#                 if i == j
+#                     print("\n")
+#                 end
+#             end
+#         end
+#     end
+# end
 
 #--------------------------------------------------------------------------
 # t-test
