@@ -389,7 +389,7 @@ function bivariatexls(df::DataFrame,
     rowvars::Vector{Symbol},
     wbook::PyObject,
     wsheet::AbstractString;
-    label_dict::Dict = nothing,
+    label_dict::Union{Void,Dict} = nothing,
     row::Int = 0,
     col::Int = 0)
 
