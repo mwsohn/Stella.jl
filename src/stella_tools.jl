@@ -162,9 +162,9 @@ function tab(df::DataFrame,args::Symbol...; rmna = true, weights::AbstractVector
         a = tab([df[y] for y in args]...)
     end
 
-    setdimnames!(a,args)
+    setdimnames!(a, args)
 
-    if length(a.dimnames) == 2
+    if ndims(a) == 2
         chisq, dof, pval = chisq_2way(a)
     else
         chisq = pval = Inf
@@ -225,8 +225,8 @@ end
 
 function chisq_2way(t::NamedArray)
 
-  if length(t.dimnames) != 2
-      error("Only two dimensional arrays are currently supported")
+  if ndims(t) != 2
+      error("Only two dimensional arrays are supported")
   end
 
   rowsum = Array(sum(t,2))
