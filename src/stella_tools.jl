@@ -167,10 +167,11 @@ function tab(df::DataFrame,args::Symbol...; rmna = true, weights::AbstractVector
     if length(a.dimnames) == 2
         chisq, dof, pval = chisq_2way(a)
     else
-        chisq = dof = pval = NaN
+        chisq = pval = Inf
+        dof = 0
     end
-    
-    return tab_return(a,chisq, dof, pval)
+
+    return tab_return(a, chisq, dof, pval)
 end
 tab(args::AbstractVector...; weights::AbstractVector = FreqTables.UnitWeights() ) = ___tab(args)
 function ___tab(x::NTuple)
