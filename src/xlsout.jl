@@ -495,7 +495,7 @@ function bivariatexls(df::DataFrame,
         # determine if varname is categorical or continuous
         if typeof(df2[varname]) <: PooledDataArray
             # categorial
-            df3=df2[completecases(df2[:varname]),[varname,colvar]]
+            df3=df2[completecases(df2[[:varname]]),[varname,colvar]]
             x = freqtable(df3,varname,colvar)
             rowval = names(x,1)
             rowtot = sum(x.array,2)
@@ -543,7 +543,7 @@ function bivariatexls(df::DataFrame,
             end
         else
             # continuous variable
-            df3=df2[completecases(df2[:varname]),[varname,colvar]]
+            df3=df2[completecases(df2[[:varname]]),[varname,colvar]]
             y = tabstat(df3,varname,colvar)
 
             # variable name
