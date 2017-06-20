@@ -155,7 +155,7 @@ function tab(df::DataFrame,args::Symbol...; rmna = true, weights::AbstractVector
 
     # find out if the args columns contain any NA values
     if rmna || cc == size(df,1)
-        a = FreqTales.freqtable([df[y] for y in args]...; weights = weights)
+        a = FreqTables.freqtable([df[y] for y in args]...; weights = weights)
     else
         # there are NA values and so we cannot use freqtable
         # weights are not allowed, either
