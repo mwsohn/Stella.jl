@@ -162,7 +162,7 @@ function tab(df::DataFrame,args::Symbol...; rmna = true, weights::AbstractVector
         a = tab([df[y] for y in args]...)
     end
 
-    setdimnames!(a, collect(args))
+    setdimnames!(a, args)
 
     if ndims(a) == 2
         chisq, dof, pval = chisq_2way(a)
@@ -211,12 +211,9 @@ function ___tab(x::NTuple)
 
     dimnames = Vector{Array}(ncols)
     for i = 1:ncols
-        dimnames[i] = Vector{String}(vnums[i])
-        for j = 1:length(vdims[i])
-            dimnames[i][j] = string(vdims[i][j])
-        end
+        dimnames[i] = string.(vdims[i])
         if vnums[i] > length(vdims[i])
-            dimnames[i][vnums[i]] = "NA"
+            push!(dimnames[i],"NA")
         end
     end
 
@@ -852,6 +849,104 @@ function anova(df::DataFrame,dep::Symbol,cat::Symbol)
 	return df2
 end
 
+
+
+#--------------------------------------------------------------------------
+# pairwise correlations
+#--------------------------------------------------------------------------
+immutable pwcorr_return
+    r::AbstractArray
+    pval::AbstractArray
+    N::AbstractArray
+    colnms::Vector
+end
+
+"""
+    pwcorr(a::AbstractArray)
+    pwcorr(a::AbstractVector...)
+    pwcorr(df::DataFrame, args::Symbol...)
+
+Produces a n x n matrix that contain correlation coefficients between all `n` columns.
+When the option `p = true` is specified, it produces a second n x n matrix containing
+p-values which is calculated using the Fisher transformation. When the option `out = true`
+is set, pwcorr prints the correlation coeffients and p-values (if specified) to the console
+in addition to returning them in arrays.
+"""
+function pwcorr(a::AbstractArray)
+
+    # if typeof(a) == DataFrame
+    #     a = a[completecases(a),:]
+    #     r = cor(Array(a))
+    #     colnames = string.(names(a))
+    # else
+    #     r = cor(a)
+    #     colnames = string.(1:size(a,2))
+    # end
+    #
+    cols = size(a,2)
+    N = zeros(Int64,cols,cols)
+    r = zeros(Float64,cols,cols)
+    pval = zeros(Float64,cols,cols)
+    if typeof(a) == DataFrame
+        colnames = names(a)
+    else
+        colnames = collect(1:size(a,2))
+    end
+
+    for j = 1:cols
+        for i = j:cols
+            if i != j
+                if typeof(a) == DataFrame
+                    x = Array(a[completecases(a[[i,j]]),[i,j]])
+                else
+                    x = a[:,[i,j]]
+                end
+                r[i,j] = r[j,i] = cor(x)[1,2]
+                rows = N[i,j] = N[j,i] = size(x,1)
+                z = (sqrt(rows - 3) / 2)*log((1+r[i,j])/(1-r[i,j]))
+                pval[i,j] = pval[j,i] = Distributions.ccdf(Distributions.Normal(),z) / 2.0
+            end
+        end
+    end
+    return pwcorr_return(r, pval, N, colnames)
+end
+pwcorr(a::AbstractArray...) = pwcorr(hcat(a...))
+pwcorr(a::DataFrame, args::Vector{Symbol}; out=true) = pwcorr(df[args], out = out)
+
+# using Formatting
+# import Base.print
+# function print(pr::pwcorr_return; width::Int8 = 9, precision::Int8 = 3, p = false, N = false)
+#
+#     ncol = size(pr.N,1)
+#
+#     for i = 1:ncol
+#         print(prepend_spaces(pr.colnames[i],width))
+#         if i < ncol
+#             print(" ")
+#         end
+#     end
+#     print("\n")
+#
+#     for i = 1:ncol
+#         print(prepend_spaces(pr.colnames[i],width)," ")
+#         for j=1:i
+#             printf("%9.4f ",bc[i,j])
+#             if i == j
+#                 print("\n")
+#             end
+#         end
+#     end
+#         if p == true
+#             print(repeat(" ",width+1))
+#             for j=1:i
+#                 @sprintf("%9.4f ",bp[i,j])
+#                 if i == j
+#                     print("\n")
+#                 end
+#             end
+#         end
+#     end
+# end
 
 #--------------------------------------------------------------------------
 # t-test
