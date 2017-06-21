@@ -162,7 +162,7 @@ function tab(df::DataFrame,args::Symbol...; rmna = true, weights::AbstractVector
         a = tab([df[y] for y in args]...)
     end
 
-    setdimnames!(a, args)
+    setdimnames!(a, collect(args))
 
     if ndims(a) == 2
         chisq, dof, pval = chisq_2way(a)
@@ -211,7 +211,6 @@ function ___tab(x::NTuple; weights::AbstractVector = FreqTables.UnitWeights())
         @inbounds a[idxvec...] += 1
     end
 
-    println(vdims)
     dimnames = Vector{Vector}(ncols)
     for i = 1:ncols
         if naidx[i]
