@@ -162,6 +162,8 @@ function tab(df::DataFrame,args::Symbol...; rmna = true, weights::AbstractVector
         a = tab([df[y] for y in args]...)
     end
 
+    println(names(a))
+
     setdimnames!(a, args)
 
     if ndims(a) == 2
@@ -173,8 +175,8 @@ function tab(df::DataFrame,args::Symbol...; rmna = true, weights::AbstractVector
 
     return tab_return(a, chisq, dof, pval)
 end
-tab(args::AbstractVector...; weights::AbstractVector = FreqTables.UnitWeights() ) = ___tab(args)
-function ___tab(x::NTuple)
+tab(args::AbstractVector...; weights::AbstractVector = FreqTables.UnitWeights() ) = ___tab(args, weights = weights)
+function ___tab(x::NTuple; weights::AbstractVector = FreqTables.UnitWeights())
 
     ncols = length(x)
     nrows = length(x[1])
@@ -187,10 +189,12 @@ function ___tab(x::NTuple)
     # create output arrays
     vdims = Array{Array,1}(ncols)
     vnums = zeros(Int,ncols)
+    naidx = falses(ncols)
     for i = 1:ncols
         if sum(x[i].na) > 0 # there are NA values in this vector
             vdims[i] = sort(levels(dropna(x[i])))
             vnums[i] = size(vdims[i],1) + 1 # one for the NA
+            naidx[i] = true
         else
             vdims[i] = sort(levels(x[i]))
             vnums[i] = size(vdims[i],1)
@@ -209,11 +213,12 @@ function ___tab(x::NTuple)
         @inbounds a[idxvec...] += 1
     end
 
-    dimnames = Vector{Array}(ncols)
+    dimnames = Vector{Vector}(ncols)
     for i = 1:ncols
-        dimnames[i] = string.(vdims[i])
-        if vnums[i] > length(vdims[i])
-            push!(dimnames[i],"NA")
+        if naidx[i]
+            dimnames[i] = vcat(string.(vdims[i]),"NA")
+        else
+            dimnames[i] = vdims[i]
         end
     end
 
