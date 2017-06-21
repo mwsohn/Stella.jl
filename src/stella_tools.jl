@@ -124,7 +124,7 @@ end
 univariate(df::DataFrame,var::Symbol) = univariate(df[var])
 
 immutable tab_return
-    na::NamedArray
+    na::NamedArrays.NamedArray
     chisq::Float64
     dof::Int64
     p::Float64
@@ -154,7 +154,7 @@ function tab(df::DataFrame,args::Symbol...; rmna = true, weights::AbstractVector
     end
 
     # find out if the args columns contain any NA values
-    if rmna || cc == size(df,1)
+    if rmna == true || cc == size(df,1)
         a = FreqTables.freqtable([df[y] for y in args]...; weights = weights)
     else
         # there are NA values and so we cannot use freqtable
@@ -173,8 +173,8 @@ function tab(df::DataFrame,args::Symbol...; rmna = true, weights::AbstractVector
 
     return tab_return(a, chisq, dof, pval)
 end
-tab(args::AbstractVector...; weights::AbstractVector = FreqTables.UnitWeights() ) = ___tab(args, weights = weights)
-function ___tab(x::NTuple; weights::AbstractVector = FreqTables.UnitWeights())
+tab(args::AbstractVector...) = ___tab(args)
+function ___tab(x::NTuple)
 
     ncols = length(x)
     nrows = length(x[1])
@@ -185,8 +185,8 @@ function ___tab(x::NTuple; weights::AbstractVector = FreqTables.UnitWeights())
     end
 
     # create output arrays
-    vdims = Array{Array,1}(ncols)
-    vnums = zeros(Int,ncols)
+    vdims = Vector{Vector}(ncols)
+    vnums = zeros(Int64,ncols)
     naidx = falses(ncols)
     for i = 1:ncols
         if sum(x[i].na) > 0 # there are NA values in this vector
@@ -200,8 +200,8 @@ function ___tab(x::NTuple; weights::AbstractVector = FreqTables.UnitWeights())
     end
 
     # allocate memory for the output array
-    a = zeros(Int,vnums...)
-    idxvec = zeros(Int,ncols)
+    a = zeros(Int64,vnums...)
+    idxvec = zeros(Int64,ncols)
 
     # get frequencies with the NA values in the vnums... cell for each column
     for i = 1:nrows
