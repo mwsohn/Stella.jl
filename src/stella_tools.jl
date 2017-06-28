@@ -174,7 +174,7 @@ function tab(df::DataFrame,args::Symbol...; rmna = true, weights::AbstractVector
     return tab_return(a, chisq, dof, pval)
 end
 #tab(args::AbstractVector...) = ___tab(args)
-functiontab(x::AbstractVector...)
+function tab(x::AbstractVector...)
 
     ncols = length(x)
     nrows = length(x[1])
