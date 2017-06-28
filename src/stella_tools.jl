@@ -164,7 +164,7 @@ function tab(df::DataFrame,args::Symbol...; rmna = true, weights::AbstractVector
 
     setdimnames!(a, collect(args))
 
-    if ndims(a) == 2
+    if ndims(a) == 2 && sum(a.array) > 1
         chisq, dof, pval = chisq_2way(a)
     else
         chisq = pval = Inf
