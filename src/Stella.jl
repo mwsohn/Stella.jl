@@ -1,4 +1,4 @@
-VERSION >= v"0.5.0"
+VERSION >= v"0.5.0" && __precomplie__()
 
 module Stella
 

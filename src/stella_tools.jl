@@ -173,7 +173,6 @@ function tab(df::DataFrame,args::Symbol...; rmna = true, weights::AbstractVector
 
     return tab_return(a, chisq, dof, pval)
 end
-#tab(args::AbstractVector...) = ___tab(args)
 function tab(x::AbstractVector...)
 
     ncols = length(x)
@@ -674,27 +673,6 @@ function xtile(da::DataArray ; nq::Int = 4, cutoffs::Union{Void,AbstractVector} 
 	return convert(DataArray{Int8,1},DataArray([isna(x) ? NA : qval(x,cutoffs) for x in da]))
 end
 xtile(df::DataFrame,arg::Symbol; nq::Int = 4, cutoffs::Union{Void,AbstractVector} = nothing) = xtile(df[arg], nq = nq, cutoffs = cutoffs)
-
-#
-# function xtile(da::DataArray ; nq::Int = 4)
-#
-# 	function qval(val::Real,cut::Vector)
-# 		for i in 1:length(cut)-1
-# 			if cut[i] <= val <= cut[i+1]
-# 				return i
-# 			end
-# 		end
-# 		warn("Error - check qval function")
-# 	end
-# 	cutoffs = nquantile(dropna(da),nq)
-#
-# 	return convert(DataArray{Int8,1},DataArray([isna(x) ? NA : qval(x,cutoffs) for x in da]))
-# end
-# xtile(df::DataFrame,arg::Symbol; nq::Int = 4) = xtile(df[arg], nq = nq)
-#
-
-
-
 
 # recode a categorical variable to new values
 function recode(da::DataArray, coding::Dict)
