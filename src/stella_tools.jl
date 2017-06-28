@@ -124,7 +124,7 @@ end
 univariate(df::DataFrame,var::Symbol) = univariate(df[var])
 
 immutable tab_return
-    na::NamedArrays.NamedArray
+    na
     chisq::Float64
     dof::Int64
     p::Float64
@@ -173,8 +173,8 @@ function tab(df::DataFrame,args::Symbol...; rmna = true, weights::AbstractVector
 
     return tab_return(a, chisq, dof, pval)
 end
-tab(args::AbstractVector...) = ___tab(args)
-function ___tab(x::NTuple)
+#tab(args::AbstractVector...) = ___tab(args)
+functiontab(x::AbstractVector...)
 
     ncols = length(x)
     nrows = length(x[1])
