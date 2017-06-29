@@ -482,7 +482,7 @@ end
 """
     destring(da::DataArray;force=true)
     destring(df::DataFrmae,strvar::Symbol;force=true)
-    destring!(df::DataFrame,strvars::Array{Symbol,1}; newvars::Array{Symbol,1} = [], force=true, replace=true)
+    destring!(df::DataFrame,strvars; newvars::Vector{Symbol} = [], force=true, replace=false)
 
 Convert a string DataArray to a numeric DataArray. Use `force = true` to coerce conversion of alphanumeric strings to
 `NA` values. If `force = false`, any DataArray containing non-numeric values are not converted.
@@ -498,7 +498,7 @@ function destring(da::DataArray; force=true)
     isfloat = false
     alpha = false
     for i in length(da)
-        if sum([isalpha(x) for x in da[i]]) > 0
+        if sum([!isna(x) && isalpha(x) for x in da[i]]) > 0
             alpha = true
         end
         if ismatch(r"[,0-9]*\.[0-9]+",da[i])
@@ -520,8 +520,7 @@ function destring(da::DataArray; force=true)
     return dacompress(da2)
 end
 destring(df::DataFrame,strvar::Symbol; force=true) = destring(df[strvar],force=force)
-
-function destring!(df::DataFrame,strvars::Array{Symbol,1}; newvars::Array{Symbol,1} = [], force=true, replace=false)
+function destring!(df::DataFrame,strvars; newvars::Vector{Symbol} = [], force=true, replace=false)
 
     if replace
         for v in strvars
