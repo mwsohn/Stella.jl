@@ -295,7 +295,7 @@ function desc(df::DataFrame;label_dict::Union{Void,Dict}=nothing)
     eltyp = string.(eltypes(df))
     for (i,v) in enumerate(names(df))
 
-        if contains(["String","AbstractString"],eltyp[i])
+        if in(eltyp[i],["String","AbstractString"])
             eltyp[i] = string("Str",getmaxlength(df[i]))
         end
 
