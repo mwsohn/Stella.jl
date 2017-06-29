@@ -497,11 +497,12 @@ function destring(da::DataArray; force=true)
     # check if the values include any alphabetic characters or decimals
     isfloat = false
     alpha = false
-    for i in length(da)
-        if sum([isalpha(x) for x in dropna(da[i])]) > 0
+    da_safe = dropna(da)
+    for i in length(da_safe)
+        if sum([isalpha(x) for x in da_safe[i]]) > 0
             alpha = true
         end
-        if ismatch(r"[,0-9]*\.[0-9]+",da[i])
+        if ismatch(r"[,0-9]*\.[0-9]+",da_safe[i])
             isfloat = true
         end
     end
