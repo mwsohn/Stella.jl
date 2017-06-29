@@ -1348,3 +1348,29 @@ function print(sr::signtest_return)
     @printf("Pr(#negative ≥ %d) = %.3f\n",sr.df[2,:observed],sr.p_right)
     @printf("Pr(#positive ≥ %d or #negative ≥ %d) = %.3f\n",sr.df[1,:observed],sr.df[2,:observed],sr.p_both)
 end
+
+
+function dir(str::String)
+  if contains(str,"*") || contains(str,"?")
+    printdir(glob(str))
+  elseif str == "." || str == ".."
+    printdir(glob(string(str,"/*")))
+  elseif str == ""
+    printdir(readdir())
+  else
+    printdir(readdir(str))
+  end
+end
+dir() = dir("")
+
+function printdir(vstr::Vector{String})
+
+  for i=1:length(vstr)
+    vstr[i] = isdir(vstr[i]) ? string(vstr[i],"/") : vstr[i]
+  end
+  maxlen = getmaxlength(vstr)
+
+  for i=1:length(vstr)
+    println(append_spaces(vstr[i],maxlen),"  ", datasize(stat(vstr[i]).size))
+  end
+end

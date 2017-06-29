@@ -326,18 +326,24 @@ function desc(df::DataFrame;label_dict::Union{Void,Dict}=nothing)
     end
 end
 
-function getmaxlength(da::DataArray)
-    maxlen = 0
-
-    for i = 1:length(da)
-        if isna(da[i])
-            continue
-        end
-        maxlen = max(maxlen,length(da[i]))
-    end
-
-    return maxlen
+function getmaxlength(s::AbstractVector{String})
+  if typeof(s) == DataArray
+    return maximum(length.(dropna(s)))
+  end
+  return maximum(length.(s))
 end
+# function getmaxlength(da::DataArray)
+#     maxlen = 0
+#
+#     for i = 1:length(da)
+#         if isna(da[i])
+#             continue
+#         end
+#         maxlen = max(maxlen,length(da[i]))
+#     end
+#
+#     return maxlen
+# end
 
 """
     ds(df::DataFrame, typ::Type, args...)

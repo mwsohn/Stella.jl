@@ -8,7 +8,7 @@ module Stella
 ##
 ################################################################################
 
-using DataFrames, Distributions, GLM, StatsBase
+using DataFrames, Distributions, GLM, StatsBase, Glob, Humanize
 
 ##############################################################################
 ##
@@ -51,10 +51,15 @@ export  read_stata,  # read stata 13 and 14 files into DF
         recode,      # recode values in a variable
         eform,       # coeftable output to eform
         anova, anovap, # ANOVA table and p-value from ANOVA
+        pwcorr,      # pairwise correlations
+        ranksum,     # ranksum test
+        signrank,    # signed rank test
+        ttest,       # t-test
         univariatexls, # output univariate statistics in an excel worksheet
         bivariatexls, # output bivariate statistics in an excel worksheet
         glmxls, # output GLM output in an excel worksheet
-        dfxls # output dataframe in an excel file
+        dfxls, # output dataframe in an excel file
+        dir # directory listing
 
 
 
