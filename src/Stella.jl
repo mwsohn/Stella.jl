@@ -47,6 +47,7 @@ export  read_stata,  # read stata 13 and 14 files into DF
         rowstat,     #
         duplicates,  # report, drop, or tag duplicate rows
         destring,    # convert strings to numeric values in a DataArray
+        destring!,   # in-place versionof destring
         renvars!,    # change variable names to either lower or upper case
         recode,      # recode values in a variable
         eform,       # coeftable output to eform
@@ -57,9 +58,12 @@ export  read_stata,  # read stata 13 and 14 files into DF
         ttest,       # t-test
         univariatexls, # output univariate statistics in an excel worksheet
         bivariatexls, # output bivariate statistics in an excel worksheet
-        glmxls, # output GLM output in an excel worksheet
-        dfxls, # output dataframe in an excel file
-        dir # directory listing
+        glmxls,     # output GLM output in an excel worksheet
+        dfxls,      # output dataframe in an excel file
+        dir,        # directory listing
+        ds,         # filenames according to type, length, or regex
+        getmaxlength # maximum length of a string variable
+
 
 
 

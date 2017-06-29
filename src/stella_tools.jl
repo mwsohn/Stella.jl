@@ -498,7 +498,7 @@ function destring(da::DataArray; force=true)
     isfloat = false
     alpha = false
     for i in length(da)
-        if sum([!isna(x) && isalpha(x) for x in da[i]]) > 0
+        if sum([isalpha(x) for x in dropna(da[i]])) > 0
             alpha = true
         end
         if ismatch(r"[,0-9]*\.[0-9]+",da[i])
