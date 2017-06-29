@@ -295,12 +295,12 @@ function desc(df::DataFrame;label_dict::Union{Void,Dict}=nothing)
     eltyp = string.(eltypes(df))
     for (i,v) in enumerate(names(df))
 
-        if eltyp[i] <: AbstractString
+        if contains(["String","AbstractString"],eltyp[i])
             eltyp[i] = string("Str",getmaxlength(df[i]))
         end
 
         v_str = string(v)
-        print(prepend_spaces(string(i),maxobs),"  ",append_spaces(v_str,maxval),"  ",append_spaces(string(eltyp[i]),maxtype),"  ")
+        print(prepend_spaces(string(i),maxobs),"  ",append_spaces(v_str,maxval),"  ",append_spaces(eltyp[i],maxtype),"  ")
 
         if label_dict != nothing
             if haskey(lablab,v_str)
