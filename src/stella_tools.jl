@@ -498,7 +498,7 @@ function destring(da::DataArray; force=true)
     isfloat = false
     alpha = false
     for i in length(da)
-        if isalpha(da[i])
+        if sum([isalpha(x) for x in da[i]) > 0
             alpha = true
         end
         if ismatch(r"[,0-9]*\.[0-9]+",da[i])
@@ -510,11 +510,11 @@ function destring(da::DataArray; force=true)
         error(arg," contains alphabetic letters. Use 'force=true' option to coerce conversion.")
     end
 
-    T = isfloat ? Float64 : Int
+    T = isfloat ? Float64 : Int64
     da2 = DataArray(T,size(da,1))
 
     for i in 1:size(da,1)
-        da2[i] = isna(da[i]) || isalpha(da[i]) ? NA : parse(T,da[i])
+        da2[i] = isna(da[i]) ? NA : parse(T,da[i])
     end
 
     return dacompress(da2)

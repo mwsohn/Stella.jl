@@ -292,12 +292,11 @@ function desc(df::DataFrame;label_dict::Union{Void,Dict}=nothing)
         println(repeat("-",maxobs+maxval+maxtype+maxlab+maxformat+30))
     end
 
-    i=1
-    eltyp = eltypes(df)
-    for v::Symbol in names(df)
+    eltyp = string.(eltypes(df))
+    for (i,v) in enumerate(names(df))
 
         if eltyp[i] <: AbstractString
-            eltyp[i] = Type(String)
+            eltyp[i] = string("Str",getmaxlength(df[i]))
         end
 
         v_str = string(v)
@@ -322,7 +321,6 @@ function desc(df::DataFrame;label_dict::Union{Void,Dict}=nothing)
         end
 
         print("\n")
-        i += 1
     end
 end
 
@@ -416,11 +414,11 @@ function ds(df::DataFrame, typ::Type, args...)
 
             maxlen = getmaxlength(df[v])
             if length(args) == 1
-                if args[1] <= maxlength
+                if args[1] <= maxlen
                     push!(dslist,v)
                 end
             elseif length(args) == 2
-                if args[1] <= maxlength <= args[2]
+                if args[1] <= maxlen <= args[2]
                     push!(dslist,v)
                 end
             end
