@@ -296,7 +296,7 @@ end
 
 
 """
-    toNA(da::DataArray,v::Array{Symbol,1})
+    toNA(da::DataArray,v::Vector)
 
 Convert values in `v` array to NAs in the `da` DataArray and return a new DataArray.
 """
@@ -685,14 +685,12 @@ function recode(da::DataArray, coding::Dict)
         end
     end
 
-    # create a new column
-    # df[new] = Array{Int8,1}(size(df,1))
-    ra = Array{Any,1}(size(df,1))
-    for i in 1:size(df,1)
+    ra = similar(da)
+    for i in 1:length(da)
         ra[i] = haskey(coding2,da[i]) ? coding2[da[i]] : da[i]
     end
 
-    return convert(DataArray{Int8,1},ra)
+    return ra
 end
 recode(df::DataFrame,varname::Symbol,coding::Dict) = recode(df[varname],coding)
 
