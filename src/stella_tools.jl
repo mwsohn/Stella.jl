@@ -674,22 +674,40 @@ function xtile(da::DataArray ; nq::Int = 4, cutoffs::Union{Void,AbstractVector} 
 end
 xtile(df::DataFrame,arg::Symbol; nq::Int = 4, cutoffs::Union{Void,AbstractVector} = nothing) = xtile(df[arg], nq = nq, cutoffs = cutoffs)
 
-# recode a categorical variable to new values
-function recode(da::DataArray, coding::Dict)
-    #df[new] = DataArray([isna(x) ? NA : coding[x] for x in df[old]])
-    # first create another dict whose keys do not include arrays
-    coding2 = Dict()
-    for key in keys(coding)
-        for k in key
-            coding2[k] = coding[key]
+"""
+    recode(da::DataArray,dict::Dict)
+    recode(df::DataFrame,v::Symbol,dict::Dict)
+
+Recodes values in `da` or `df[v]` to values specified in `dict` dictionary.
+
+## Example
+
+```jldoctest
+julia> df = DataFrame(race = ["White","White","Black","Other","Hispanic"], sex = ["M","F","M","M","F"])
+5×2 DataFrames.DataFrame
+│ Row │ race       │ sex │
+├─────┼────────────┼─────┤
+│ 1   │ "White"    │ "M" │
+│ 2   │ "White"    │ "F" │
+│ 3   │ "Black"    │ "M" │
+│ 4   │ "Other"    │ "M" │
+│ 5   │ "Hispanic" │ "F" │
+
+julia> df[:race2] = recode(df,:race,Dict("White" => "1","Black" => "2", "Hispanic" => "3", "Other" => "4"))
+```
+"""
+function recode(da::DataArray, coding::Dict; restna = false)
+    ra = DataArray(eltype(da),length(da))
+    for i in 1:length(da)
+        if isna(da[i])
+            continue
+        end
+        if restna
+            ra[i] = haskey(coding,da[i]) ? coding[da[i]] : NA
+        else
+            ra[i] = haskey(coding,da[i]) ? coding[da[i]] : da[i]
         end
     end
-
-    ra = similar(da)
-    for i in 1:length(da)
-        ra[i] = haskey(coding2,da[i]) ? coding2[da[i]] : da[i]
-    end
-
     return ra
 end
 recode(df::DataFrame,varname::Symbol,coding::Dict) = recode(df[varname],coding)
