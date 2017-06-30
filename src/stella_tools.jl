@@ -675,10 +675,13 @@ end
 xtile(df::DataFrame,arg::Symbol; nq::Int = 4, cutoffs::Union{Void,AbstractVector} = nothing) = xtile(df[arg], nq = nq, cutoffs = cutoffs)
 
 """
-    recode(da::DataArray,dict::Dict)
-    recode(df::DataFrame,v::Symbol,dict::Dict)
+    recode(da::DataArray,dict::Dict; restna=false)
+    recode(df::DataFrame,v::Symbol,dict::Dict; restna=false)
 
 Recodes values in `da` or `df[v]` to values specified in `dict` dictionary.
+An option `restna = true` will convert all values in the original data array that are
+not a key in `dict` to NAs. Values in `dict` must be the same type as the original
+value or integer.
 
 ## Example
 
@@ -693,11 +696,35 @@ julia> df = DataFrame(race = ["White","White","Black","Other","Hispanic"], sex =
 │ 4   │ "Other"    │ "M" │
 │ 5   │ "Hispanic" │ "F" │
 
-julia> df[:race2] = recode(df,:race,Dict("White" => "1","Black" => "2", "Hispanic" => "3", "Other" => "4"))
+julia> df[:race2] = recode(df,:race,Dict("White" => 1,"Black" => 2, "Hispanic" => 3, "Other" => 4))
+5-element DataArrays.DataArray{Int8,1}:
+ 1
+ 1
+ 2
+ 4
+ 3
+
+ julia> df
+5×3 DataFrames.DataFrame
+│ Row │ race       │ sex │ race2 │
+├─────┼────────────┼─────┼───────┤
+│ 1   │ "White"    │ "M" │ 1     │
+│ 2   │ "White"    │ "F" │ 1     │
+│ 3   │ "Black"    │ "M" │ 2     │
+│ 4   │ "Other"    │ "M" │ 4     │
+│ 5   │ "Hispanic" │ "F" │ 3     │
+
 ```
+
 """
 function recode(da::DataArray, coding::Dict; restna = false)
-    ra = DataArray(eltype(da),length(da))
+    val = values(coding)
+    if !(eltype(da) <: Integer) && sum([typeof(v) <: Integer || isna(v) for v in val]) == length(val)
+        ra = DataArray(Int64,length(da))
+    else
+        ra = DataArray(eltype(da),length(da))
+    end
+
     for i in 1:length(da)
         if isna(da[i])
             continue
@@ -708,9 +735,12 @@ function recode(da::DataArray, coding::Dict; restna = false)
             ra[i] = haskey(coding,da[i]) ? coding[da[i]] : da[i]
         end
     end
+    if eltype(ra) <: Integer
+        return dacompress(ra)
+    end
     return ra
 end
-recode(df::DataFrame,varname::Symbol,coding::Dict) = recode(df[varname],coding)
+recode(df::DataFrame,varname::Symbol,coding::Dict; restna = false) = recode(df[varname],coding,restna=restna)
 
 #----------------------------------------------------------------------------
 # eform

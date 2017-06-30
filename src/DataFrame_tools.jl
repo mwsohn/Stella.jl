@@ -218,9 +218,11 @@ label["label"] = Dict(
     )
 ```
 """
-function desc(df::DataFrame;label_dict::Union{Void,Dict}=nothing)
+function desc(df::DataFrame,varnames::Vector=[];label_dict::Union{Void,Dict}=nothing)
 
-    varnames = names(df)
+    if length(varnames) == 0
+        varnames = names(df)
+    end
 
     varlab = label_dict != nothing && haskey(label_dict,"variable") ? label_dict["variable"] : Dict()
     lablab = label_dict != nothing && haskey(label_dict,"label") ? label_dict["label"] : Dict()
@@ -229,16 +231,17 @@ function desc(df::DataFrame;label_dict::Union{Void,Dict}=nothing)
     varlen = zeros(Int,size(df,2)) # length of variable names
     lablen = zeros(Int,size(df,2)) # length of value labels
     forlen = zeros(Int,size(df,2)) # length of display formats
-    for i = 1:size(df,2)
-        varlen[i] = length(string(varnames[i]))
+    for (i,v) in enumerate(varnames)
+        varstr = string(v)
+        varlen[i] = length(varstr)
         if label_dict != nothing
-            if haskey(lablab,string(varnames[i]))
-                tmplen = length(lablab[string(varnames[i])])
-                lablen[i] = length(lablab[string(varnames[i])])
+            if haskey(lablab,varstr)
+                tmplen = length(lablab[varstr])
+                lablen[i] = length(lablab[varstr])
             end
-            if haskey(forlab,string(varnames[i]))
-                tmplen = length(forlab[string(varnames[i])])
-                forlen[i] = length(forlab[string(varnames[i])])
+            if haskey(forlab,varstr)
+                tmplen = length(forlab[varstr])
+                forlen[i] = length(forlab[varstr])
             end
         end
     end
@@ -292,31 +295,32 @@ function desc(df::DataFrame;label_dict::Union{Void,Dict}=nothing)
         println(repeat("-",maxobs+maxval+maxtype+maxlab+maxformat+30))
     end
 
-    eltyp = string.(eltypes(df))
-    for (i,v) in enumerate(names(df))
+    for (i,v) in enumerate(varnames)
 
-        if in(eltyp[i],["String","AbstractString"])
-            eltyp[i] = string("Str",getmaxlength(df[i]))
+        eltyp = string(eltype(df[v]))
+
+        if in(eltyp,["String","AbstractString"])
+            eltyp = string("Str",getmaxlength(df[v]))
         end
 
-        v_str = string(v)
-        print(prepend_spaces(string(i),maxobs),"  ",append_spaces(v_str,maxval),"  ",append_spaces(eltyp[i],maxtype),"  ")
+        varstr = string(v)
+        print(prepend_spaces(string(i),maxobs),"  ",append_spaces(varstr,maxval),"  ",append_spaces(eltyp,maxtype),"  ")
 
         if label_dict != nothing
-            if haskey(lablab,v_str)
-                print(append_spaces(lablab[v_str],maxlab),"  ")
+            if haskey(lablab,varstr)
+                print(append_spaces(lablab[varstr],maxlab),"  ")
             else
                 print(repeat(" ",maxlab+2))
             end
 
-            if haskey(forlab,v_str)
-                print(append_spaces(forlab[v_str],maxformat),"  ")
+            if haskey(forlab,varstr)
+                print(append_spaces(forlab[varstr],maxformat),"  ")
             else
                 print(repeat(" ",maxformat+2))
             end
 
-            if haskey(varlab,v_str)
-                print(varlab[v_str])
+            if haskey(varlab,varstr)
+                print(varlab[varstr])
             end
         end
 
