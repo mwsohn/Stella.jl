@@ -167,6 +167,7 @@ function tab(df::DataFrame,args::Symbol...; label_dict::Union{Void,Dict} = nothi
         vdicts = OrderedDict[]
         for (i,v) in enumerate(NamedArrays.dimnames(a))
             vs = string(v)
+            d = Dict()
             if haskey(label_dict["label"],vs) && haskey(label_dict["value"],label_dict["label"][vs])
                 lblname = label_dict["label"][vs]
                 d = label_dict["value"][lblname]
@@ -174,7 +175,7 @@ function tab(df::DataFrame,args::Symbol...; label_dict::Union{Void,Dict} = nothi
             val = names(a,i)
             od = OrderedDict()
             for j=1:length(val)
-                od[val[j]] = isdefined(:d) ? (haskey(d,val[j]) ? d[val[j]] : string(val[j])) : val[j]
+                od[val[j]] = length(d) > 0 ? (haskey(d,val[j]) ? d[val[j]] : string(val[j])) : val[j]
             end
             push!(vdicts,od)
         end
