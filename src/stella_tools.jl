@@ -190,7 +190,8 @@ function tab(df::DataFrame,args::Symbol...; label_dict::Union{Void,Dict} = nothi
         end
 
         # replace a with a new NamedArray because a.dicts cannot be set with different data types
-        a = NamedArray(a.array,tuple(vdicts...),ntuple(dimnames(a)...))
+        a = NamedArray(a.array,tuple(vdicts...))
+        setdimnames!(a, collect(args))
     end
 
     if ndims(a) == 2 && sum(a.array) > 1
