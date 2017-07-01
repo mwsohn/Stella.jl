@@ -166,10 +166,10 @@ function tab(df::DataFrame,args::Symbol...; label_dict::Union{Void,Dict} = nothi
 
     # if label_dict is specified, use value labels as value names
     if label_dict != nothing
-        dimnms = dimnames(a)
-        for (i,v) in enumerate(dimnms)
-            if haskey(label_dict["label"],v) && haskey(label_dict["value"],label_dict["label"][v])
-                lblname = label_dict["label"][v]
+        for (i,v) in enumerate(NamedArrays.dimnames(a))
+            vs = string(v)
+            if haskey(label_dict["label"],vs) && haskey(label_dict["value"],label_dict["label"][vs])
+                lblname = label_dict["label"][vs]
                 d = label_dict["value"][lblname]
                 val = names(a,i)
                 setnames!(a,[haskey(d,x) ? d[x] : string(x) for x in val],i)
