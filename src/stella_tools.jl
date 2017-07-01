@@ -172,10 +172,11 @@ function tab(df::DataFrame,args::Symbol...; label_dict::Union{Void,Dict} = nothi
                 d = label_dict["value"][lblname]
             end
             val = names(a,i)
-            vdicts[i] = OrderedDict()
+            od = OrderedDict()
             for j=1:length(val)
-                vdicts[i][val[j]] = isdefined(:d) ? (haskey(d,val[j]) ? d[val[j]] : string(val[j])) : val[j]
+                od[val[j]] = isdefined(:d) ? (haskey(d,val[j]) ? d[val[j]] : string(val[j])) : val[j]
             end
+            push!(vdicts,od)
         end
         a.dicts = tuple(vdicts...)
     end
