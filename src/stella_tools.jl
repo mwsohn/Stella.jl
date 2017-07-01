@@ -1,4 +1,4 @@
-using DataFrames, FreqTables, HypothesisTests, NamedArrays
+using DataFrames, FreqTables, HypothesisTests, NamedArrays, OrderedDict
 
 """
     prepend_spaces(str,maxlength)
@@ -172,7 +172,7 @@ function tab(df::DataFrame,args::Symbol...; label_dict::Union{Void,Dict} = nothi
                 lblname = label_dict["label"][vs]
                 d = label_dict["value"][lblname]
                 val = names(a,i)
-                a.dicts[i] = OrderedDict()
+                a.dicts[i] = OrderedDict[]
                 for j=1:length(val)
                     a.dicts[i][val[j]] = haskey(d,val[j]) ? d[val[j]] : string(val[j])
                 end
