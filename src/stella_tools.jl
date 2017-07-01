@@ -737,6 +737,11 @@ julia> df[:race2] = recode(df,:race,Dict("White" => 1,"Black" => 2, "Hispanic" =
 """
 function recode(da::DataArray, coding::Dict; restna = false)
     val = values(coding)
+
+    # if the da is not integer type
+    # check to see if all values in the coding dictionary are integers or NAs
+    # if so, construct a return data array whose elements are integers
+    # otherwise, keep the original data type
     if !(eltype(da) <: Integer) && sum([typeof(v) <: Integer || isna(v) for v in val]) == length(val)
         ra = DataArray(Int64,length(da))
     else
