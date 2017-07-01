@@ -131,8 +131,8 @@ immutable tab_return
 end
 
 """
-    tab(x::AbstractArray...; rmna::Bool = true, weights::AbstractVector = UnitWeights())
-    tab(df::DataFrame,vars::Symbol...; rmna::Bool = true, weights::AbstractVector = UnitWeights())
+    tab(x::AbstractArray...; label_dict::Union{Void,Dict} = nothing, rmna::Bool = true, weights::AbstractVector = UnitWeights())
+    tab(df::DataFrame,vars::Symbol...; label_dict::Union{Void,Dict} = nothing, rmna::Bool = true, weights::AbstractVector = UnitWeights())
 
 Produce n-way frequency table from a DataFrame or any type of arrays. Weights can be used to obtain
 weighted frequencies. `tab` is mainly a wrapper for the excellent `FreqTables` package for all
@@ -142,7 +142,7 @@ where `na` is the returned NamedArray. `na.dimnames` contain row and column valu
 When NA values are included, the `dimnames` (see `NamedArrays` package) are returned in string
 values rather than in the original data type.
 """
-function tab(df::DataFrame,args::Symbol...; rmna = true, weights::AbstractVector = FreqTables.UnitWeights())
+function tab(df::DataFrame,args::Symbol...; label_dict::Union{Void,Dict} = nothing, rmna = true, weights::AbstractVector = FreqTables.UnitWeights())
 
     # number of complete cases
     ba = completecases(df[collect(args)])
@@ -163,6 +163,19 @@ function tab(df::DataFrame,args::Symbol...; rmna = true, weights::AbstractVector
     end
 
     setdimnames!(a, collect(args))
+
+    # if label_dict is specified, use value labels as value names
+    if label_dict != nothing
+        dimnms = dimnames(a)
+        for (i,v) in enumerate(dimnms)
+            if haskey(label_dict["label"],v) && haskey(label_dict["value"],label_dict["label"][v])
+                lblname = label_dict["label"][v]
+                d = label_dict["value"][lblname]
+                val = names(a,i)
+                setnames!(a,[haskey(d,x) ? d[x] : string(x) for x in val],i)
+            end
+        end
+    end
 
     if ndims(a) == 2 && sum(a.array) > 1
         chisq, dof, pval = chisq_2way(a)
@@ -300,15 +313,15 @@ end
 
 Convert values in `v` array to NAs in the `da` DataArray and return a new DataArray.
 """
-function toNA(da::DataArray, varray = [])
-    if isempty(varray)
+function toNA(da::DataArray, v = [])
+    if isempty(v)
         return da
     end
 
     for i = 1:length(da)
         if isna(da[i])
             continue
-        elseif in(da[i],varray)
+        elseif in(da[i],v)
             da[i] = NA
         end
     end
