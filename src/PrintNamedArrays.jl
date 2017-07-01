@@ -32,13 +32,13 @@ function getdictval(dt::Dict,val)
     return haskey(dt,val) ? dt[val] : val
 end
 
-function print(tr::tab_return; row=false, col=false, cell=false, total=false, rmna = false, label::Union{Void,Dict} = nothing)
+function print(tr::tab_return; row=false, col=false, cell=false, total=false, precision::Int8 = 2)
 
     # named array
-    na = rmna ? dropna(tr.na) : tr.na
+    na = tr.na
 
     if ndims(na.array) == 1
-        return print_oneway(na, total = total, rmna = rmna, label = label)
+        return print_oneway(na, total = total, precision = precision)
     elseif length(na.dimnames) > 2
         error("Only up to two dimensional arrays are currently supported")
     end
@@ -137,14 +137,14 @@ function print(tr::tab_return; row=false, col=false, cell=false, total=false, rm
         if row
           print(repeat(" ",maxrowname)," |")
           for j = 1:ncols
-              val = strval(100 * na.array[i,j] / rowsum[i])
+              val = strval(100 * na.array[i,j] / rowsum[i],precision)
               print(" ",lpad(val,colwidth," "))
           end
 
           # row percentage
           print(" |")
 
-          val = "100.00"
+          val = strval(100.0,precision)
           print(" ",lpad(val,colwidth," "),"\n")
         end
 
@@ -152,14 +152,14 @@ function print(tr::tab_return; row=false, col=false, cell=false, total=false, rm
         if col
           print(repeat(" ",maxrowname)," |")
           for j = 1:ncols
-              val = strval(100 * na.array[i,j] / colsum[j])
+              val = strval(100 * na.array[i,j] / colsum[j],precision)
               print(" ",lpad(val,colwidth," "))
           end
 
           # column percent
           print(" |")
 
-          val = strval(100 * rowsum[i] / tot)
+          val = strval(100 * rowsum[i] / tot,precision)
           print(" ",lpad(val,colwidth," "),"\n")
         end
 
@@ -167,14 +167,14 @@ function print(tr::tab_return; row=false, col=false, cell=false, total=false, rm
         if cell
           print(repeat(" ",maxrowname)," |")
           for j = 1:ncols
-              val = strval(100 * na.array[i,j] / tot)
+              val = strval(100 * na.array[i,j] / tot,precision)
               print(" ",lpad(val,colwidth," "))
           end
 
           # column percent
           print(" |")
 
-          val = strval(100 * rowsum[i] / tot)
+          val = strval(100 * rowsum[i] / tot,precision)
           print(" ",lpad(val,colwidth," "),"\n")
         end
 
@@ -207,12 +207,12 @@ function print(tr::tab_return; row=false, col=false, cell=false, total=false, rm
     if row
       print(repeat(" ",maxrowname)," |")
       for j = 1:ncols
-          val = strval(100 * colsum[j] / tot)
+          val = strval(100 * colsum[j] / tot,precision)
           print(" ",lpad(val,colwidth," "))
       end
 
       # column percent
-      val = "100.00"
+      val = strval(100.0,precision)
       print(" | ",lpad(val,colwidth," "),"\n")
     end
 
@@ -220,12 +220,12 @@ function print(tr::tab_return; row=false, col=false, cell=false, total=false, rm
     if col
       print(repeat(" ",maxrowname)," |")
       for j = 1:ncols
-          val = "100.00"
+          val = strval(100.,precision)
           print(" ",lpad(val,colwidth," "))
       end
 
       # column percent
-      val = "100.00"
+      val = strval(100.0,precision)
       print(" | ",lpad(val,colwidth," "),"\n")
 
     end
@@ -234,12 +234,12 @@ function print(tr::tab_return; row=false, col=false, cell=false, total=false, rm
     if cell
       print(repeat(" ",maxrowname)," |")
       for j = 1:ncols
-          val = strval(100 * colsum[j] / tot)
+          val = strval(100 * colsum[j] / tot,precision)
           print(" ",lpad(val,colwidth," "))
       end
 
       # column percent
-      val = "100.00"
+      val = strval(100.0,precision)
       print(" | ",lpad(val,colwidth," "),"\n")
     end
 
@@ -247,13 +247,9 @@ function print(tr::tab_return; row=false, col=false, cell=false, total=false, rm
     println("\nPearson χ² (",tr.dof,") = ",@sprintf("%.3f",tr.chisq)," Pr = ",@sprintf("%.3f",tr.p))
 end
 
-function print_oneway(na::NamedArray; total = false, rmna = false, label::Union{Void,Dict} = nothing)
+function print_oneway(na::NamedArray; total = false, precision::Int8 = 2)
 
-    if rmna
-        na = dropna(na)
-    end
-
-    rownames = map(x -> isna(x) ? "#NULL" : string(x),names(na,1))
+    rownames = map(x -> isna(x) ? "NA" : string(x),names(na,1))
 
     maxrowname = max(5,maximum(length.(rownames)))
 
@@ -271,8 +267,8 @@ function print_oneway(na::NamedArray; total = false, rmna = false, label::Union{
     cumtot = cumsum(na.array)
     for i = 1:size(na.array,1)
         str = strval(na.array[i])
-        pct = strval(100*na.array[i] / tot)
-        cumpct = strval(100*cumtot[i] / tot)
+        pct = strval(100*na.array[i] / tot, precision)
+        cumpct = strval(100*cumtot[i] / tot, precision)
         print(rpad(string(rownames[i]),maxrowname," "),
             " | ",lpad(str,colwidth," "),
             " ",lpad(pct,colwidth," "),
@@ -283,8 +279,8 @@ function print_oneway(na::NamedArray; total = false, rmna = false, label::Union{
     if total
         print(repeat("-",maxrowname),"-+-",repeat("-",colwidth),"-",repeat("-",colwidth),"-",repeat("-",colwidth),"\n")
         str = strval(tot)
-        pct = strval(100.00)
-        cumpct = strval(100.00)
+        pct = strval(100.00, precision)
+        cumpct = strval(100.00, precision)
         print(rpad("Total",maxrowname," "),
             " | ",lpad(str,colwidth," "),
             " ",lpad(pct,colwidth," "),
