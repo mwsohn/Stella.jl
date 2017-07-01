@@ -70,7 +70,6 @@ function dacompress(da::DataArray)
     end
 end
 
-
 function get_disp_length(dat::AbstractVector; precision = 2)
 
     vtype = eltype(dat)

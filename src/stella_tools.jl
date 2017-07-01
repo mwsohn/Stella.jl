@@ -1,5 +1,3 @@
-using DataFrames, FreqTables, HypothesisTests, NamedArrays, OrderedDict
-
 """
     prepend_spaces(str,maxlength)
 
