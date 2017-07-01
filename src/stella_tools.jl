@@ -160,9 +160,12 @@ function tab(df::DataFrame,args::Symbol...; label_dict::Union{Void,Dict} = nothi
         a = tab([df[y] for y in args]...)
     end
 
+    setdimnames!(a, collect(args))
+
     # if label_dict is specified, use value labels as value names
     if label_dict != nothing
         vdicts = OrderedDict[]
+
         for (i,v) in enumerate(NamedArrays.dimnames(a))
             vs = string(v)
             d = Dict()
@@ -185,10 +188,10 @@ function tab(df::DataFrame,args::Symbol...; label_dict::Union{Void,Dict} = nothi
             end
             push!(vdicts,od)
         end
-        a = NamedArray(a.array,tuple(vdicts...))
-    end
 
-    setdimnames!(a, collect(args))
+        # replace a with a new NamedArray because a.dicts cannot be set with different data types
+        a = NamedArray(a.array,tuple(vdicts...),ntuple(dimnames(a)...))
+    end
 
     if ndims(a) == 2 && sum(a.array) > 1
         chisq, dof, pval = chisq_2way(a)
