@@ -249,7 +249,7 @@ end
 
 function print_oneway(na::NamedArray; total = false, precision::Int8 = 2)
 
-    rownames = map(x -> isna(x) ? "NA" : string(x),names(na,1))
+    rownames = names(na,1)
 
     maxrowname = max(5,maximum(length.(rownames)))
 
