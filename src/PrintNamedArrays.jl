@@ -46,31 +46,13 @@ function print(tr::tab_return; row=false, col=false, cell=false, total=false, rm
     dimnames = string(na.dimnames[1]) * " \\ " * string(na.dimnames[2])
     print(dimnames,"\n")
 
-    # value labels
-    valuelab1 = valuelab2 = nothing
-    if label != nothing
-        lblname1 = label["label"][string(na.dimnames[1])]
-        if haskey(label["value"],lblname1)
-            valuelab1 = label["value"][lblname1]
-        end
-
-        lblname2 = label["label"][string(na.dimnames[2])]
-        if haskey(label["value"],lblname2)
-            valuelab2 = label["value"][lblname2]
-        end
-    end
-
     # total is true when row, col, or cell is true
     if row || col || cell
       total = true
     end
 
     # row names
-    if valuelab1 != nothing
-        rownames = map(x -> isna(x) ? "NA" : getdictval(valuelab1,x),names(na,1))
-    else
-        rownames = map(x -> isna(x) ? "NA" : string(x),names(na,1))
-    end
+    rownames = map(x -> isna(x) ? "NA" : string(x),names(na,1))
 
     maxrowname = 5
     for i = 1:length(rownames)
@@ -78,11 +60,7 @@ function print(tr::tab_return; row=false, col=false, cell=false, total=false, rm
     end
 
     # column names
-    if valuelab2 != nothing
-        colnames = map(x -> isna(x) ? "NA" : getdictval(valuelab2,x),names(na,2))
-    else
-        colnames = map(x -> isna(x) ? "NA" : string(x),names(na,2))
-    end
+    colnames = map(x -> isna(x) ? "NA" : string(x),names(na,2))
 
     maxcolname = 3
     for i = 1:length(colnames)
@@ -275,21 +253,8 @@ function print_oneway(na::NamedArray; total = false, rmna = false, label::Union{
         na = dropna(na)
     end
 
-    # value labels
-    valuelab1 = nothing
-    if label != nothing
-        lblname1 = label["label"][string(na.dimnames[1])]
-        if lblname1 != "" && haskey(label["value"],lblname1)
-            valuelab1 = label["value"][lblname1]
-        end
-    end
+    rownames = map(x -> isna(x) ? "#NULL" : string(x),names(na,1))
 
-    # row names
-    if valuelab1 != nothing
-        rownames = map(x -> isna(x) ? "#NULL" : getdictval(valuelab1,x),names(na,1))
-    else
-        rownames = map(x -> isna(x) ? "#NULL" : string(x),names(na,1))
-    end
     maxrowname = max(5,maximum(length.(rownames)))
 
     # width of data columns - the same as the length of tht grand total
