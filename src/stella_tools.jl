@@ -172,7 +172,10 @@ function tab(df::DataFrame,args::Symbol...; label_dict::Union{Void,Dict} = nothi
                 lblname = label_dict["label"][vs]
                 d = label_dict["value"][lblname]
                 val = names(a,i)
-                setnames!(a,[haskey(d,x) ? d[x] : string(x) for x in val],i)
+                a.dicts[i] = Dict()
+                for j=1:length(val)
+                    a.dicts[i][val[j]] = haskey(d,val[j]) ? d[val[j]] : string(val[j])
+                end
             end
         end
     end
