@@ -179,6 +179,7 @@ function tab(df::DataFrame,args::Symbol...; label_dict::Union{Void,Dict} = nothi
             end
             push!(vdicts,od)
         end
+        a.dicts = tuple()
         a.dicts = tuple(vdicts...)
     end
 
