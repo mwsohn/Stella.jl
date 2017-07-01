@@ -175,12 +175,12 @@ function tab(df::DataFrame,args::Symbol...; label_dict::Union{Void,Dict} = nothi
             for j=1:length(val)
                 if length(d) > 0
                   if haskey(d,val[j])
-                    a[d[val[j]]] = j
+                    od[d[val[j]]] = j
                   else
-                    a[string(val[j])] = j
+                    od[string(val[j])] = j
                   end
                 else
-                  a[val[j]] = j
+                  od[val[j]] = j
                 end
             end
             push!(vdicts,od)
