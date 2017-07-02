@@ -52,7 +52,7 @@ function print(tr::tab_return; row=false, col=false, cell=false, total=false, pr
     end
 
     # row names
-    rownames = map(x -> isna(x) ? "NA" : string(x),names(na,1))
+    rownames = names(na,1)
 
     maxrowname = 5
     for i = 1:length(rownames)
@@ -60,7 +60,7 @@ function print(tr::tab_return; row=false, col=false, cell=false, total=false, pr
     end
 
     # column names
-    colnames = map(x -> isna(x) ? "NA" : string(x),names(na,2))
+    colnames = names(na,2)
 
     maxcolname = 3
     for i = 1:length(colnames)
