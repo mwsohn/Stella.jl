@@ -308,6 +308,7 @@ function getdictval(dt::Dict,val)
     return haskey(dt,val) ? dt[val] : val
 end
 
+import Base.print
 function print(tr::tab_return; row=false, col=false, cell=false, total=false, precision::Int8 = 2)
 
     # named array
@@ -1520,7 +1521,6 @@ function ttest(df::DataFrame, varname::Symbol, val::Real; sig = 95)
 
 end
 
-import Base.print
 function print(t::ttest_return)
     println(t.df)
     print("\n")
