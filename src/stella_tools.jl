@@ -122,7 +122,7 @@ end
 univariate(df::DataFrame,var::Symbol) = univariate(df[var])
 
 immutable tab_return
-    na::NamedArrays.NamedArray
+    na
     chisq::Float64
     dof::Int64
     p::Float64
@@ -311,16 +311,13 @@ end
 import Base.print
 function print(tr::tab_return; row=false, col=false, cell=false, total=false, precision::Int8 = 2)
 
-    # named array
-    a = tr.na
-
-    if ndims(a.array) == 1
-        return print_oneway(a, total = total, precision = precision)
-    elseif length(na.dimnames) > 2
+    if ndims(tr.na) == 1
+        return print_oneway(tr.na, total = total, precision = precision)
+    elseif length(tr.na.dimnames) > 2
         error("Only up to two dimensional arrays are currently supported")
     end
 
-    dimnames = string(a.dimnames[1]) * " \\ " * string(a.dimnames[2])
+    dimnames = string(tr.na.dimnames[1]) * " \\ " * string(tr.na.dimnames[2])
     print(dimnames,"\n")
 
     # total is true when row, col, or cell is true
@@ -329,7 +326,7 @@ function print(tr::tab_return; row=false, col=false, cell=false, total=false, pr
     end
 
     # row names
-    rownames = names(a,1)
+    rownames = names(tr.na,1)
 
     maxrowname = 5
     for i = 1:length(rownames)
@@ -337,7 +334,7 @@ function print(tr::tab_return; row=false, col=false, cell=false, total=false, pr
     end
 
     # column names
-    colnames = names(a,2)
+    colnames = names(tr.na,2)
 
     maxcolname = 3
     for i = 1:length(colnames)
@@ -345,7 +342,7 @@ function print(tr::tab_return; row=false, col=false, cell=false, total=false, pr
     end
 
     # width of data columns - the same as the length of tht grand total
-    tot = sum(a) # grand total
+    tot = sum(tr.na) # grand total
     colwidth = length(digits(Int(floor(tot))))
 
     # number of columns
@@ -355,7 +352,7 @@ function print(tr::tab_return; row=false, col=false, cell=false, total=false, pr
     nrows = length(rownames)
 
     # floating point numbers with three digits after decimal point
-    if eltype(a.array) <: AbstractFloat
+    if eltype(tr.na.array) <: AbstractFloat
       colwidth += 3
     end
 
@@ -384,10 +381,10 @@ function print(tr::tab_return; row=false, col=false, cell=false, total=false, pr
     #---------------------------------------------------
 
     # column totals
-    colsum = sum(a.array,1)
+    colsum = sum(tr.na.array,1)
 
     # row totals
-    rowsum = sum(a.array,2)
+    rowsum = sum(tr.na.array,2)
 
     #----------------------------------------------------
     # print values
@@ -397,7 +394,7 @@ function print(tr::tab_return; row=false, col=false, cell=false, total=false, pr
         print(rpad(string(rownames[i]),maxrowname," ")," |")
 
         for j = 1:ncols
-            val = strval(a.array[i,j])
+            val = strval(tr.na.array[i,j])
             print(" ",lpad(val,colwidth," "))
         end
 
@@ -414,7 +411,7 @@ function print(tr::tab_return; row=false, col=false, cell=false, total=false, pr
         if row
           print(repeat(" ",maxrowname)," |")
           for j = 1:ncols
-              val = strval(100 * a.array[i,j] / rowsum[i],precision)
+              val = strval(100 * tr.na.array[i,j] / rowsum[i],precision)
               print(" ",lpad(val,colwidth," "))
           end
 
@@ -429,7 +426,7 @@ function print(tr::tab_return; row=false, col=false, cell=false, total=false, pr
         if col
           print(repeat(" ",maxrowname)," |")
           for j = 1:ncols
-              val = strval(100 * a.array[i,j] / colsum[j],precision)
+              val = strval(100 * tr.na.array[i,j] / colsum[j],precision)
               print(" ",lpad(val,colwidth," "))
           end
 
@@ -444,7 +441,7 @@ function print(tr::tab_return; row=false, col=false, cell=false, total=false, pr
         if cell
           print(repeat(" ",maxrowname)," |")
           for j = 1:ncols
-              val = strval(100 * a.array[i,j] / tot,precision)
+              val = strval(100 * tr.na.array[i,j] / tot,precision)
               print(" ",lpad(val,colwidth," "))
           end
 
