@@ -318,7 +318,7 @@ function print(io::IO,tr::Stella.tab_return; row=false, col=false, cell=false, t
     end
 
     dimnames = string(tr.na.dimnames[1]) * " \\ " * string(tr.na.dimnames[2])
-    print(dimnames,"\n")
+    Base.print(dimnames,"\n")
 
     # total is true when row, col, or cell is true
     if row || col || cell
@@ -361,23 +361,23 @@ function print(io::IO,tr::Stella.tab_return; row=false, col=false, cell=false, t
 
     #---------------------------------------------------
     # print header
-    print(repeat(" ",maxrowname)," |")
+    Base.print(repeat(" ",maxrowname)," |")
 
     for i = 1:length(colnames)
-        print(" ",lpad(string(colnames[i]),colwidth," "))
+        Base.print(" ",lpad(string(colnames[i]),colwidth," "))
     end
 
     if total
-      print(" | ",lpad("Total",colwidth," "))
+      Base.print(" | ",lpad("Total",colwidth," "))
     end
-    print("\n")
+    Base.print("\n")
 
-    print(repeat("-",maxrowname),"-+-",repeat("-",(colwidth+1)*(length(colnames))-1))
+    Base.print(repeat("-",maxrowname),"-+-",repeat("-",(colwidth+1)*(length(colnames))-1))
 
     if total
-      print("-+-",repeat("-",colwidth))
+      Base.print("-+-",repeat("-",colwidth))
     end
-    print("\n")
+    Base.print("\n")
     #---------------------------------------------------
 
     # column totals
@@ -391,50 +391,50 @@ function print(io::IO,tr::Stella.tab_return; row=false, col=false, cell=false, t
     for i = 1:nrows
 
         # row name
-        print(rpad(string(rownames[i]),maxrowname," ")," |")
+        Base.print(rpad(string(rownames[i]),maxrowname," ")," |")
 
         for j = 1:ncols
             val = strval(tr.na.array[i,j])
-            print(" ",lpad(val,colwidth," "))
+            Base.print(" ",lpad(val,colwidth," "))
         end
 
         # row total
         if total
-          print(" |")
+          Base.print(" |")
 
           val = strval(rowsum[i])
-          print(" ",lpad(val,colwidth," "))
+          Base.print(" ",lpad(val,colwidth," "))
         end
-        print("\n")
+        Base.print("\n")
 
         # row percentages
         if row
-          print(repeat(" ",maxrowname)," |")
+          Base.print(repeat(" ",maxrowname)," |")
           for j = 1:ncols
               val = strval(100 * tr.na.array[i,j] / rowsum[i],precision)
-              print(" ",lpad(val,colwidth," "))
+              Base.print(" ",lpad(val,colwidth," "))
           end
 
           # row percentage
-          print(" |")
+          Base.print(" |")
 
           val = strval(100.0,precision)
-          print(" ",lpad(val,colwidth," "),"\n")
+          Base.print(" ",lpad(val,colwidth," "),"\n")
         end
 
         # column percentages
         if col
-          print(repeat(" ",maxrowname)," |")
+          Base.print(repeat(" ",maxrowname)," |")
           for j = 1:ncols
               val = strval(100 * tr.na.array[i,j] / colsum[j],precision)
-              print(" ",lpad(val,colwidth," "))
+              Base.print(" ",lpad(val,colwidth," "))
           end
 
           # column percent
-          print(" |")
+          Base.print(" |")
 
           val = strval(100 * rowsum[i] / tot,precision)
-          print(" ",lpad(val,colwidth," "),"\n")
+          Base.print(" ",lpad(val,colwidth," "),"\n")
         end
 
         # column percentages
@@ -531,10 +531,10 @@ function print_oneway(na::NamedArray; total = false, precision::Int8 = 2)
     colwidth = max(7,length(digits(Int(floor(tot)))))
 
     # print header
-    print(rpad("Value",maxrowname," "))
-    print(" | ",lpad("Count",colwidth," ")," ",lpad("Percent",colwidth," "),
+    Base.print(rpad("Value",maxrowname," "))
+    Base.print(" | ",lpad("Count",colwidth," ")," ",lpad("Percent",colwidth," "),
         " ",lpad("Cum_pct",colwidth," "),"\n")
-    print(repeat("-",maxrowname),"-+-",repeat("-",colwidth),"-",repeat("-",colwidth),"-",repeat("-",colwidth),"\n")
+    Base.print(repeat("-",maxrowname),"-+-",repeat("-",colwidth),"-",repeat("-",colwidth),"-",repeat("-",colwidth),"\n")
 
     # values
     cumtot = cumsum(na.array)
@@ -542,7 +542,7 @@ function print_oneway(na::NamedArray; total = false, precision::Int8 = 2)
         str = strval(na.array[i])
         pct = strval(100*na.array[i] / tot, precision)
         cumpct = strval(100*cumtot[i] / tot, precision)
-        print(rpad(string(rownames[i]),maxrowname," "),
+        Base.print(rpad(string(rownames[i]),maxrowname," "),
             " | ",lpad(str,colwidth," "),
             " ",lpad(pct,colwidth," "),
             " ",lpad(cumpct,colwidth," "),"\n")
@@ -550,11 +550,11 @@ function print_oneway(na::NamedArray; total = false, precision::Int8 = 2)
 
     # total
     if total
-        print(repeat("-",maxrowname),"-+-",repeat("-",colwidth),"-",repeat("-",colwidth),"-",repeat("-",colwidth),"\n")
+        Base.print(repeat("-",maxrowname),"-+-",repeat("-",colwidth),"-",repeat("-",colwidth),"-",repeat("-",colwidth),"\n")
         str = strval(tot)
         pct = strval(100.00, precision)
         cumpct = strval(100.00, precision)
-        print(rpad("Total",maxrowname," "),
+        Base.print(rpad("Total",maxrowname," "),
             " | ",lpad(str,colwidth," "),
             " ",lpad(pct,colwidth," "),
             " ",lpad(cumpct,colwidth," "),"\n")
