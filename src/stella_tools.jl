@@ -1,4 +1,4 @@
-"""
+Base.print"""
     prepend_spaces(str,maxlength)
 
 Create a string of length `maxlength`. When `str` is shorter than `maxlength`,
@@ -122,14 +122,13 @@ end
 univariate(df::DataFrame,var::Symbol) = univariate(df[var])
 
 immutable tab_return
-    na::NamedArrays.NamedArray
+    na
     chisq::Float64
     dof::Int64
     p::Float64
 end
 
 """
-    tab(x::AbstractArray...; label_dict::Union{Void,Dict} = nothing, rmna::Bool = true, weights::AbstractVector = UnitWeights())
     tab(df::DataFrame,vars::Symbol...; label_dict::Union{Void,Dict} = nothing, rmna::Bool = true, weights::AbstractVector = UnitWeights())
 
 Produce n-way frequency table from a DataFrame or any type of arrays. Weights can be used to obtain
@@ -157,7 +156,7 @@ function tab(df::DataFrame,args::Symbol...; label_dict::Union{Void,Dict} = nothi
     else
         # there are NA values and so we cannot use freqtable
         # weights are not allowed, either
-        a = tab([df[y] for y in args]...)
+        a = tabna([df[y] for y in args]...)
     end
 
     setdimnames!(a, collect(args))
@@ -203,7 +202,7 @@ function tab(df::DataFrame,args::Symbol...; label_dict::Union{Void,Dict} = nothi
 
     return tab_return(a, chisq, dof, pval)
 end
-function tab(x::AbstractVector...)
+function tabna(x::AbstractVector...)
 
     ncols = length(x)
     nrows = length(x[1])
@@ -235,7 +234,7 @@ function tab(x::AbstractVector...)
     # get frequencies with the NA values in the vnums... cell for each column
     for i = 1:nrows
         for j = 1:ncols
-            @inbounds idxvec[j] = isna(x[j][i]) ? vnums[j] : findfirst(vdims[j],x[j][i])
+            @inbounds idxvec[j] = isna(x[j][i]) ? vnums[j] : searchsortedfirst(vdims[j],x[j][i])
         end
         @inbounds a[idxvec...] += 1
     end
@@ -310,215 +309,215 @@ end
 
 import Base.print
 function print(tr::tab_return; row=false, col=false, cell=false, total=false, precision::Int8 = 2)
-    #
-    # if ndims(tr.na) == 1
-    #     return print_oneway(tr.na, total = total, precision = precision)
-    # elseif length(tr.na.dimnames) > 2
-    #     error("Only up to two dimensional arrays are currently supported")
-    # end
-    #
-    # dimnames = string(tr.na.dimnames[1]) * " \\ " * string(tr.na.dimnames[2])
-    # print(dimnames,"\n")
-    #
-    # # total is true when row, col, or cell is true
-    # if row || col || cell
-    #   total = true
-    # end
-    #
-    # # row names
-    # rownames = names(tr.na,1)
-    #
-    # maxrowname = 5
-    # for i = 1:length(rownames)
-    #     maxrowname = max(maxrowname,length(rownames[i]))
-    # end
-    #
-    # # column names
-    # colnames = names(tr.na,2)
-    #
-    # maxcolname = 3
-    # for i = 1:length(colnames)
-    #     maxcolname = max(maxcolname,length(colnames[i]))
-    # end
-    #
-    # # width of data columns - the same as the length of tht grand total
-    # tot = sum(tr.na) # grand total
-    # colwidth = length(digits(Int(floor(tot))))
-    #
-    # # number of columns
-    # ncols = length(colnames)
-    #
-    # # number of rows
-    # nrows = length(rownames)
-    #
-    # # floating point numbers with three digits after decimal point
-    # if eltype(tr.na.array) <: AbstractFloat
-    #   colwidth += 3
-    # end
-    #
-    # # determine column widths
-    # colwidth = max(maxcolname,colwidth)
-    #
-    # #---------------------------------------------------
-    # # print header
-    # print(repeat(" ",maxrowname)," |")
-    #
-    # for i = 1:length(colnames)
-    #     print(" ",lpad(string(colnames[i]),colwidth," "))
-    # end
-    #
-    # if total
-    #   print(" | ",lpad("Total",colwidth," "))
-    # end
-    # print("\n")
-    #
-    # print(repeat("-",maxrowname),"-+-",repeat("-",(colwidth+1)*(length(colnames))-1))
-    #
-    # if total
-    #   print("-+-",repeat("-",colwidth))
-    # end
-    # print("\n")
-    # #---------------------------------------------------
-    #
-    # # column totals
-    # colsum = sum(tr.na.array,1)
-    #
-    # # row totals
-    # rowsum = sum(tr.na.array,2)
-    #
-    # #----------------------------------------------------
-    # # print values
-    # for i = 1:nrows
-    #
-    #     # row name
-    #     print(rpad(string(rownames[i]),maxrowname," ")," |")
-    #
-    #     for j = 1:ncols
-    #         val = strval(tr.na.array[i,j])
-    #         print(" ",lpad(val,colwidth," "))
-    #     end
-    #
-    #     # row total
-    #     if total
-    #       print(" |")
-    #
-    #       val = strval(rowsum[i])
-    #       print(" ",lpad(val,colwidth," "))
-    #     end
-    #     print("\n")
-    #
-    #     # row percentages
-    #     if row
-    #       print(repeat(" ",maxrowname)," |")
-    #       for j = 1:ncols
-    #           val = strval(100 * tr.na.array[i,j] / rowsum[i],precision)
-    #           print(" ",lpad(val,colwidth," "))
-    #       end
-    #
-    #       # row percentage
-    #       print(" |")
-    #
-    #       val = strval(100.0,precision)
-    #       print(" ",lpad(val,colwidth," "),"\n")
-    #     end
-    #
-    #     # column percentages
-    #     if col
-    #       print(repeat(" ",maxrowname)," |")
-    #       for j = 1:ncols
-    #           val = strval(100 * tr.na.array[i,j] / colsum[j],precision)
-    #           print(" ",lpad(val,colwidth," "))
-    #       end
-    #
-    #       # column percent
-    #       print(" |")
-    #
-    #       val = strval(100 * rowsum[i] / tot,precision)
-    #       print(" ",lpad(val,colwidth," "),"\n")
-    #     end
-    #
-    #     # column percentages
-    #     if cell
-    #       print(repeat(" ",maxrowname)," |")
-    #       for j = 1:ncols
-    #           val = strval(100 * tr.na.array[i,j] / tot,precision)
-    #           print(" ",lpad(val,colwidth," "))
-    #       end
-    #
-    #       # column percent
-    #       print(" |")
-    #
-    #       val = strval(100 * rowsum[i] / tot,precision)
-    #       print(" ",lpad(val,colwidth," "),"\n")
-    #     end
-    #
-    #     if row || col || cell
-    #       print(repeat("-",maxrowname),"-+=",repeat("-",(colwidth+1)*(length(colnames))),"+-",repeat("-",colwidth),"\n")
-    #     end
-    #
-    # end
-    #
-    # #----------------------------------------------------
-    # # Total
-    # if total
-    #   if !(row || col || cell)
-    #     print(repeat("-",maxrowname+1),"+",repeat("-",(colwidth+1)*(length(colnames))),"-+-",repeat("-",colwidth),"\n")
-    #   end
-    #   print(rpad("Total",maxrowname," ")," |")
-    #
-    #   for i = 1:length(colnames)
-    #       val=strval(colsum[i])
-    #       print(" ",lpad(val,colwidth," "))
-    #   end
-    #
-    #   # Grand total
-    #   val = strval(tot)
-    #   print(" | ",lpad(val,colwidth," "),"\n")
-    # end
-    # #----------------------------------------------------
-    #
-    # # row percentages
-    # if row
-    #   print(repeat(" ",maxrowname)," |")
-    #   for j = 1:ncols
-    #       val = strval(100 * colsum[j] / tot,precision)
-    #       print(" ",lpad(val,colwidth," "))
-    #   end
-    #
-    #   # column percent
-    #   val = strval(100.0,precision)
-    #   print(" | ",lpad(val,colwidth," "),"\n")
-    # end
-    #
-    # # column percentages
-    # if col
-    #   print(repeat(" ",maxrowname)," |")
-    #   for j = 1:ncols
-    #       val = strval(100.,precision)
-    #       print(" ",lpad(val,colwidth," "))
-    #   end
-    #
-    #   # column percent
-    #   val = strval(100.0,precision)
-    #   print(" | ",lpad(val,colwidth," "),"\n")
-    #
-    # end
-    #
-    # # column percentages
-    # if cell
-    #   print(repeat(" ",maxrowname)," |")
-    #   for j = 1:ncols
-    #       val = strval(100 * colsum[j] / tot,precision)
-    #       print(" ",lpad(val,colwidth," "))
-    #   end
-    #
-    #   # column percent
-    #   val = strval(100.0,precision)
-    #   print(" | ",lpad(val,colwidth," "),"\n")
-    # end
-    #
-    # # p-value
-    # println("\nPearson χ² (",tr.dof,") = ",@sprintf("%.3f",tr.chisq)," Pr = ",@sprintf("%.3f",tr.p))
+
+    if ndims(tr.na) == 1
+        return print_oneway(tr.na, total = total, precision = precision)
+    elseif length(tr.na.dimnames) > 2
+        error("Only up to two dimensional arrays are currently supported")
+    end
+
+    dimnames = string(tr.na.dimnames[1]) * " \\ " * string(tr.na.dimnames[2])
+    Base.print(dimnames,"\n")
+
+    # total is true when row, col, or cell is true
+    if row || col || cell
+      total = true
+    end
+
+    # row names
+    rownames = names(tr.na,1)
+
+    maxrowname = 5
+    for i = 1:length(rownames)
+        maxrowname = max(maxrowname,length(rownames[i]))
+    end
+
+    # column names
+    colnames = names(tr.na,2)
+
+    maxcolname = 3
+    for i = 1:length(colnames)
+        maxcolname = max(maxcolname,length(colnames[i]))
+    end
+
+    # width of data columns - the same as the length of tht grand total
+    tot = sum(tr.na) # grand total
+    colwidth = length(digits(Int(floor(tot))))
+
+    # number of columns
+    ncols = length(colnames)
+
+    # number of rows
+    nrows = length(rownames)
+
+    # floating point numbers with three digits after decimal point
+    if eltype(tr.na.array) <: AbstractFloat
+      colwidth += 3
+    end
+
+    # determine column widths
+    colwidth = max(maxcolname,colwidth)
+
+    #---------------------------------------------------
+    # print header
+    Base.print(repeat(" ",maxrowname)," |")
+
+    for i = 1:length(colnames)
+        Base.print(" ",lpad(string(colnames[i]),colwidth," "))
+    end
+
+    if total
+      Base.print(" | ",lpad("Total",colwidth," "))
+    end
+    Base.print("\n")
+
+    Base.print(repeat("-",maxrowname),"-+-",repeat("-",(colwidth+1)*(length(colnames))-1))
+
+    if total
+      Base.print("-+-",repeat("-",colwidth))
+    end
+    Base.print("\n")
+    #---------------------------------------------------
+
+    # column totals
+    colsum = sum(tr.na.array,1)
+
+    # row totals
+    rowsum = sum(tr.na.array,2)
+
+    #----------------------------------------------------
+    # print values
+    for i = 1:nrows
+
+        # row name
+        Base.print(rpad(string(rownames[i]),maxrowname," ")," |")
+
+        for j = 1:ncols
+            val = strval(tr.na.array[i,j])
+            Base.print(" ",lpad(val,colwidth," "))
+        end
+
+        # row total
+        if total
+          Base.print(" |")
+
+          val = strval(rowsum[i])
+          Base.print(" ",lpad(val,colwidth," "))
+        end
+        Base.print("\n")
+
+        # row percentages
+        if row
+          Base.print(repeat(" ",maxrowname)," |")
+          for j = 1:ncols
+              val = strval(100 * tr.na.array[i,j] / rowsum[i],precision)
+              Base.print(" ",lpad(val,colwidth," "))
+          end
+
+          # row percentage
+          Base.print(" |")
+
+          val = strval(100.0,precision)
+          Base.print(" ",lpad(val,colwidth," "),"\n")
+        end
+
+        # column percentages
+        if col
+          Base.print(repeat(" ",maxrowname)," |")
+          for j = 1:ncols
+              val = strval(100 * tr.na.array[i,j] / colsum[j],precision)
+              Base.print(" ",lpad(val,colwidth," "))
+          end
+
+          # column percent
+          Base.print(" |")
+
+          val = strval(100 * rowsum[i] / tot,precision)
+          Base.print(" ",lpad(val,colwidth," "),"\n")
+        end
+
+        # column percentages
+        if cell
+          Base.print(repeat(" ",maxrowname)," |")
+          for j = 1:ncols
+              val = strval(100 * tr.na.array[i,j] / tot,precision)
+              Base.print(" ",lpad(val,colwidth," "))
+          end
+
+          # column percent
+          Base.print(" |")
+
+          val = strval(100 * rowsum[i] / tot,precision)
+          Base.print(" ",lpad(val,colwidth," "),"\n")
+        end
+
+        if row || col || cell
+          Base.print(repeat("-",maxrowname),"-+=",repeat("-",(colwidth+1)*(length(colnames))),"+-",repeat("-",colwidth),"\n")
+        end
+
+    end
+
+    #----------------------------------------------------
+    # Total
+    if total
+      if !(row || col || cell)
+        Base.print(repeat("-",maxrowname+1),"+",repeat("-",(colwidth+1)*(length(colnames))),"-+-",repeat("-",colwidth),"\n")
+      end
+      Base.print(rpad("Total",maxrowname," ")," |")
+
+      for i = 1:length(colnames)
+          val=strval(colsum[i])
+          Base.print(" ",lpad(val,colwidth," "))
+      end
+
+      # Grand total
+      val = strval(tot)
+      Base.print(" | ",lpad(val,colwidth," "),"\n")
+    end
+    #----------------------------------------------------
+
+    # row percentages
+    if row
+      Base.print(repeat(" ",maxrowname)," |")
+      for j = 1:ncols
+          val = strval(100 * colsum[j] / tot,precision)
+          Base.print(" ",lpad(val,colwidth," "))
+      end
+
+      # column percent
+      val = strval(100.0,precision)
+      Base.print(" | ",lpad(val,colwidth," "),"\n")
+    end
+
+    # column percentages
+    if col
+      Base.print(repeat(" ",maxrowname)," |")
+      for j = 1:ncols
+          val = strval(100.,precision)
+          Base.print(" ",lpad(val,colwidth," "))
+      end
+
+      # column percent
+      val = strval(100.0,precision)
+      Base.print(" | ",lpad(val,colwidth," "),"\n")
+
+    end
+
+    # column percentages
+    if cell
+      Base.print(repeat(" ",maxrowname)," |")
+      for j = 1:ncols
+          val = strval(100 * colsum[j] / tot,precision)
+          Base.print(" ",lpad(val,colwidth," "))
+      end
+
+      # column percent
+      val = strval(100.0,precision)
+      Base.print(" | ",lpad(val,colwidth," "),"\n")
+    end
+
+    # p-value
+    println("\nPearson χ² (",tr.dof,") = ",@sprintf("%.3f",tr.chisq)," Pr = ",@sprintf("%.3f",tr.p))
 end
 function print_oneway(na::NamedArray; total = false, precision::Int8 = 2)
 
@@ -531,10 +530,10 @@ function print_oneway(na::NamedArray; total = false, precision::Int8 = 2)
     colwidth = max(7,length(digits(Int(floor(tot)))))
 
     # print header
-    print(rpad("Value",maxrowname," "))
-    print(" | ",lpad("Count",colwidth," ")," ",lpad("Percent",colwidth," "),
+    Base.print(rpad("Value",maxrowname," "))
+    Base.print(" | ",lpad("Count",colwidth," ")," ",lpad("Percent",colwidth," "),
         " ",lpad("Cum_pct",colwidth," "),"\n")
-    print(repeat("-",maxrowname),"-+-",repeat("-",colwidth),"-",repeat("-",colwidth),"-",repeat("-",colwidth),"\n")
+    Base.print(repeat("-",maxrowname),"-+-",repeat("-",colwidth),"-",repeat("-",colwidth),"-",repeat("-",colwidth),"\n")
 
     # values
     cumtot = cumsum(na.array)
@@ -542,7 +541,7 @@ function print_oneway(na::NamedArray; total = false, precision::Int8 = 2)
         str = strval(na.array[i])
         pct = strval(100*na.array[i] / tot, precision)
         cumpct = strval(100*cumtot[i] / tot, precision)
-        print(rpad(string(rownames[i]),maxrowname," "),
+        Base.print(rpad(string(rownames[i]),maxrowname," "),
             " | ",lpad(str,colwidth," "),
             " ",lpad(pct,colwidth," "),
             " ",lpad(cumpct,colwidth," "),"\n")
@@ -550,11 +549,11 @@ function print_oneway(na::NamedArray; total = false, precision::Int8 = 2)
 
     # total
     if total
-        print(repeat("-",maxrowname),"-+-",repeat("-",colwidth),"-",repeat("-",colwidth),"-",repeat("-",colwidth),"\n")
+        Base.print(repeat("-",maxrowname),"-+-",repeat("-",colwidth),"-",repeat("-",colwidth),"-",repeat("-",colwidth),"\n")
         str = strval(tot)
         pct = strval(100.00, precision)
         cumpct = strval(100.00, precision)
-        print(rpad("Total",maxrowname," "),
+        Base.print(rpad("Total",maxrowname," "),
             " | ",lpad(str,colwidth," "),
             " ",lpad(pct,colwidth," "),
             " ",lpad(cumpct,colwidth," "),"\n")
@@ -801,6 +800,9 @@ Use `replace = true` in `destring!` to replace the original string DataArray wit
 If `replace` option is specified, `newvars` array is ignored.
 """
 function destring(da::DataArray; force=true)
+    if length(da) == 0
+        error(da,"Input data array is empty!")
+    end
     if eltype(da) <: Number
         error(da," is a numeric DataArray.")
     end
