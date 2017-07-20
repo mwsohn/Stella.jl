@@ -121,8 +121,8 @@ function univariate(da::AbstractVector)
 end
 univariate(df::DataFrame,var::Symbol) = univariate(df[var])
 
-immutable tab_return
-    na
+struct tab_return
+    na::NamedArrays.NamedArray
     chisq::Float64
     dof::Int64
     p::Float64
@@ -307,7 +307,7 @@ function getdictval(dt::Dict,val)
     return haskey(dt,val) ? dt[val] : val
 end
 
-import Base.print
+#import Base.print
 function print(tr::Stella.tab_return; row=false, col=false, cell=false, total=false, precision::Int8 = 2)
 
     if ndims(tr.na) == 1
