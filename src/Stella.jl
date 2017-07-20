@@ -32,7 +32,7 @@ export  read_stata,  # read stata 13 and 14 files into DF
         xtile,       # create variable that classify a column into percentiles
         rowsum,      # create variable that sums rows
         strval,      # convert floats or ints to strings
-        print,       # print NamedArray
+        #print,       # print NamedArray
         chisq_2way,  # compute chisquare statistics from na.array
         prepend_spaces, append_spaces, # create fixed length strings
         smallest, largest, # list smallest and largest values in a DA

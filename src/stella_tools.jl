@@ -1,4 +1,4 @@
-Base.print"""
+"""
     prepend_spaces(str,maxlength)
 
 Create a string of length `maxlength`. When `str` is shorter than `maxlength`,
