@@ -122,7 +122,7 @@ end
 univariate(df::DataFrame,var::Symbol) = univariate(df[var])
 
 struct tab_return
-    na::NamedArrays.NamedArray
+    na
     chisq::Float64
     dof::Int64
     p::Float64
