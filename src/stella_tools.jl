@@ -308,7 +308,7 @@ function getdictval(dt::Dict,val)
 end
 
 import Base.print
-function print(tr::tab_return; row=false, col=false, cell=false, total=false, precision::Int8 = 2)
+function print(io::IO,tr::Stella.tab_return; row=false, col=false, cell=false, total=false, precision::Int8 = 2)
 
     if ndims(tr.na) == 1
         return print_oneway(tr.na, total = total, precision = precision)
