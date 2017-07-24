@@ -122,7 +122,7 @@ end
 univariate(df::DataFrame,var::Symbol) = univariate(df[var])
 
 struct tab_return
-    na
+    na::NamedArrays.NamedArray
     chisq::Float64
     dof::Int64
     p::Float64
@@ -519,6 +519,7 @@ function print(tr::Stella.tab_return; row=false, col=false, cell=false, total=fa
     # p-value
     println("\nPearson χ² (",tr.dof,") = ",@sprintf("%.3f",tr.chisq)," Pr = ",@sprintf("%.3f",tr.p))
 end
+
 function print_oneway(na::NamedArray; total = false, precision::Int8 = 2)
 
     rownames = names(na,1)
@@ -611,7 +612,7 @@ end
 Convert values in `v` array to NAs in the `da` DataArray and return a new DataArray.
 """
 function toNA(da::DataArray, v = [])
-    if isempty(v)
+    if isempty(v) || typeof(da) == PooledDataArray
         return da
     end
 
