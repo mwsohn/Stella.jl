@@ -168,9 +168,9 @@ function read_stata!(fn,df::DataFrame,label::Dict; categorize=true, verbose=fals
 
     # variable names
     skip(fh,27)
-    varlist = Array{String,1}(nvar)
+    varlist = Array{Symbol,1}(nvar)
     for i in 1:nvar
-        varlist[i] = strtonull(String(read(fh,UInt8,len_varname)))
+        varlist[i] = Symbol(strtonull(String(read(fh,UInt8,len_varname))))
     end
 
     # sort list
@@ -277,7 +277,7 @@ function read_stata!(fn,df::DataFrame,label::Dict; categorize=true, verbose=fals
             println("Processing variable ",j," ", varlist[j])
         end
 
-        df[Symbol(varlist[j])] = alloc_array(typelist[j],fmtlist[j],nobs)
+        df[varlist[j]] = alloc_array(typelist[j],fmtlist[j],nobs)
 
 		for i in 1:nobs
 
@@ -354,8 +354,8 @@ function read_stata!(fn,df::DataFrame,label::Dict; categorize=true, verbose=fals
                 end
             end
         end
-        if categorize && 0 < typelist[j] < 2045 && in(Symbol(varlist[j]),exclude) # character variable
-            pool!(df,Symbol(varlist[j]))
+        if categorize && 0 < typelist[j] < 2045 && in(varlist[j],exclude) # character variable
+            pool!(df,varlist[j])
             gc()
         end
     end
