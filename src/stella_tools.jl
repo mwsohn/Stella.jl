@@ -166,10 +166,10 @@ function tab(df::DataFrame,args::Symbol...; label_dict::Union{Void,Dict} = nothi
         vdicts = OrderedDict[]
 
         for (i,v) in enumerate(NamedArrays.dimnames(a))
-            vs = string(v)
+            # vs = string(v)
             d = Dict()
-            if haskey(label_dict["label"],vs) && haskey(label_dict["value"],label_dict["label"][vs])
-                lblname = label_dict["label"][vs]
+            if haskey(label_dict["label"],v) && haskey(label_dict["value"],label_dict["label"][v])
+                lblname = label_dict["label"][v]
                 d = label_dict["value"][lblname]
             end
             val = names(a,i)
@@ -521,7 +521,7 @@ function print(tr::Stella.tab_return; row=false, col=false, cell=false, total=fa
     println("\nPearson χ² (",tr.dof,") = ",@sprintf("%.3f",tr.chisq)," Pr = ",@sprintf("%.3f",tr.p))
 end
 
-function print_oneway(na::NamedArray; total = false, precision::Int8 = 2)
+function print_oneway(na::NamedArrays.NamedArray; total = false, precision::Int8 = 2)
 
     rownames = names(na,1)
 
@@ -605,7 +605,6 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
     end
     return outdf
 end
-
 
 """
     toNA(da::DataArray,v::Vector)
