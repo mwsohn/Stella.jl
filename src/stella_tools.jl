@@ -122,7 +122,9 @@ end
 univariate(df::DataFrame,var::Symbol) = univariate(df[var])
 
 struct tab_return
-    na::NamedArrays.NamedArray
+    array
+    dicts
+    dimnames
     chisq::Float64
     dof::Int64
     p::Float64
@@ -200,7 +202,7 @@ function tab(df::DataFrame,args::Symbol...; label_dict::Union{Void,Dict} = nothi
         dof = 0
     end
 
-    return tab_return(a, chisq, dof, pval)
+    return tab_return(a.array, a.dicts, a.dimnames, chisq, dof, pval)
 end
 function tabna(x::AbstractVector...)
 
@@ -310,14 +312,14 @@ end
 #import Base.print
 function print(tr::Stella.tab_return; row=false, col=false, cell=false, total=false, precision::Int8 = 2)
 
-    if ndims(tr.na) == 1
-        print_oneway(tr.na, total = total, precision = precision)
+    if length(tr.dimnames) == 1
+        print_oneway(NamedArray(tr.array,tr.dicts,tr.dimnames), total = total, precision = precision)
         exit()
-    elseif length(tr.na.dimnames) > 2
+    elseif length(tr.dimnames) > 2
         error("Only up to two dimensional arrays are currently supported")
     end
 
-    dimnames = string(tr.na.dimnames[1]) * " \\ " * string(tr.na.dimnames[2])
+    dimnames = string(tr.dimnames[1]) * " \\ " * string(tr.dimnames[2])
     print(dimnames,"\n")
 
     # total is true when row, col, or cell is true
@@ -326,7 +328,7 @@ function print(tr::Stella.tab_return; row=false, col=false, cell=false, total=fa
     end
 
     # row names
-    rownames = names(tr.na,1)
+    rownames = collect(keys(tr.dicts[1]))
 
     maxrowname = 5
     for i = 1:length(rownames)
@@ -334,7 +336,7 @@ function print(tr::Stella.tab_return; row=false, col=false, cell=false, total=fa
     end
 
     # column names
-    colnames = names(tr.na,2)
+    colnames = collect(keys(tr.dicts[20]))
 
     maxcolname = 3
     for i = 1:length(colnames)
@@ -342,7 +344,7 @@ function print(tr::Stella.tab_return; row=false, col=false, cell=false, total=fa
     end
 
     # width of data columns - the same as the length of tht grand total
-    tot = sum(tr.na) # grand total
+    tot = sum(tr.array) # grand total
     colwidth = length(digits(Int(floor(tot))))
 
     # number of columns
@@ -352,7 +354,7 @@ function print(tr::Stella.tab_return; row=false, col=false, cell=false, total=fa
     nrows = length(rownames)
 
     # floating point numbers with three digits after decimal point
-    if eltype(tr.na.array) <: AbstractFloat
+    if eltype(tr.array) <: AbstractFloat
       colwidth += 3
     end
 
@@ -381,10 +383,10 @@ function print(tr::Stella.tab_return; row=false, col=false, cell=false, total=fa
     #---------------------------------------------------
 
     # column totals
-    colsum = sum(tr.na.array,1)
+    colsum = sum(tr.array,1)
 
     # row totals
-    rowsum = sum(tr.na.array,2)
+    rowsum = sum(tr.array,2)
 
     #----------------------------------------------------
     # print values
@@ -394,7 +396,7 @@ function print(tr::Stella.tab_return; row=false, col=false, cell=false, total=fa
         print(rpad(string(rownames[i]),maxrowname," ")," |")
 
         for j = 1:ncols
-            val = strval(tr.na.array[i,j])
+            val = strval(tr.array[i,j])
             print(" ",lpad(val,colwidth," "))
         end
 
@@ -411,7 +413,7 @@ function print(tr::Stella.tab_return; row=false, col=false, cell=false, total=fa
         if row
           print(repeat(" ",maxrowname)," |")
           for j = 1:ncols
-              val = strval(100 * tr.na.array[i,j] / rowsum[i],precision)
+              val = strval(100 * tr.array[i,j] / rowsum[i],precision)
               print(" ",lpad(val,colwidth," "))
           end
 
@@ -426,7 +428,7 @@ function print(tr::Stella.tab_return; row=false, col=false, cell=false, total=fa
         if col
           print(repeat(" ",maxrowname)," |")
           for j = 1:ncols
-              val = strval(100 * tr.na.array[i,j] / colsum[j],precision)
+              val = strval(100 * tr.array[i,j] / colsum[j],precision)
               print(" ",lpad(val,colwidth," "))
           end
 
@@ -441,7 +443,7 @@ function print(tr::Stella.tab_return; row=false, col=false, cell=false, total=fa
         if cell
           print(repeat(" ",maxrowname)," |")
           for j = 1:ncols
-              val = strval(100 * tr.na.array[i,j] / tot,precision)
+              val = strval(100 * tr.array[i,j] / tot,precision)
               print(" ",lpad(val,colwidth," "))
           end
 
