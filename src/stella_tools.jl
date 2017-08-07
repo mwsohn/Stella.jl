@@ -311,7 +311,8 @@ end
 function print(tr::Stella.tab_return; row=false, col=false, cell=false, total=false, precision::Int8 = 2)
 
     if ndims(tr.na) == 1
-        return print_oneway(tr.na, total = total, precision = precision)
+        print_oneway(tr.na, total = total, precision = precision)
+        exit()
     elseif length(tr.na.dimnames) > 2
         error("Only up to two dimensional arrays are currently supported")
     end
@@ -613,7 +614,8 @@ Convert values in `v` array to NAs in the `da` DataArray and return a new DataAr
 """
 function toNA(da::DataArray, v = [])
     if isempty(v) || typeof(da) == PooledDataArray
-        return da
+        warn("Data array is either empty or a pooled data array.")
+        exit()
     end
 
     for i = 1:length(da)
