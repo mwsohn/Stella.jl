@@ -238,9 +238,9 @@ function desc(df::DataFrame,varnames::Vector=[];label_dict::Union{Void,Dict}=not
                 tmplen = length(lablab[varstr])
                 lablen[i] = length(lablab[varstr])
             end
-            if haskey(forlab,varstr)
-                tmplen = length(forlab[varstr])
-                forlen[i] = length(forlab[varstr])
+            if haskey(forlab,v)
+                tmplen = length(forlab[v])
+                forlen[i] = length(forlab[v])
             end
         end
     end
@@ -306,20 +306,20 @@ function desc(df::DataFrame,varnames::Vector=[];label_dict::Union{Void,Dict}=not
         print(prepend_spaces(string(i),maxobs),"  ",append_spaces(varstr,maxval),"  ",append_spaces(eltyp,maxtype),"  ")
 
         if label_dict != nothing
-            if haskey(lablab,varstr)
-                print(append_spaces(lablab[varstr],maxlab),"  ")
+            if haskey(lablab,v)
+                print(append_spaces(lablab[v],maxlab),"  ")
             else
                 print(repeat(" ",maxlab+2))
             end
 
-            if haskey(forlab,varstr)
-                print(append_spaces(forlab[varstr],maxformat),"  ")
+            if haskey(forlab,v)
+                print(append_spaces(forlab[v],maxformat),"  ")
             else
                 print(repeat(" ",maxformat+2))
             end
 
-            if haskey(varlab,varstr)
-                print(varlab[varstr])
+            if haskey(varlab,v)
+                print(varlab[v])
             end
         end
 

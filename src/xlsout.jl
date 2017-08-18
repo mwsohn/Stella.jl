@@ -452,9 +452,10 @@ function bivariatexls(df::DataFrame,
 
         # value label
         vals = string(colnms[i])
-        if label_dict != nothing
-            if haskey(vallab,colnms[i])
-                vals = vallab[colnms[i]]
+        if label_dict != nothing & haskey(label_dict["label"],colvar)
+            lblname = label_dict["label"][colvar]
+            if haskey(vallab,lblname) & haskey(vallab[lblname],colnms[i])
+                vals = vallab[lblname][colnms[i]]
             end
         end
 
@@ -507,44 +508,59 @@ function bivariatexls(df::DataFrame,
 
             # variable name
             # if there only two levels and one of the values is 1 or true
+            # and the other values is 0 or false,
             # just output the frequency and percentage of the 1/true row
+
+            # variable name
             t[:write_string](r,c,vars,formats[:heading_left])
 
-            for i = 1:nlev+1
-                t[:write_string](r,c+(i-1)*2+1,"",formats[:empty_right])
-                t[:write_string](r,c+(i-1)*2+2,"",formats[:empty_left])
-            end
-            t[:write_string](r,c+(nlev+1)*2+1,"",formats[:empty_border])
-
-            r += 1
-            for i = 1:length(rowval)
-                # row value
-                vals = string(rowval[i])
-                if label_dict != nothing
-                    vars = string(varname)
-                    if haskey(vallab, varname) && haskey(vallab[varname],rowval[i])
-                        vals = vallab[varname][rowval[i]]
-                    end
-                end
-                t[:write_string](r,c,vals,formats[:varname_1indent])
-
+            # two levels with [0,1] or [false,true]
+            if length(rowval) == 2 && [0,1] in ([0,1],[false,true])
                 # row total
-                t[:write](r,c+1,rowtot[i],formats[:n_fmt_right])
-                t[:write](r,c+2,rowtot[i]/tot,formats[:pct_fmt_parens])
+                t[:write](r,c+1,rowtot[2],formats[:n_fmt_right])
+                t[:write](r,c+2,rowtot[2]/tot,formats[:pct_fmt_parens])
 
                 for j = 1:nlev
-                    t[:write](r,c+j*2+1,x.array[i,j],formats[:n_fmt_right])
-                    t[:write](r,c+j*2+2,x.array[i,j]/rowtot[i],formats[:pct_fmt_parens])
+                    t[:write](r,c+j*2+1,x.array[2,j],formats[:n_fmt_right])
+                    t[:write](r,c+j*2+2,x.array[2,j]/rowtot[2],formats[:pct_fmt_parens])
                 end
+                t[:write](r,c+(nlev+1)*2,chisq_2way(x)[3],formats[:p_fmt])
+            else
+                for i = 1:nlev+1
+                    t[:write_string](r,c+(i-1)*2+1,"",formats[:empty_right])
+                    t[:write_string](r,c+(i-1)*2+2,"",formats[:empty_left])
+                end
+                t[:write_string](r,c+(nlev+1)*2+1,"",formats[:empty_border])
 
-                # p-value - output only once
-                if length(rowval) == 1
-                    t[:write](r,c+(nlev+1)*2,chisq_2way(x)[3],formats[:p_fmt])
-                elseif i == 1
-                    pval = chisq_2way(x)[3]
-                    t[:merge_range](r,c+(nlev+1)*2+1,r+length(rowval)-1,c+(nlev+1)*2+1,pval < 0.001 ? "< 0.001" : pval,formats[:p_fmt])
-                end
                 r += 1
+                for i = 1:length(rowval)
+                    # row value
+                    vals = string(rowval[i])
+                    if label_dict != nothing
+                        vars = string(varname)
+                        if haskey(vallab, varname) && haskey(vallab[varname],rowval[i])
+                            vals = vallab[varname][rowval[i]]
+                        end
+                    end
+                    t[:write_string](r,c,vals,formats[:varname_1indent])
+
+                    # row total
+                    t[:write](r,c+1,rowtot[i],formats[:n_fmt_right])
+                    t[:write](r,c+2,rowtot[i]/tot,formats[:pct_fmt_parens])
+
+                    for j = 1:nlev
+                        t[:write](r,c+j*2+1,x.array[i,j],formats[:n_fmt_right])
+                        t[:write](r,c+j*2+2,x.array[i,j]/rowtot[i],formats[:pct_fmt_parens])
+                    end
+                    # p-value - output only once
+                    if length(rowval) == 1
+                        t[:write](r,c+(nlev+1)*2,chisq_2way(x)[3],formats[:p_fmt])
+                    elseif i == 1
+                        pval = chisq_2way(x)[3]
+                        t[:merge_range](r,c+(nlev+1)*2+1,r+length(rowval)-1,c+(nlev+1)*2+1,pval < 0.001 ? "< 0.001" : pval,formats[:p_fmt])
+                    end
+                    r += 1
+                end
             end
         else
             # continuous variable
