@@ -391,7 +391,8 @@ function bivariatexls(df::DataFrame,
     wsheet::AbstractString;
     label_dict::Union{Void,Dict} = nothing,
     row::Int = 0,
-    col::Int = 0)
+    col::Int = 0,
+    verbose::Bool = true)
 
     if label_dict != nothing
         # variable labels
