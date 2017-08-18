@@ -392,6 +392,7 @@ function bivariatexls(df::DataFrame,
     label_dict::Union{Void,Dict} = nothing,
     row::Int = 0,
     col::Int = 0,
+    column_percent::Bool = true,
     verbose::Bool = false)
 
     if label_dict != nothing
@@ -505,6 +506,7 @@ function bivariatexls(df::DataFrame,
             x = freqtable(df3,varname,colvar)
             rowval = names(x,1)
             rowtot = sum(x.array,2)
+            coltot = sum(x.array,1)
 
             # variable name
             # if there only two levels and one of the values is 1 or true
@@ -522,7 +524,11 @@ function bivariatexls(df::DataFrame,
 
                 for j = 1:nlev
                     t[:write](r,c+j*2+1,x.array[2,j],formats[:n_fmt_right])
-                    t[:write](r,c+j*2+2,x.array[2,j]/rowtot[2],formats[:pct_fmt_parens])
+                    if column_percent
+                        t[:write](r,c+j*2+2,x.array[2,j]/coltot[j],formats[:pct_fmt_parens])
+                    else
+                        t[:write](r,c+j*2+2,x.array[2,j]/rowtot[2],formats[:pct_fmt_parens])
+                    end
                 end
                 t[:write](r,c+(nlev+1)*2+1,chisq_2way(x)[3],formats[:p_fmt])
                 r += 1
@@ -552,7 +558,11 @@ function bivariatexls(df::DataFrame,
 
                     for j = 1:nlev
                         t[:write](r,c+j*2+1,x.array[i,j],formats[:n_fmt_right])
-                        t[:write](r,c+j*2+2,x.array[i,j]/rowtot[i],formats[:pct_fmt_parens])
+                        if column_percent
+                            t[:write](r,c+j*2+2,x.array[i,j]/coltot[j],formats[:pct_fmt_parens])
+                        else
+                            t[:write](r,c+j*2+2,x.array[i,j]/rowtot[i],formats[:pct_fmt_parens])
+                        end
                     end
                     # p-value - output only once
                     if length(rowval) == 1
