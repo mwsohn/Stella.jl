@@ -392,7 +392,7 @@ function bivariatexls(df::DataFrame,
     label_dict::Union{Void,Dict} = nothing,
     row::Int = 0,
     col::Int = 0,
-    verbose::Bool = true)
+    verbose::Bool = false)
 
     if label_dict != nothing
         # variable labels
@@ -454,7 +454,7 @@ function bivariatexls(df::DataFrame,
         vals = string(colnms[i])
         if label_dict != nothing && haskey(label_dict["label"],colvar)
             lblname = label_dict["label"][colvar]
-            if haskey(vallab,lblname) & haskey(vallab[lblname],colnms[i])
+            if haskey(vallab,lblname) && haskey(vallab[lblname],colnms[i]) && vallab[lblname][colnms[i]] != ""
                 vals = vallab[lblname][colnms[i]]
             end
         end
@@ -493,7 +493,7 @@ function bivariatexls(df::DataFrame,
         # print the variable name
         vars = string(varname)
         if label_dict != nothing
-            if haskey(varlab,varname)
+            if haskey(varlab,varname) && varlab[varname] != ""
                 vars = varlab[varname]
             end
         end
@@ -536,10 +536,11 @@ function bivariatexls(df::DataFrame,
                 for i = 1:length(rowval)
                     # row value
                     vals = string(rowval[i])
-                    if label_dict != nothing
-                        vars = string(varname)
-                        if haskey(vallab, varname) && haskey(vallab[varname],rowval[i])
-                            vals = vallab[varname][rowval[i]]
+
+                    if label_dict != nothing && haskey(label_dict["label"],varname)
+                        lblname = label_dict["label"][varname]
+                        if haskey(vallab, lblname) && haskey(vallab[lblname],rowval[i]) && vallab[lblname][rowval[i]] != ""
+                            vals = vallab[lblname][rowval[i]]
                         end
                     end
                     t[:write_string](r,c,vals,formats[:varname_1indent])
