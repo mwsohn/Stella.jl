@@ -524,7 +524,7 @@ function bivariatexls(df::DataFrame,
                     t[:write](r,c+j*2+1,x.array[2,j],formats[:n_fmt_right])
                     t[:write](r,c+j*2+2,x.array[2,j]/rowtot[2],formats[:pct_fmt_parens])
                 end
-                t[:write](r,c+(nlev+1)*2,chisq_2way(x)[3],formats[:p_fmt])
+                t[:write](r,c+(nlev+1)*2+1,chisq_2way(x)[3],formats[:p_fmt])
                 r += 1
             else
                 for i = 1:nlev+1
