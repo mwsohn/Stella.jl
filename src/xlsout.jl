@@ -452,7 +452,7 @@ function bivariatexls(df::DataFrame,
 
         # value label
         vals = string(colnms[i])
-        if label_dict != nothing & haskey(label_dict["label"],colvar)
+        if label_dict != nothing && haskey(label_dict["label"],colvar)
             lblname = label_dict["label"][colvar]
             if haskey(vallab,lblname) & haskey(vallab[lblname],colnms[i])
                 vals = vallab[lblname][colnms[i]]
