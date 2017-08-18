@@ -432,10 +432,10 @@ function bivariatexls(df::DataFrame,
     t[:merge_range](r,c,r+2,c,"Variable",formats[:heading])
 
     # 1st row = variable name
-    colvname = string(colvar)
+    colvname = String(colvar)
     if label_dict != nothing
-        if haskey(varlab,colvname)
-            colvname = varlab[colvname]
+        if haskey(varlab,colvar)
+            colvname = varlab[colvar]
         end
     end
     t[:merge_range](r,c+1,r,c+(nlev+1)*2+1,colvname,formats[:heading])
@@ -492,8 +492,8 @@ function bivariatexls(df::DataFrame,
         # print the variable name
         vars = string(varname)
         if label_dict != nothing
-            if haskey(varlab,vars)
-                vars = varlab[vars]
+            if haskey(varlab,varname)
+                vars = varlab[varname]
             end
         end
 
@@ -522,8 +522,8 @@ function bivariatexls(df::DataFrame,
                 vals = string(rowval[i])
                 if label_dict != nothing
                     vars = string(varname)
-                    if haskey(vallab, vars) && haskey(vallab[vars],rowval[i])
-                        vals = vallab[vars][rowval[i]]
+                    if haskey(vallab, varname) && haskey(vallab[varname],rowval[i])
+                        vals = vallab[varname][rowval[i]]
                     end
                 end
                 t[:write_string](r,c,vals,formats[:varname_1indent])
