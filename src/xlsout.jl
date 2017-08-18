@@ -484,6 +484,10 @@ function bivariatexls(df::DataFrame,
     r += 1
     for varname in rowvars
 
+        if verbose == true
+            println("Processing ",varname)
+        end
+
         # print the variable name
         vars = string(varname)
         if label_dict != nothing
