@@ -1131,7 +1131,7 @@ function eform(coeftbl::StatsBase.CoefTable; label_dict::Union{Void,Dict} = noth
 
 		# If value is 1 and value label is Yes, it is a binary variable
 		# do not print " - 1"
-		if value2 == 1 && (contains(vlabel,"1") || contains(vlabel,"Yes") || contains(vlabel,"yes"))
+		if value2 == 1 && ismatch(r" *(1|[Yy]es)$",string(vlabel))
 			coeftable2.rownms[i] = varlabel
 		else
 			coeftable2.rownms[i] = string(varlabel, ": ", vlabel)
