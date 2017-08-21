@@ -1089,7 +1089,7 @@ function eform(coeftbl::StatsBase.CoefTable; label_dict::Union{Void,Dict} = noth
 	coeftable2 = coeftbl
 
 	# estimates
-	coeftable2.cols[1] = exp(coeftable2.cols[1])
+	coeftable2.cols[1] = exp.(coeftable2.cols[1])
 
 	# standard errors
 	coeftable2.cols[2] = coeftable2.cols[1] .* coeftable2.cols[2]
