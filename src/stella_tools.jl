@@ -1085,7 +1085,7 @@ function _getval(dt::Dict,val)
     return haskey(dt,val) ? dt[val] : val
 end
 
-function eform(coeftbl::StatsBase.CoefTable; label_dict::Union{Void,Dict) = nothing)
+function eform(coeftbl::StatsBase.CoefTable; label_dict::Union{Void,Dict} = nothing)
 	coeftable2 = coeftbl
 
 	# estimates
