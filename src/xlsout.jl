@@ -395,6 +395,20 @@ function bivariatexls(df::DataFrame,
     column_percent::Bool = true,
     verbose::Bool = false)
 
+    # check data
+
+    # colvar has to be a PooledDataArray and must have 2 or more categories
+    if isa(df[colvar], PooledDataArray) == false || length(levels(df[colvar]) < 2
+        error("`colvar` is not a PooledDataArray or does not have two or more levels")
+    end
+
+    # sum of rowvars must be non-zero
+    for v in rowvars
+        if sum(dropna(df[v])) == 0
+            error("`v` in `rowvars` is empty.")
+        end
+    end
+
     if label_dict != nothing
         # variable labels
         varlab = label_dict["variable"]
@@ -514,7 +528,7 @@ function bivariatexls(df::DataFrame,
             # just output the frequency and percentage of the 1/true row
 
             # variable name
-            t[:write_string](r,c,vars,formats[:heading_left])
+            t[:write_string](r,c,vars,formats[:model_name])
 
             # two levels with [0,1] or [false,true]
             if length(rowval) == 2 && [0,1] in ([0,1],[false,true])
@@ -531,7 +545,12 @@ function bivariatexls(df::DataFrame,
                     end
                 end
                 pval = chisq_2way(x)[3]
-                t[:write](r,c+(nlev+1)*2+1, pval == NaN ? "" : pval,formats[:p_fmt])
+                if pval == NaN
+                    pval = ""
+                elseif pval < 0.001
+                    pval = "< 0.001"
+                end
+                t[:write](r,c+(nlev+1)*2+1, pval,formats[:p_fmt])
                 r += 1
             else
                 for i = 1:nlev+1
@@ -575,7 +594,6 @@ function bivariatexls(df::DataFrame,
                     if length(rowval) == 1
                         t[:write](r,c+(nlev+1)*2,pval,formats[:p_fmt])
                     elseif i == 1
-                        pval = chisq_2way(x)[3]
                         t[:merge_range](r,c+(nlev+1)*2+1,r+length(rowval)-1,c+(nlev+1)*2+1,pval,formats[:p_fmt])
                     end
                     r += 1
