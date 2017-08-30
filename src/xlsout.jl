@@ -545,12 +545,11 @@ function bivariatexls(df::DataFrame,
                     end
                 end
                 pval = chisq_2way(x)[3]
-                if pval == NaN || pval == Inf
+                if isnan(pval) || isinf(pval)
                     pval = ""
                 elseif pval < 0.001
                     pval = "< 0.001"
                 end
-                println(vars," ---> ",pval)
                 t[:write](r,c+(nlev+1)*2+1, pval,formats[:p_fmt])
                 r += 1
             else
@@ -587,7 +586,7 @@ function bivariatexls(df::DataFrame,
                     end
                     # p-value - output only once
                     pval = chisq_2way(x)[3]
-                    if pval == NaN || pval == Inf
+                    if isnan(pval) || isinf(pval)
                         pval = ""
                     elseif pval < 0.001
                         pval = "< 0.001"
@@ -624,7 +623,12 @@ function bivariatexls(df::DataFrame,
             end
             if size(y,1) > 1
                 pval = anovap(df3,varname,colvar)
-                t[:write](r,c+(nlev+1)*2+1,pval < 0.001 ? "< 0.001" : pval,formats[:p_fmt])
+                if isnan(pval) || isinf(pval)
+                    pval = ""
+                elseif pval < 0.001
+                    pval = "< 0.001"
+                end
+                t[:write](r,c+(nlev+1)*2+1,pval,formats[:p_fmt])
             else
                 t[:write](r,c+(nlev+1)*2+1,"",formats[:p_fmt])
             end
