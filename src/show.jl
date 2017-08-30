@@ -255,3 +255,38 @@ function show_oneway(io::IO,na::NamedArrays.NamedArray; total = false, precision
             " ",lpad(cumpct,colwidth," "),"\n")
     end
 end
+
+Base.show(io::IO,::MIME"text/plain",pwr::pwcorr_return) = show(io,pwr)
+
+function show(io::IO,pr::pwcorr_return; width::Int8 = 9, precision::Int8 = 3, p = false, N = false)
+
+    ncol = size(pr.N,1)
+
+    for i = 1:ncol
+        print(io,prepend_spaces(pr.colnames[i],width))
+        if i < ncol
+            print(io," ")
+        end
+    end
+    print(io,"\n")
+
+    for i = 1:ncol
+        print(io,prepend_spaces(pr.colnames[i],width)," ")
+        for j=1:i
+            printf(io,"%9.4f ",bc[i,j])
+            if i == j
+                print(io,"\n")
+            end
+        end
+    end
+        if p == true
+            print(io,repeat(" ",width+1))
+            for j=1:i
+                printf(io,"%9.4f ",bp[i,j])
+                if i == j
+                    print(io,"\n")
+                end
+            end
+        end
+    end
+end

@@ -525,9 +525,9 @@ function bivariatexls(df::DataFrame,
                 for j = 1:nlev
                     t[:write](r,c+j*2+1,x.array[2,j],formats[:n_fmt_right])
                     if column_percent
-                        t[:write](r,c+j*2+2,x.array[2,j]/coltot[j],formats[:pct_fmt_parens])
-                    else
-                        t[:write](r,c+j*2+2,x.array[2,j]/rowtot[2],formats[:pct_fmt_parens])
+                        t[:write](r,c+j*2+2, coltot[j] > 0 ? x.array[2,j]/coltot[j] : "",formats[:pct_fmt_parens])
+                    elseif rowtot[2] > 0
+                        t[:write](r,c+j*2+2, rowtot[2] > 0 ? x.array[2,j]/rowtot[2] : "",formats[:pct_fmt_parens])
                     end
                 end
                 t[:write](r,c+(nlev+1)*2+1,chisq_2way(x)[3],formats[:p_fmt])
