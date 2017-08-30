@@ -282,7 +282,7 @@ function glmxls(glmout,wbook::AbstractString,wsheet::AbstractString;
 
     xlsxwriter = pyimport("xlsxwriter")
 
-    wb = xlsxwriter[:Workbook](wbook,Dict("nan_inf_to_errors" => true))
+    wb = xlsxwriter[:Workbook](wbook)
 
     glmxls(glmout,wb,wsheet,label_dict=label_dict,eform=eform,ci=ci,row=row,col=col)
 end
@@ -550,6 +550,7 @@ function bivariatexls(df::DataFrame,
                 elseif pval < 0.001
                     pval = "< 0.001"
                 end
+                println(vars," ---> ",pval)
                 t[:write](r,c+(nlev+1)*2+1, pval,formats[:p_fmt])
                 r += 1
             else
@@ -586,7 +587,7 @@ function bivariatexls(df::DataFrame,
                     end
                     # p-value - output only once
                     pval = chisq_2way(x)[3]
-                    if pval == NaN
+                    if pval == NaN || pval == Inf
                         pval = ""
                     elseif pval < 0.001
                         pval = "< 0.001"
