@@ -305,6 +305,7 @@ end
 - `label_dict`: an option to specify a `label` dictionary (see an example below)
 - `row`: specify the row of the workbook to start the output table (default = 0 (for row 1))
 - `col`: specify the column of the workbook to start the output table (default = 0 (for column A))
+- `column_percent`: set this to `false` if you want row percentages in the output table (default = true) 
 
 # Example 1
 This example is useful when one wants to append a worksheet to an existing workbook.
@@ -485,7 +486,7 @@ function bivariatexls(df::DataFrame,
     # total
     c = 0
     r += 2
-    t[:write_string](r,c,"All",formats[:heading_left])
+    t[:write_string](r,c,"All, n (Row %)",formats[:model_name])
     x = freqtable(df2,colvar)
     tot = sum(x.array)
     t[:write](r,c+1,tot,formats[:n_fmt_right])
@@ -514,7 +515,7 @@ function bivariatexls(df::DataFrame,
         end
 
         # determine if varname is categorical or continuous
-        if typeof(df2[varname]) <: PooledDataArray || eltype(df2[varname]) == String
+        if isa(df2[varname], PooledDataArray) || eltype(df2[varname]) == String
             # categorial
             df3=df2[completecases(df2[[varname]]),[varname,colvar]]
             x = freqtable(df3,varname,colvar)
@@ -605,7 +606,7 @@ function bivariatexls(df::DataFrame,
             y = tabstat(df3,varname,colvar)
 
             # variable name
-            t[:write_string](r,c,string(vars,", mean (SD)"),formats[:heading_left])
+            t[:write_string](r,c,string(vars,", mean (SD)"),formats[:model_name])
 
             # All
             t[:write](r,c+1,mean(df3[varname]),formats[:f_fmt_right])
