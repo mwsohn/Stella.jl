@@ -530,7 +530,8 @@ function bivariatexls(df::DataFrame,
                         t[:write](r,c+j*2+2, rowtot[2] > 0 ? x.array[2,j]/rowtot[2] : "",formats[:pct_fmt_parens])
                     end
                 end
-                t[:write](r,c+(nlev+1)*2+1,chisq_2way(x)[3],formats[:p_fmt])
+                pval = chisq_2way(x)[3]
+                t[:write](r,c+(nlev+1)*2+1, pval == NaN ? "" : pval,formats[:p_fmt])
                 r += 1
             else
                 for i = 1:nlev+1
@@ -559,17 +560,23 @@ function bivariatexls(df::DataFrame,
                     for j = 1:nlev
                         t[:write](r,c+j*2+1,x.array[i,j],formats[:n_fmt_right])
                         if column_percent
-                            t[:write](r,c+j*2+2,x.array[i,j]/coltot[j],formats[:pct_fmt_parens])
+                            t[:write](r,c+j*2+2,coltot[j] > 0 ? x.array[i,j]/coltot[j] : "",formats[:pct_fmt_parens])
                         else
-                            t[:write](r,c+j*2+2,x.array[i,j]/rowtot[i],formats[:pct_fmt_parens])
+                            t[:write](r,c+j*2+2,rowtot[i] > 0 ? x.array[i,j]/rowtot[i] : "",formats[:pct_fmt_parens])
                         end
                     end
                     # p-value - output only once
+                    pval = chisq_2way(x)[3]
+                    if pval == NaN
+                        pval = ""
+                    elseif pval < 0.001
+                        pval = "< 0.001"
+                    end
                     if length(rowval) == 1
-                        t[:write](r,c+(nlev+1)*2,chisq_2way(x)[3],formats[:p_fmt])
+                        t[:write](r,c+(nlev+1)*2,pval,formats[:p_fmt])
                     elseif i == 1
                         pval = chisq_2way(x)[3]
-                        t[:merge_range](r,c+(nlev+1)*2+1,r+length(rowval)-1,c+(nlev+1)*2+1,pval < 0.001 ? "< 0.001" : pval,formats[:p_fmt])
+                        t[:merge_range](r,c+(nlev+1)*2+1,r+length(rowval)-1,c+(nlev+1)*2+1,pval,formats[:p_fmt])
                     end
                     r += 1
                 end
