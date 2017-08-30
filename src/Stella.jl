@@ -63,7 +63,8 @@ export  read_stata,  # read stata 13 and 14 files into DF
         dfxls,      # output dataframe in an excel file
         dir,        # directory listing
         ds,         # filenames according to type, length, or regex
-        getmaxlength # maximum length of a string variable
+        getmaxlength, # maximum length of a string variable
+        show
 
 
 

@@ -215,43 +215,43 @@ function show(io::IO,tr::Stella.tab_return; row=false, col=false, cell=false, to
     println(io,"\nPearson χ² (",tr.dof,") = ",@sprintf("%.3f",tr.chisq)," Pr = ",@sprintf("%.3f",tr.p))
 end
 
-# function print_oneway(na::NamedArrays.NamedArray; total = false, precision::Int8 = 2)
-#
-#     rownames = names(na,1)
-#
-#     maxrowname = max(5,maximum(length.(rownames)))
-#
-#     # width of data columns - the same as the length of tht grand total
-#     tot = sum(na) # grand total
-#     colwidth = max(7,length(digits(Int(floor(tot)))))
-#
-#     # print header
-#     print(rpad("Value",maxrowname," "))
-#     print(" | ",lpad("Count",colwidth," ")," ",lpad("Percent",colwidth," "),
-#         " ",lpad("Cum_pct",colwidth," "),"\n")
-#     print(repeat("-",maxrowname),"-+-",repeat("-",colwidth),"-",repeat("-",colwidth),"-",repeat("-",colwidth),"\n")
-#
-#     # values
-#     cumtot = cumsum(na.array)
-#     for i = 1:size(na.array,1)
-#         str = strval(na.array[i])
-#         pct = strval(100*na.array[i] / tot, precision)
-#         cumpct = strval(100*cumtot[i] / tot, precision)
-#         print(rpad(string(rownames[i]),maxrowname," "),
-#             " | ",lpad(str,colwidth," "),
-#             " ",lpad(pct,colwidth," "),
-#             " ",lpad(cumpct,colwidth," "),"\n")
-#     end
-#
-#     # total
-#     if total
-#         print(repeat("-",maxrowname),"-+-",repeat("-",colwidth),"-",repeat("-",colwidth),"-",repeat("-",colwidth),"\n")
-#         str = strval(tot)
-#         pct = strval(100.00, precision)
-#         cumpct = strval(100.00, precision)
-#         print(rpad("Total",maxrowname," "),
-#             " | ",lpad(str,colwidth," "),
-#             " ",lpad(pct,colwidth," "),
-#             " ",lpad(cumpct,colwidth," "),"\n")
-#     end
-# end
+function show_oneway(io::IO,na::NamedArrays.NamedArray; total = false, precision::Int8 = 2)
+
+    rownames = names(na,1)
+
+    maxrowname = max(5,maximum(length.(rownames)))
+
+    # width of data columns - the same as the length of tht grand total
+    tot = sum(na) # grand total
+    colwidth = max(7,length(digits(Int(floor(tot)))))
+
+    # print header
+    print(io,rpad("Value",maxrowname," "))
+    print(io," | ",lpad("Count",colwidth," ")," ",lpad("Percent",colwidth," "),
+        " ",lpad("Cum_pct",colwidth," "),"\n")
+    print(io,repeat("-",maxrowname),"-+-",repeat("-",colwidth),"-",repeat("-",colwidth),"-",repeat("-",colwidth),"\n")
+
+    # values
+    cumtot = cumsum(na.array)
+    for i = 1:size(na.array,1)
+        str = strval(na.array[i])
+        pct = strval(100*na.array[i] / tot, precision)
+        cumpct = strval(100*cumtot[i] / tot, precision)
+        print(io,rpad(string(rownames[i]),maxrowname," "),
+            " | ",lpad(str,colwidth," "),
+            " ",lpad(pct,colwidth," "),
+            " ",lpad(cumpct,colwidth," "),"\n")
+    end
+
+    # total
+    if total
+        print(io,repeat("-",maxrowname),"-+-",repeat("-",colwidth),"-",repeat("-",colwidth),"-",repeat("-",colwidth),"\n")
+        str = strval(tot)
+        pct = strval(100.00, precision)
+        cumpct = strval(100.00, precision)
+        print(io,rpad("Total",maxrowname," "),
+            " | ",lpad(str,colwidth," "),
+            " ",lpad(pct,colwidth," "),
+            " ",lpad(cumpct,colwidth," "),"\n")
+    end
+end
