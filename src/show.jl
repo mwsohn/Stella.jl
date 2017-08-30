@@ -1,6 +1,6 @@
 import Base.show
 
-Base.show(io::IO, ::MIME"text/plain", t::Stella.tab_return) = show(io,t)
+Base.show(io::IO, ::MIME"text/plain", tr::Stella.tab_return) = show(io,tr)
 
 function show(io::IO,tr::Stella.tab_return; row=false, col=false, cell=false, total=false, precision::Int8 = 2)
 
@@ -256,7 +256,7 @@ function show_oneway(io::IO,na::NamedArrays.NamedArray; total = false, precision
     end
 end
 
-Base.show(io::IO,::MIME"text/plain",pwr::pwcorr_return) = show(io,pwr)
+Base.show(io::IO,::MIME"text/plain",pr::pwcorr_return) = show(io,pr)
 
 function show(io::IO,pr::pwcorr_return; width::Int8 = 9, precision::Int8 = 3, p = false, N = false)
 
@@ -278,7 +278,6 @@ function show(io::IO,pr::pwcorr_return; width::Int8 = 9, precision::Int8 = 3, p 
                 print(io,"\n")
             end
         end
-    end
         if p == true
             print(io,repeat(" ",width+1))
             for j=1:i
