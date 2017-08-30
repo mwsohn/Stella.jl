@@ -398,7 +398,7 @@ function bivariatexls(df::DataFrame,
     # check data
 
     # colvar has to be a PooledDataArray and must have 2 or more categories
-    if isa(df[colvar], PooledDataArray) == false || length(levels(df[colvar]) < 2
+    if isa(df[colvar], PooledDataArray) == false || length(levels(df[colvar])) < 2
         error("`colvar` is not a PooledDataArray or does not have two or more levels")
     end
 
