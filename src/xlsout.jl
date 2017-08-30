@@ -282,7 +282,7 @@ function glmxls(glmout,wbook::AbstractString,wsheet::AbstractString;
 
     xlsxwriter = pyimport("xlsxwriter")
 
-    wb = xlsxwriter[:Workbook](wbook)
+    wb = xlsxwriter[:Workbook](wbook,Dict("nan_inf_to_errors" => true))
 
     glmxls(glmout,wb,wsheet,label_dict=label_dict,eform=eform,ci=ci,row=row,col=col)
 end
