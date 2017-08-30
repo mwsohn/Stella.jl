@@ -1065,7 +1065,27 @@ recode(df::DataFrame,varname::Symbol,coding::Dict; restna = false) = recode(df[v
 #----------------------------------------------------------------------------
 # eform
 #----------------------------------------------------------------------------
-function eform(coeftbl::StatsBase.CoefTable)
+# function eform(coeftbl::StatsBase.CoefTable)
+# 	coeftable2 = coeftbl
+#
+# 	# estimates
+# 	coeftable2.cols[1] = exp.(coeftable2.cols[1])
+#
+# 	# standard errors
+# 	coeftable2.cols[2] = coeftable2.cols[1] .* coeftable2.cols[2]
+#
+# 	# rename column1 to OR
+# 	coeftable2.colnms[1] = "OR"
+#
+# 	return coeftable2
+# end
+#
+#
+function _getval(dt::Dict,val)
+    return haskey(dt,val) ? dt[val] : val
+end
+
+function eform(coeftbl::StatsBase.CoefTable; label_dict::Union{Void,Dict} = nothing)
 	coeftable2 = coeftbl
 
 	# estimates
@@ -1077,25 +1097,10 @@ function eform(coeftbl::StatsBase.CoefTable)
 	# rename column1 to OR
 	coeftable2.colnms[1] = "OR"
 
-	return coeftable2
-end
-
-
-function _getval(dt::Dict,val)
-    return haskey(dt,val) ? dt[val] : val
-end
-
-function eform(coeftbl::StatsBase.CoefTable, label_dict::Dict)
-	coeftable2 = coeftbl
-
-	# estimates
-	coeftable2.cols[1] = exp(coeftable2.cols[1])
-
-	# standard errors
-	coeftable2.cols[2] = coeftable2.cols[1] .* coeftable2.cols[2]
-
-	# rename column1 to OR
-	coeftable2.colnms[1] = "OR"
+    # no label dictionary
+    if label_dict == nothing
+        return coeftable2
+    end
 
 	# parse the row names and change variable names and values
 	for i in 2:length(coeftable2.rownms)
@@ -1107,7 +1112,7 @@ function eform(coeftbl::StatsBase.CoefTable, label_dict::Dict)
 		end
 
         # get variable label from the label dictionary
-		varlabel = _getval(label_dict["variable"],varname)
+		varlabel = _getval(label_dict["variable"],Symbol(varname))
         if varlabel == ""
             varlabel = varname
         end
@@ -1118,7 +1123,7 @@ function eform(coeftbl::StatsBase.CoefTable, label_dict::Dict)
 			continue
 		end
 
-		lblname = haskey(label_dict["label"], varname) ? label_dict["label"][varname] : nothing
+		lblname = haskey(label_dict["label"], Symbol(varname)) ? label_dict["label"][Symbol(varname)] : nothing
 
 		value2 = parse(Int,value)
 		vlabel = (lblname != nothing && haskey(label_dict["value"],lblname) && haskey(label_dict["value"][lblname],value2)) ?
@@ -1126,7 +1131,7 @@ function eform(coeftbl::StatsBase.CoefTable, label_dict::Dict)
 
 		# If value is 1 and value label is Yes, it is a binary variable
 		# do not print " - 1"
-		if value2 == 1 && ismatch(r"^ *yes *$"i,vlabel)
+		if value2 == 1 && ismatch(r" *(1|[Yy]es)$",string(vlabel))
 			coeftable2.rownms[i] = varlabel
 		else
 			coeftable2.rownms[i] = string(varlabel, ": ", vlabel)
