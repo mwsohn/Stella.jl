@@ -398,7 +398,7 @@ function read_stata!(fn,df::DataFrame,label::Dict; categorize=true, verbose=fals
             else
                 offset_end = offset[k+1]
             end
-            println(".....",values[k])
+            println(labname,".....",values[k])
             if values[k] != ""
                 value_labels[labname][values[k]] = strtonull(valtext[offset[k]+1:offset_end])
             end
