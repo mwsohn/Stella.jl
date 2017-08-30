@@ -545,7 +545,7 @@ function bivariatexls(df::DataFrame,
                     end
                 end
                 pval = chisq_2way(x)[3]
-                if pval == NaN
+                if pval == NaN || pval == Inf
                     pval = ""
                 elseif pval < 0.001
                     pval = "< 0.001"
