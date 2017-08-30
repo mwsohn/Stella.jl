@@ -1,4 +1,4 @@
-VERSION >= v"0.5.0" && __precompile__()
+VERSION >= v"0.6.0" && __precompile__()
 
 module Stella
 
@@ -73,10 +73,10 @@ export  read_stata,  # read stata 13 and 14 files into DF
 ## Load files
 ##
 ##############################################################################
-
 include("stella_tools.jl")
 include("DataFrame_tools.jl")
 include("Stata_Reader.jl")
 include("xlsout.jl")
+include("show.jl")
 
 end
