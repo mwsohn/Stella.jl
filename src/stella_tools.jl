@@ -1449,3 +1449,26 @@ function printdir(vstr::Vector{String})
     println(append_spaces(vstr[i],maxlen),"  ", datasize(stat(vstr[i]).size))
   end
 end
+
+"""
+    deleterc(m::Matrix)
+
+Drops rows and columns from a 2-dimensional matrix that have zeros in their margin totals.
+"""
+function deleterc(m::Matrix)
+    colsum = sum(m,1)
+    colindex = Vector{Int64}()
+    for i=1:length(colsum)
+        if colsum[i] != 0
+            push!(colindex,i)
+        end
+    end
+    rowsum = sum(m,2)
+    rowindex = Vector{Int64}()
+    for i=1:length(rowsum)
+        if rowsum[i] != 0
+            push!(rowindex,i)
+        end
+    end
+    return m[rowindex,colindex]
+end

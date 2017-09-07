@@ -305,9 +305,9 @@ end
 - `label_dict`: an option to specify a `label` dictionary (see an example below)
 - `row`: specify the row of the workbook to start the output table (default = 0 (for row 1))
 - `col`: specify the column of the workbook to start the output table (default = 0 (for column A))
-- `column_percent`: set this to `false` if you want row percentages in the output table (default = true) 
+- `column_percent`: set this to `false` if you want row percentages in the output table (default = true)
 
-# Example 1
+### Example 1
 This example is useful when one wants to append a worksheet to an existing workbook.
 It is responsibility of the user to open a workbook before the function call and close it
 to actually create the physical file by close the workbook.
@@ -327,7 +327,7 @@ julia> bivairatexls(df,:incomecat,[:age,:race,:male,:bmicat],wb,"Bivariate",labe
 Julia> wb[:close]()
 ```
 
-# Example 2
+### Example 2
 Alternatively, one can create a spreadsheet file directly. `PyCall` or `@pyimport`
 does not need to be called before the function.
 
@@ -335,7 +335,7 @@ does not need to be called before the function.
 julia> bivariatexls(df,:incomecat,[:age,:race,:male,:bmicat],"test_workbook.xlsx","Bivariate",label_dict = label)
 ```
 
-# Example 3
+### Example 3
 A `label` dictionary is a collection of dictionaries, two of which are `variable` and `value`
 dictionaries. The label dictionary can be created as follows:
 
@@ -545,7 +545,7 @@ function bivariatexls(df::DataFrame,
                         t[:write](r,c+j*2+2, rowtot[2] > 0 ? x.array[2,j]/rowtot[2] : "",formats[:pct_fmt_parens])
                     end
                 end
-                pval = chisq_2way(x)[3]
+                pval = pvalue(ChisqTest(deleterc(x.array)))
                 if isnan(pval) || isinf(pval)
                     pval = ""
                 elseif pval < 0.001
@@ -586,7 +586,7 @@ function bivariatexls(df::DataFrame,
                         end
                     end
                     # p-value - output only once
-                    pval = chisq_2way(x)[3]
+                    pval = pvalue(ChisqTest(deleterc(x.array)))
                     if isnan(pval) || isinf(pval)
                         pval = ""
                     elseif pval < 0.001
@@ -871,7 +871,7 @@ julia> dfxls(df,"test_workbook.xlsx","df",nrows = 0)
 function dfxls(df::DataFrame,
     wbook::PyObject;
     worksheet::AbstractString = "Data1",
-    rows::Int64 = 500, start::Int64 = 1, col::Int64 = 0, row::Int64 = 0)
+    nrows::Int64 = 500, start::Int64 = 1, col::Int64 = 0, row::Int64 = 0)
 
     # create a worksheet
     t = wbook[:add_worksheet](worksheet)
