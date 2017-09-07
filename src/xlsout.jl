@@ -923,7 +923,6 @@ function dfxls(df::DataFrame,
         c += 1
     end
 
-    wb[:close]()
 end
 function dfxls(df::DataFrame,
     wbook::AbstractString,
@@ -938,7 +937,7 @@ function dfxls(df::DataFrame,
 
     dfxls(df,wb,worksheet, nrows = nrows, start = start, col = col, row = row)
 
-    wb[:close]()
+    wbook[:close]()
 end
 
 function newfilename(filen::AbstractString)
