@@ -652,6 +652,8 @@ function bivariatexls(df::DataFrame,
     wb = xlsxwriter[:Workbook](wbook)
 
     bivariatexls(df,colvar,rowvars,wb,wsheet,label_dict=label_dict,row=row,col=col)
+
+    wb[:close]()
 end
 
 
@@ -818,11 +820,13 @@ function univariatexls(df::DataFrame,contvars::Vector{Symbol},wbook::AbstractStr
     wb = wlsxwriter[:Workbook](wbook)
 
     univariatexls(df,contvars,wb,wsheet,label_dict=label_dict,row=row,col=col)
+
+    wb[:close]()
 end
 
 
 """
-    dfxls(df::DataFrame,workbook::PyObject; worksheet::AbstractString = "Data1",nrow = 500, start = 1, row=0,col=0)
+    dfxls(df::DataFrame,workbook::PyObject, worksheet::AbstractString; nrows = 500, start = 1, row=0, col=0)
 
  To use this function, `PyCall` is required with a working version python and
  a python package called `xlsxwriter` installed. Options are:
@@ -870,8 +874,8 @@ julia> dfxls(df,"test_workbook.xlsx","df",nrows = 0)
 """
 function dfxls(df::DataFrame,
     wbook::PyObject;
-    worksheet::AbstractString = "Data1",
-    nrows::Int64 = 500, start::Int64 = 1, col::Int64 = 0, row::Int64 = 0)
+    worksheet::AbstractString;
+    nrows::Int64 = 0, start::Int64 = 1, col::Int64 = 0, row::Int64 = 0)
 
     # create a worksheet
     t = wbook[:add_worksheet](worksheet)
@@ -922,9 +926,9 @@ function dfxls(df::DataFrame,
     wb[:close]()
 end
 function dfxls(df::DataFrame,
-    wbook::AbstractString;
-    worksheet::AbstractString = "Data1",
-    nrows::Int64 = 500, start::Int64 = 1, col::Int64 = 0, row::Int64 = 0)
+    wbook::AbstractString
+    worksheet::AbstractString;
+    nrows::Int64 = 0, start::Int64 = 1, col::Int64 = 0, row::Int64 = 0)
 
     # import xlsxwriter
     XlsxWriter = pyimport("xlsxwriter")
@@ -932,7 +936,9 @@ function dfxls(df::DataFrame,
     # create a workbook
     wb = XlsxWriter[:Workbook](wbook)
 
-    dfxls(df,wb,worksheet = worksheet, nrows = nrows, start = start, col = col, row = row)
+    dfxls(df,wb,worksheet, nrows = nrows, start = start, col = col, row = row)
+
+    wb[:close]()
 end
 
 function newfilename(filen::AbstractString)
