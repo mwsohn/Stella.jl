@@ -926,7 +926,7 @@ function dfxls(df::DataFrame,
     wb[:close]()
 end
 function dfxls(df::DataFrame,
-    wbook::AbstractString
+    wbook::AbstractString,
     worksheet::AbstractString;
     nrows::Int64 = 0, start::Int64 = 1, col::Int64 = 0, row::Int64 = 0)
 
