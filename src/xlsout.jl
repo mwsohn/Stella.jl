@@ -305,7 +305,7 @@ end
 - `label_dict`: an option to specify a `label` dictionary (see an example below)
 - `row`: specify the row of the workbook to start the output table (default = 0 (for row 1))
 - `col`: specify the column of the workbook to start the output table (default = 0 (for column A))
-- `column_percent`: set this to `false` if you want row percentages in the output table (default = true) 
+- `column_percent`: set this to `false` if you want row percentages in the output table (default = true)
 
 # Example 1
 This example is useful when one wants to append a worksheet to an existing workbook.
@@ -400,13 +400,13 @@ function bivariatexls(df::DataFrame,
 
     # colvar has to be a PooledDataArray and must have 2 or more categories
     if isa(df[colvar], PooledDataArray) == false || length(levels(df[colvar])) < 2
-        error("`colvar` is not a PooledDataArray or does not have two or more levels")
+        error("`",colvar,"` is not a PooledDataArray or does not have two or more levels")
     end
 
     # sum of rowvars must be non-zero
     for v in rowvars
         if sum(dropna(df[v])) == 0
-            error("`v` in `rowvars` is empty.")
+            error("`",v,"` in `rowvars` is empty.")
         end
     end
 
