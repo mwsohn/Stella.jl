@@ -307,7 +307,7 @@ end
 - `col`: specify the column of the workbook to start the output table (default = 0 (for column A))
 - `column_percent`: set this to `false` if you want row percentages in the output table (default = true)
 
-# Example 1
+### Example 1
 This example is useful when one wants to append a worksheet to an existing workbook.
 It is responsibility of the user to open a workbook before the function call and close it
 to actually create the physical file by close the workbook.
@@ -327,7 +327,7 @@ julia> bivairatexls(df,:incomecat,[:age,:race,:male,:bmicat],wb,"Bivariate",labe
 Julia> wb[:close]()
 ```
 
-# Example 2
+### Example 2
 Alternatively, one can create a spreadsheet file directly. `PyCall` or `@pyimport`
 does not need to be called before the function.
 
@@ -335,7 +335,7 @@ does not need to be called before the function.
 julia> bivariatexls(df,:incomecat,[:age,:race,:male,:bmicat],"test_workbook.xlsx","Bivariate",label_dict = label)
 ```
 
-# Example 3
+### Example 3
 A `label` dictionary is a collection of dictionaries, two of which are `variable` and `value`
 dictionaries. The label dictionary can be created as follows:
 
@@ -545,7 +545,7 @@ function bivariatexls(df::DataFrame,
                         t[:write](r,c+j*2+2, rowtot[2] > 0 ? x.array[2,j]/rowtot[2] : "",formats[:pct_fmt_parens])
                     end
                 end
-                pval = chisq_2way(x)[3]
+                pval = pvalue(ChisqTest(deleterc(x.array)))
                 if isnan(pval) || isinf(pval)
                     pval = ""
                 elseif pval < 0.001
@@ -586,7 +586,7 @@ function bivariatexls(df::DataFrame,
                         end
                     end
                     # p-value - output only once
-                    pval = chisq_2way(x)[3]
+                    pval = pvalue(ChisqTest(deleterc(x.array)))
                     if isnan(pval) || isinf(pval)
                         pval = ""
                     elseif pval < 0.001
@@ -652,6 +652,8 @@ function bivariatexls(df::DataFrame,
     wb = xlsxwriter[:Workbook](wbook)
 
     bivariatexls(df,colvar,rowvars,wb,wsheet,label_dict=label_dict,row=row,col=col)
+
+    wb[:close]()
 end
 
 
@@ -818,11 +820,13 @@ function univariatexls(df::DataFrame,contvars::Vector{Symbol},wbook::AbstractStr
     wb = wlsxwriter[:Workbook](wbook)
 
     univariatexls(df,contvars,wb,wsheet,label_dict=label_dict,row=row,col=col)
+
+    wb[:close]()
 end
 
 
 """
-    dfxls(df::DataFrame,workbook::PyObject; worksheet::AbstractString = "Data1",nrow = 500, start = 1, row=0,col=0)
+    dfxls(df::DataFrame,workbook::PyObject, worksheet::AbstractString; nrows = 500, start = 1, row=0, col=0)
 
  To use this function, `PyCall` is required with a working version python and
  a python package called `xlsxwriter` installed. Options are:
@@ -869,9 +873,9 @@ julia> dfxls(df,"test_workbook.xlsx","df",nrows = 0)
 
 """
 function dfxls(df::DataFrame,
-    wbook::PyObject;
-    worksheet::AbstractString = "Data1",
-    rows::Int64 = 500, start::Int64 = 1, col::Int64 = 0, row::Int64 = 0)
+    wbook::PyObject,
+    worksheet::AbstractString;
+    nrows::Int64 = 0, start::Int64 = 1, col::Int64 = 0, row::Int64 = 0)
 
     # create a worksheet
     t = wbook[:add_worksheet](worksheet)
@@ -919,12 +923,11 @@ function dfxls(df::DataFrame,
         c += 1
     end
 
-    wb[:close]()
 end
 function dfxls(df::DataFrame,
-    wbook::AbstractString;
-    worksheet::AbstractString = "Data1",
-    nrows::Int64 = 500, start::Int64 = 1, col::Int64 = 0, row::Int64 = 0)
+    wbook::AbstractString,
+    worksheet::AbstractString;
+    nrows::Int64 = 0, start::Int64 = 1, col::Int64 = 0, row::Int64 = 0)
 
     # import xlsxwriter
     XlsxWriter = pyimport("xlsxwriter")
@@ -932,7 +935,9 @@ function dfxls(df::DataFrame,
     # create a workbook
     wb = XlsxWriter[:Workbook](wbook)
 
-    dfxls(df,wb,worksheet = worksheet, nrows = nrows, start = start, col = col, row = row)
+    dfxls(df,wb,worksheet, nrows = nrows, start = start, col = col, row = row)
+
+    wbook[:close]()
 end
 
 function newfilename(filen::AbstractString)
