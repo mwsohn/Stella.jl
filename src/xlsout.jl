@@ -501,7 +501,11 @@ function bivariatexls(df::DataFrame,
 
         # sum of rowvars must be non-zero
         if sum(dropna(df[varname])) == 0
+<<<<<<< HEAD
             warn("`",varname,"` in `rowvars` is empty.")
+=======
+            warn("`",v,"` in `rowvars` is empty.")
+>>>>>>> 26bd3d7d7be9b2d8c144a96aa2df7cfc0b06b973
             continue
         end
 
