@@ -39,11 +39,11 @@ function dacompress(da::DataArray)
     # if the original eltype is a Boolean or a String
     # then do not perform any compression
     if eltype_old == Bool
-        error(da," is a Boolean. No need to compress.")
+        warn(da," is a Boolean. No need to compress.")
     elseif eltype_old <: AbstractString
-        error(da," is a String. No need to compress.")
+        warn(da," is a String. No need to compress.")
     elseif length(dropna(da)) == 0
-        error(da," is an empty column. No need to compress")
+        warn(da," is an empty column. No need to compress")
     end
 
     if  eltype_old <: Integer
@@ -59,6 +59,11 @@ function dacompress(da::DataArray)
             return da
         end
     elseif eltype_old <: AbstractFloat
+        # first test if the floats are integer numbers
+        if sum(isinteger.(dropna(da)).==false) == 0
+            return decompress(convert(DataArray{Int64,1},da))
+        end
+
         # get minimum and maximum values
         varfmin = minimum(dropna(da))
         varfmax = maximum(dropna(da))
@@ -726,4 +731,45 @@ function classify(da::DataArray,thresholds::Vector; lower::Bool = false)
         end
     end
     return da2
+end
+
+"""
+    addvars(fm::Formula,v::Vector{Symbol})
+
+Adds covariates to an existing formula. `fm` is an object of `Formula` type
+created by `@formula` macro. `v` is a vector of Symbols. This function is useful to
+build hierarchically nested models.
+
+### Example
+
+```jldoctest
+julia> using DataFrames
+
+julia> fm = @formula(income ~ age + male)
+Formula: income ~ age + male
+
+julia> fm2 = addvars(fm,[:race, :educ])
+Formula: income ~ age + male + race + educ
+```
+
+"""
+function addvars(fmm::Formula,v::Vector{Symbol})
+
+    # create a new Formula object
+    fm = deepcopy(fmm)
+
+    # if fm.rhs is a Symbol, convert it to an Expr first
+    if typeof(fm.rhs) == Symbol
+        tmpvar = fm.rhs
+        fm.rhs = :()
+        push!(fm.rhs.args,:+)
+        push!(fm.rhs.args,tmpvar)
+        fm.rhs.head = :call
+    end
+
+    for i=1:length(v)
+        push!(fm.rhs.args,v[i])
+    end
+
+    return fm
 end
