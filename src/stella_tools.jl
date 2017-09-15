@@ -502,7 +502,7 @@ function rowsum(df::DataFrame)
         da = DataArray(zeros(Int64,size(df,1)))
     end
 
-    ba = complete_cases(df)
+    ba = completecases(df)
     for i = 1:size(df,1)
         if ba[i] == false
             da[i] = NA

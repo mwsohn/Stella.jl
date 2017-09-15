@@ -78,6 +78,7 @@ include("stella_tools.jl")
 include("DataFrame_tools.jl")
 include("Stata_Reader.jl")
 include("xlsout.jl")
+include("tab.jl")
 include("show.jl")
 
 end

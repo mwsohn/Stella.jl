@@ -1,5 +1,5 @@
 struct tab_return
-    freq::Int64
+    na::NamedArray
     chisq::Float64
     dof::Int64
     p::Float64

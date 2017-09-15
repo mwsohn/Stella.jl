@@ -2,7 +2,7 @@ import Base.show
 
 Base.show(io::IO, ::MIME"text/plain", tr::Stella.tab_return) = show(io,tr)
 
-function show(io::IO,tr::Stella.tab_return; row=false, col=false, cell=false, total=false, precision::Int8 = 2)
+function show(io::IO,tr::Stella.tab_return)
 
     if length(tr.dimnames) == 1
         show_oneway(io,NamedArray(tr.array,tr.dicts,tr.dimnames), total = total, precision = precision)
@@ -13,6 +13,9 @@ function show(io::IO,tr::Stella.tab_return; row=false, col=false, cell=false, to
 
     dimnames = string(tr.dimnames[1]) * " \\ " * string(tr.dimnames[2])
     print(io,dimnames,"\n")
+
+    # temporary
+    row = col = cell = false
 
     # total is true when row, col, or cell is true
     if row || col || cell

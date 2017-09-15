@@ -403,13 +403,6 @@ function bivariatexls(df::DataFrame,
         error("`",colvar,"` is not a PooledDataArray or does not have two or more levels")
     end
 
-    # sum of rowvars must be non-zero
-    for v in rowvars
-        if sum(dropna(df[v])) == 0
-            error("`",v,"` in `rowvars` is empty.")
-        end
-    end
-
     if label_dict != nothing
         # variable labels
         varlab = label_dict["variable"]
@@ -506,6 +499,12 @@ function bivariatexls(df::DataFrame,
             println("Processing ",varname)
         end
 
+        # sum of rowvars must be non-zero
+        if sum(dropna(df[varname])) == 0
+            warn("`",varname,"` in `rowvars` is empty.")
+            continue
+        end
+
         # print the variable name
         vars = string(varname)
         if label_dict != nothing
@@ -532,7 +531,8 @@ function bivariatexls(df::DataFrame,
             t[:write_string](r,c,vars,formats[:model_name])
 
             # two levels with [0,1] or [false,true]
-            if length(rowval) == 2 && [0,1] in ([0,1],[false,true])
+            if length(rowval) == 2 && rowval in ([0,1],[false,true])
+
                 # row total
                 t[:write](r,c+1,rowtot[2],formats[:n_fmt_right])
                 t[:write](r,c+2,rowtot[2]/tot,formats[:pct_fmt_parens])
