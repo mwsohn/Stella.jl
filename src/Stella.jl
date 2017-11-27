@@ -59,15 +59,13 @@ export  read_stata,  # read stata 13 and 14 files into DF
         ttest,       # t-test
         univariatexls, # output univariate statistics in an excel worksheet
         bivariatexls, # output bivariate statistics in an excel worksheet
-        glmxls,     # output GLM output in an excel worksheet
+        glmxls,     # output GLM models to an excel worksheet
+        mglmxls,    # output multiple GLM regression models to an excel spreadsheet
         dfxls,      # output dataframe in an excel file
         dir,        # directory listing
         ds,         # filenames according to type, length, or regex
         getmaxlength, # maximum length of a string variable
         show
-
-
-
 
 ##############################################################################
 ##
@@ -78,6 +76,7 @@ include("stella_tools.jl")
 include("DataFrame_tools.jl")
 include("Stata_Reader.jl")
 include("xlsout.jl")
+include("mglmxls.jl")
 include("tab.jl")
 include("show.jl")
 

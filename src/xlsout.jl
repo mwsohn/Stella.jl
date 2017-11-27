@@ -102,7 +102,7 @@ function glmxls(glmout,wbook::PyObject,wsheet::AbstractString;
         error("This is not a GLM model output.")
     end
 
-    distrib = replace(modelstr,r".*Distributions\.(Normal|Bernoulli|Binomial|Gamma|Normal|Poisson)\{.*",s"\1")
+    distrib = replace(modelstr,r".*Distributions\.(Normal|Bernoulli|Binomial|Bernoulli|Gamma|Normal|Poisson)\{.*",s"\1")
     linkfun = replace(modelstr,r".*,GLM\.(CauchitLink|CloglogLink|IdentityLink|InverseLink|LogitLink|LogLink|ProbitLink|SqrtLink)\}.*",s"\1")
 
     # create a worksheet
