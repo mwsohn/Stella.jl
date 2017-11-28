@@ -143,7 +143,7 @@ function mglmxls(glmout,
     end
 
     # create a worksheet
-    t = wb[:add_worksheet](wsheet)
+    t = wbook[:add_worksheet](wsheet)
 
     # attach formats to the workbook
     formats = Stella.attach_formats(wbook)
