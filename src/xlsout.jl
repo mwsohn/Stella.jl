@@ -399,8 +399,8 @@ function bivariatexls(df::DataFrame,
     # check data
 
     # colvar has to be a PooledDataArray and must have 2 or more categories
-    if isa(df[colvar], PooledDataArray) == false || length(levels(df[colvar])) < 2
-        error("`",colvar,"` is not a PooledDataArray or does not have two or more levels")
+    if isa(df[colvar], CategoricalArray) == false || length(levels(df[colvar])) < 2
+        error("`",colvar,"` is not a CategoricalArray or does not have two or more levels")
     end
 
     if label_dict != nothing
@@ -500,7 +500,7 @@ function bivariatexls(df::DataFrame,
         end
 
         # sum of rowvars must be non-zero
-        if sum(dropna(df[varname])) == 0
+        if sum(dropmissing(df[varname])) == 0
             warn("`",varname,"` in `rowvars` is empty.")
             continue
         end
@@ -514,7 +514,7 @@ function bivariatexls(df::DataFrame,
         end
 
         # determine if varname is categorical or continuous
-        if isa(df2[varname], PooledDataArray) || eltype(df2[varname]) == String
+        if isa(df2[varname], CategoricalArray) || eltype(df2[varname]) == String
             # categorial
             df3=df2[completecases(df2[[varname]]),[varname,colvar]]
             x = freqtable(df3,varname,colvar)

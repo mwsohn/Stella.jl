@@ -6,16 +6,16 @@
 """
     dfcompress!(df::DataFrame)
 
-Reduce `df`'s memory use by changing the eltype of each DataArray in the `df` to
+Reduce `df`'s memory use by changing the eltype of each column in the `df` to
 the type that can accommodate the larget and the smallest values within the same
 integer or float class.
 """
 function dfcompress!(df::DataFrame)
     for v in names(df)
 
-        # if DataArray is empty after all NAs are dropped
+        # if Array is empty after all missings are dropped
         # drop it from the df
-        if length(dropna(df[v])) == 0
+        if length(skipmissing(df[v])) == 0
             delete!(df,v)
             println(v, " was empty, now deleted")
             continue
@@ -24,7 +24,7 @@ function dfcompress!(df::DataFrame)
         # get the original eltype
         eltype_old = eltype(df[v])
 
-        df[v] = dacompress(df[v])
+        df[v] = compress(df[v])
 
         if eltype_old != eltype(df[v])
             println(v, " was ", eltype_old, ", now ", eltype(df[v]))
@@ -32,43 +32,41 @@ function dfcompress!(df::DataFrame)
     end
 end
 
-function dacompress(da::DataArray)
+function compress(da::Vector{Missing,T}) where T <: Real
     # get the original eltype
     eltype_old = eltype(da)
 
     # if the original eltype is a Boolean or a String
     # then do not perform any compression
-    if eltype_old == Bool
-        warn(da," is a Boolean. No need to compress.")
-    elseif eltype_old <: AbstractString
-        warn(da," is a String. No need to compress.")
-    elseif length(dropna(da)) == 0
-        warn(da," is an empty column. No need to compress")
-    end
+    # if eltype_old == Bool
+    #     warn(da," is a Boolean. No need to compress.")
+    # elseif eltype_old <: AbstractString
+    #     warn(da," is a String. No need to compress.")
+    # elseif length(dropna(da)) == 0
+    #     warn(da," is an empty column. No need to compress")
+    # end
 
     if  eltype_old <: Integer
         # get minimum and maximum values
-        varmin = minimum(dropna(da))
-        varmax = maximum(dropna(da))
+        varmin = minimum(skipmissing(da))
+        varmax = maximum(skipmissing(da))
         # test if Int8
         if eltype_old != Int8 && varmin >= typemin(Int8) && varmax <= typemax(Int8)
-            return convert(DataArray{Int8,1},da)
+            return convert(Vector{Union{Missing,Int8}},da)
         elseif eltype_old != Int16 && varmin >= typemin(Int16) && varmax <= typemax(Int16)
-            return convert(DataArray{Int16,1},da)
+            return convert(Vector{Union{Missing,Int16}},da)
         else
             return da
         end
     elseif eltype_old <: AbstractFloat
         # first test if the floats are integer numbers
-        if sum(isinteger.(dropna(da)).==false) == 0
-            return decompress(convert(DataArray{Int64,1},da))
+        if sum(isinteger.(skipmissing(da)).==false) == 0
+            return compress(convert(Vector{Union{Missing,Int64}},da))
         end
 
         # get minimum and maximum values
-        varfmin = minimum(dropna(da))
-        varfmax = maximum(dropna(da))
-        if eltype_old != Float32 && varfmin >= typemin(Float32) && varfmax <= typemin(Float32)
-            return convert(DataArray{Float32,1},da)
+        if eltype_old != Float32 && minimum(skipmissing(da)) >= typemin(Float32) && maximum(skipmissing(da)) <= typemin(Float32)
+            return convert(Vector{Union{Missing,Float32}},da)
         else
             return da
         end
@@ -87,7 +85,7 @@ function get_disp_length(dat::AbstractVector; precision = 2)
     end
 
     if vtype <: Number
-        da = dropna(dat)
+        da = skipmissing(dat)
         _max = size(da,1) == 0 ? 0 : maximum(da)
         for k = 1:30
             if _max < 10^k
@@ -334,22 +332,10 @@ end
 
 function getmaxlength(s::AbstractVector{String})
   if typeof(s) == DataArray
-    return maximum(length.(dropna(s)))
+    return maximum(length.(skipmissing(s)))
   end
   return maximum(length.(s))
 end
-# function getmaxlength(da::DataArray)
-#     maxlen = 0
-#
-#     for i = 1:length(da)
-#         if isna(da[i])
-#             continue
-#         end
-#         maxlen = max(maxlen,length(da[i]))
-#     end
-#
-#     return maxlen
-# end
 
 """
     ds(df::DataFrame, typ::Type, args...)
@@ -452,66 +438,6 @@ function ds(df::DataFrame,re::Regex)
     return dslist
 end
 
-
-import DataFrames.dropna
-
-"""
-    dropna(df::DataFrame,args::Symbol...)
-
-Create a data frame that does not contain NA values in `args` columns. When no `args`
-are specified, it produces a data frame that does not not contain any NA values
-(e.g., it is identical to `df = df[completecases(df),:]`).
-"""
-function dropna(df::DataFrame,args::Symbol...)
-    if length(args) == 0
-        return df[completecases(df),:]
-    end
-
-    ba = BitArray(trues(size(df,1)))
-    for sym in args
-        ba &= ~BitArray(df[sym].na)
-    end
-    return df[ba,:]
-end
-
-"""
-    andcond(df::DataFrame,args::Expr...)
-
-Produces a BitArray array in which rows that meet all the `args` conditions will have
-a `false` value. It is intended to be used to drop cases from a DataFrame.
-Each condition in `args` must be be an Expr: e.g, `:(condition)`.
-"""
-function andcond(df::DataFrame,args::Expr...)
-    if length(args) == 0
-        error("No condition was specified.")
-    end
-
-    ba = BitArray(trues(size(df,1)))
-    for arg in args
-        ba &= BitArray(eval(arg))
-    end
-    return ba
-end
-
-"""
-    orcond(df::DataFrame,args::Expr...)
-
-Produces a BitArray array in which rows that meet at least one `args` condition will have
-a `false` value. It is intended to be used to drop cases from a DataFrame.
-Each condition in `args` must be an Expr: e.g, `:(condition)`.
-"""
-function orcond(df::DataFrame,args::Expr...)
-    if length(args) == 0
-        error("No condition was specified.")
-    end
-
-    ba = BitArray(trues(size(df,1)))
-    for arg in args
-        ba |= BitArray(eval(arg))
-    end
-    return ba
-end
-
 """
     duplicates(df::DataFrame, args::Symbol...; cmd::Symbol = :report)
 
@@ -552,7 +478,6 @@ function duplicates(df::DataFrame, args::Symbol... ; cmd::Symbol = :report) #; e
     ba = [x == 1 ? true : false for x in pickone(df,collect(args))]
     return df[ba,collect(names(df[1:end-1]))]
 end
-#duplicates(df::DataFrame,arg::Symbol; cmd::Symbol = :report) = duplicates(df,Tuple(arg),cmd=cmd)
 
 """
     dfsample(df::DataFrame,num::Union{Int64,Float64})
@@ -669,27 +594,6 @@ function dfappend(df1::DataFrame,df2::DataFrame)
     return [df1;df2]
 end
 
-"""
-    unpool(df::DataFrame,varname::Symbol)
-
-Returns a DataArray with the original values of a PooledDataArray.
-"""
-function unpool(df::DataFrame,varname::Symbol)
-    if isa(df[varname],PooledDataArray) == false
-        error(varname," is not a PooledDataArray")
-    end
-
-    da = DataArray(eltype(df[varname].pool),size(df,1))
-    pool = df[varname].pool
-    refs = df[varname].refs
-    for i = 1:size(df,1)
-        da[i] = refs[i] == 0 ? NA : pool[refs[i]]
-    end
-    return da
-end
-
-
-
 function get_class(val::Real,thresholds::Vector,lower::Bool)
     if lower == false
         for i = 1:length(thresholds)
@@ -717,15 +621,15 @@ end
 Produces a categorical variable based on a data array and a vector of throsholds.
 Use `lower = true` to classify the threshold value to the lower class.
 """
-function classify(da::DataArray,thresholds::Vector; lower::Bool = false)
-    da2 = DataArray(Int8,size(da,1))
+function classify(da::AbstractVector,thresholds::Vector; lower::Bool = false)
+    da2 = Vector{Union{Missing,Int8}}(length(da))
     if length(thresholds) > 100
         error("Cannot use more than 100 threshold values.")
     end
 
     for i = 1:size(da,1)
-        if isna(da[i])
-            da2[i] = NA
+        if ismissing(da[i])
+            da2[i] = missing
         else
             da2[i] = get_class(da[i],thresholds,lower)
         end
