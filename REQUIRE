@@ -1,12 +1,2 @@
 julia 0.6-
 Compat
-DataFrames 0.10.0-
-Distributions 0.14.0-
-GLM 0.7.0-
-StatsBase 0.17.0-
-Glob
-Humanize 0.4.1-
-DataStructures 0.6.0-
-HypothesisTests 0.5.1-
-NamedArrays 0.6.1-
-FreqTables 0.1.0-
