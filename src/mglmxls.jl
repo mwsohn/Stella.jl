@@ -99,6 +99,7 @@ function mglmxls(glmout,
     label_dict::Union{Void,Dict} = nothing,
     eform::Bool = false,
     ci = true,
+    gof = true,
     row = 0,
     col = 0)
 
@@ -110,26 +111,30 @@ function mglmxls(glmout,
 
     for i=1:num_models
 
+        otype[i] = "Estimate"
+
         # check if the models are GLM outputs
         modelstr[i] = string(typeof(glmout[i]))
-        if !ismatch(r"GLM\.GeneralizedLinearModel",modelstr[i])
-            error(modelstr[i]," is not a GLM model output.")
-        end
+        if ismatch(r"GLM\.GeneralizedLinearModel",modelstr[i])
 
-        distrib = replace(modelstr[i],r".*Distributions\.(Normal|Bernoulli|Binomial|Bernoulli|Gamma|Normal|Poisson)\{.*",s"\1")
-        linkfun = replace(modelstr[i],r".*,GLM\.(CauchitLink|CloglogLink|IdentityLink|InverseLink|LogitLink|LogLink|ProbitLink|SqrtLink)\}.*",s"\1")
+            distrib = replace(modelstr[i],r".*Distributions\.(Normal|Bernoulli|Binomial|Bernoulli|Gamma|Normal|Poisson)\{.*",s"\1")
+            linkfun = replace(modelstr[i],r".*,GLM\.(CauchitLink|CloglogLink|IdentityLink|InverseLink|LogitLink|LogLink|ProbitLink|SqrtLink)\}.*",s"\1")
 
-        otype[i] = "Estimate"
-        if eform == true
-            if distrib == "Bernoulli" && linkfun == "LogitLink"
-                otype[i] = "OR"
-            elseif distrib == "Binomial" && linkfun == "LogLink"
-                otype[i] = "RR"
-            elseif distrib == "Poisson" && linkfun == "LogLink"
-                otype[i] = "IRR"
-            else
-                otype[i] = "exp(Est)"
+            if eform == true
+                if in(distrib, ["Binomial","Bernoulli"]) && linkfun == "LogitLink"
+                    otype[i] = "OR"
+                elseif distrib == "Binomial" && linkfun == "LogLink"
+                    otype[i] = "RR"
+                elseif distrib == "Poisson" && linkfun == "LogLink"
+                    otype[i] = "IRR"
+                else
+                    otype[i] = "exp(Est)"
+                end
             end
+        elseif ismatch(r"GLM\.LinearModel",modelstr[i])
+            # for future options
+        else
+            error("This is not a GLM Linear or Generalized Linear Model")
         end
     end
 
@@ -156,6 +161,8 @@ function mglmxls(glmout,
     t[:set_column](c,c,40)
     t[:set_column](c+1,c+4*num_models,7)
 
+    #--------------------------------------------------------------------------
+    # header section
     t[:merge_range](r,c,r+1,c,"Variable",formats[:heading])
     for i=1:num_models
         if ci == true
@@ -183,7 +190,8 @@ function mglmxls(glmout,
         vallab = label_dict["value"]
     end
 
-    # collate variables
+    #------------------------------------------------------------------
+    # collate variables from multiple regression models
     covariates = Vector{String}()
     tdata = Vector(num_models)
     tconfint = Vector(num_models)
@@ -199,6 +207,7 @@ function mglmxls(glmout,
         end
     end
 
+    #-------------------------------------------------------------------
     # go through each variable and construct variable name and value label arrays
     nrows = length(covariates)
     varname = Vector{String}(nrows)
@@ -232,27 +241,37 @@ function mglmxls(glmout,
         nlev[i] = Stella.countlev(varname[i],varname)
     end
 
+    #------------------------------------------------------------------
     # write table
     lastvarname = ""
 
     for i = 1:nrows
+
+        # a new variable
         if varname[i] != lastvarname
+
+            # if it is a categorical variables,
             # output cell boundaries only and go to the next line
             if nlev[i] > 1
                 t[:write_string](r,c,varname[i],formats[:heading_left])
 
-                if ci == true
-                    t[:write](r,c+1,"",formats[:empty_right])
-                    t[:write](r,c+2,"",formats[:empty_both])
-                    t[:write](r,c+3,"",formats[:empty_left])
-                    t[:write](r,c+4,"",formats[:p_fmt])
-                else
-                    t[:write](r,c+1,"",formats[:empty_border])
-                    t[:write](r,c+2,"",formats[:empty_border])
-                    t[:write](r,c+3,"",formats[:empty_border])
-                    t[:write](r,c+4,"",formats[:p_fmt])
+                for j=1:num_models
+                    if ci == true
+                        t[:write](r,c+1,"",formats[:empty_right])
+                        t[:write](r,c+2,"",formats[:empty_both])
+                        t[:write](r,c+3,"",formats[:empty_left])
+                        t[:write](r,c+4,"",formats[:p_fmt])
+                    else
+                        t[:write](r,c+1,"",formats[:empty_border])
+                        t[:write](r,c+2,"",formats[:empty_border])
+                        t[:write](r,c+3,"",formats[:empty_border])
+                        t[:write](r,c+4,"",formats[:p_fmt])
+                    end
+                    c += 4
                 end
+
                 r += 1
+                c = 0
                 t[:write_string](r,c,vals[i],formats[:varname_1indent])
 
             else
@@ -347,6 +366,7 @@ function mglmxls(glmout,
     label_dict::Union{Void,Dict} = nothing,
     eform::Bool = false,
     ci = true,
+    gof = true,
     row = 0,
     col = 0)
 
@@ -354,5 +374,7 @@ function mglmxls(glmout,
 
     wb = xlsxwriter[:Workbook](wbook)
 
-    mglmxls(glmout,wb,wsheet,label_dict=label_dict,mtitle=mtitle,eform=eform,ci=ci,row=row,col=col)
+    mglmxls(glmout,wb,wsheet,label_dict=label_dict,mtitle=mtitle,eform=eform,ci=ci,gof=gof,row=row,col=col)
+
+    wb[:close]()
 end
