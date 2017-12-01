@@ -189,6 +189,9 @@ function mglmxls(glmout,
 
         # value labels
         vallab = label_dict["value"]
+
+        # label names
+        lblname = label_dict["label"]
     end
 
     #------------------------------------------------------------------
@@ -211,7 +214,7 @@ function mglmxls(glmout,
     #-------------------------------------------------------------------
     # go through each variable and construct variable name and value label arrays
     nrows = length(covariates)
-    varname = Vector{Symbol}(nrows)
+    varname = Vector{String}(nrows)
     vals = Vector{String}(nrows)
     nlev = zeros(Int,nrows)
 
@@ -229,12 +232,12 @@ function mglmxls(glmout,
         if label_dict != nothing
             if vals[i] != ""
                 valn = vals[i] == "true" ? 1 : parse(Int,vals[i])
-                if haskey(vallab,varname[i]) && haskey(vallab[varname[i]],valn)
-                    vals[i] = vallab[varname[i]][valn]
+                if haskey(vallab,Symbol(varname[i])) && haskey(vallab[varname[i]],valn)
+                    vals[i] = vallab[lblname[Symbol(varname[i])]][valn]
                 end
             end
-            if haskey(varlab,varname[i])
-                varname[i] = varlab[varname[i]] == "" ? varname[i] : varlab[varname[i]]
+            if haskey(varlab,Symbol(varname[i]))
+                varname[i] = varlab[Symbol(varname[i])] == "" ? varname[i] : varlab[Symbol(varname[i])]
             end
         end
     end
