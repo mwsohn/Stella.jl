@@ -211,7 +211,7 @@ function mglmxls(glmout,
     #-------------------------------------------------------------------
     # go through each variable and construct variable name and value label arrays
     nrows = length(covariates)
-    varname = Vector{String}(nrows)
+    varname = Vector{Symbol}(nrows)
     vals = Vector{String}(nrows)
     nlev = zeros(Int,nrows)
 
