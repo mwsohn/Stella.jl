@@ -108,6 +108,7 @@ function mglmxls(glmout,
     modelstr = Vector(num_models)
     otype = Vector(num_models)
     linkfun = Vector(num_models)
+    linearmodel = false
 
     for i=1:num_models
 
