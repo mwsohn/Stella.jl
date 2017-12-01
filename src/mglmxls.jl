@@ -132,7 +132,7 @@ function mglmxls(glmout,
                 end
             end
         elseif ismatch(r"GLM\.LinearModel",modelstr[i])
-            # for future options
+            linearmodel = true
         else
             error("This is not a GLM Linear or Generalized Linear Model")
         end
@@ -357,6 +357,51 @@ function mglmxls(glmout,
         # update row
         r += 1
         c = 0
+    end
+
+    # --------------------------------------------------------------------
+    # n
+    t[:write](r,c,"N",formats[:model_name])
+    for i=1:num_models
+        t[:merge_range](r,c+1,r,c+4,nobs(glmout[i]),formats[:n_fmt_center])
+        c += 4
+    end
+
+    # --------------------------------------------------------------------
+    # goodness of fit statistics
+    r += 1
+    c = 0
+
+    if gof == true
+        if linearmodel
+
+            # output R-squared and adjusted R-squared
+            t[:write](r,c,"R²",formats[:model_name])
+            t[:write](r+1,c,"Adjusted R²",formats[:model_name])
+            t[:write](r+2,c,"RMSE",formats[:model_name])
+
+
+            for i=1:num_models
+                t[:merge_range](r,c+1,r,c+4,r2(glmout[i]),formats[:gof_fmt_center])
+                t[:merge_range](r+1,c+1,r+1,c+4,adjr2(glmout[i]),formats[:gof_fmt_center])
+                t[:merge_range](r+2,c+1,r+2,c+4,sqrt(deviance(glmout[i])),formats[:gof_fmt_center])
+
+                c += 4
+            end
+        end
+
+        r += 3
+        c = 0
+
+        # AIC, BIC
+        t[:write](r,c,"AIC",formats[:model_name])
+        t[:write](r+1,c,"BIC",formats[:model_name])
+
+        for i=1:num_models
+            t[:merge_range](r,c+1,r,c+4,r2(glmout[i]),formats[:gof_fmt_center])
+            t[:merge_range](r+1,c+1,r+1,c+4,adjr2(glmout[i]),formats[:gof_fmt_center])
+            c += 4
+        end
     end
 end
 function mglmxls(glmout,

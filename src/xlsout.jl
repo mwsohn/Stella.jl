@@ -1080,6 +1080,25 @@ format_defs[:n_fmt] = Dict(
 )
 
 
+format_defs[:n_fmt_center] = Dict(
+	"num_format" => "#,##0",
+	"font" => "Arial",
+	"size" => 9,
+	"valign" => "vcenter",
+	"align" => "center",
+	"border" => true
+)
+
+format_defs[:gof_fmt_center] = Dict(
+	"num_format" => "#,##0.00000",
+	"font" => "Arial",
+	"size" => 9,
+	"valign" => "vcenter",
+	"align" => "center",
+	"border" => true
+)
+
+
 format_defs[:f_fmt_left_parens] = Dict(
 	"num_format" => "(#,##0.00)",
 	"font" => "Arial",
