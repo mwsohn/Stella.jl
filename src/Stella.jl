@@ -8,7 +8,7 @@ module Stella
 ##
 ################################################################################
 
-using DataFrames, Distributions, GLM, StatsBase, Glob, Humanize,
+using DataFrames, DataArrays, Distributions, GLM, StatsBase, Glob, Humanize,
         DataStructures, HypothesisTests, NamedArrays, FreqTables
 
 ##############################################################################
