@@ -1,4 +1,4 @@
-VERSION >= v"0.5.0" && __precompile__()
+VERSION >= v"0.6.0" && __precompile__()
 
 module Stella
 
@@ -36,7 +36,6 @@ export  read_stata,  # read stata 13 and 14 files into DF
         chisq_2way,  # compute chisquare statistics from na.array
         prepend_spaces, append_spaces, # create fixed length strings
         smallest, largest, # list smallest and largest values in a DA
-        toNA,        # set certain values to NA
         pickone,     # create a binary variable that identifies one records in a subgroup
         p5, p10, p25, p50, p75, p90, p95, # percentiles
         cv,          # coefficient of variation, alias of variation()
@@ -57,11 +56,6 @@ export  read_stata,  # read stata 13 and 14 files into DF
         ranksum,     # ranksum test
         signrank,    # signed rank test
         ttest,       # t-test
-        univariatexls, # output univariate statistics in an excel worksheet
-        bivariatexls, # output bivariate statistics in an excel worksheet
-        glmxls,     # output GLM models to an excel worksheet
-        mglmxls,    # output multiple GLM regression models to an excel spreadsheet
-        dfxls,      # output dataframe in an excel file
         dir,        # directory listing
         ds,         # filenames according to type, length, or regex
         getmaxlength, # maximum length of a string variable
@@ -75,8 +69,6 @@ export  read_stata,  # read stata 13 and 14 files into DF
 include("stella_tools.jl")
 include("DataFrame_tools.jl")
 include("Stata_Reader.jl")
-include("xlsout.jl")
-include("mglmxls.jl")
 include("tab.jl")
 include("show.jl")
 

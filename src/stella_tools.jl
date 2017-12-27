@@ -174,14 +174,14 @@ function getdictval(dt::Dict,val)
 end
 
 """
-    tabstat(df::DataFrame,varname::Symbol,groupvar::Symbol)
+    tabstat(df::DataFrame,varname::Symbol,groupvar::Symbol;s::Vector{Function} = [N,mean,sd,minimum,p25,median,p75,maximum ],wt::Union{Void,Symbol}=nothing)
 
 Produce a DataFrame that contains summary statistics for each `groupvar` subgroup
 of the `varname` column in the `df`. The following are computed: `n` (total non-missing rows),
 `mean` (mean), `sd` (standard deviation), `min` (minimum), `p25` (25th percentile),
 `median` (median), `p75` (75th percentile), and `max` (maximum).
 """
-function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Function} = [N,mean,sd,minimum,p25,median,p75,maximum ])
+function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Function} = [N,mean,sd,minimum,p25,median,p75,maximum ],wt::Union{Void,Symbol}=nothing)
 
     if length(s) == 0
         error("No statistic function was specified.")
