@@ -56,7 +56,7 @@ end
 List the `n` smallest values in `da` in a descending order. The default `n` is 5.
 """
 function smallest(da::AbstractArray; n::Int = 5)
-	return sort(dropmissing)(da))[1:n]
+	return sort(dropmissing(da))[1:n]
 end
 smallest(df::DataFrame,varname::Symbol; n = 5) = smallest(df[varname], n = n)
 
