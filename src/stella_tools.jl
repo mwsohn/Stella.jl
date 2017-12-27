@@ -51,42 +51,38 @@ end
 
 
 """
-    smallest(da::DataArray, n::Int) or smallest(df::DataFrame, varname::Symbol, n::Int)
+    smallest(da::AbstractArray, n::Int) or smallest(df::DataFrame, varname::Symbol, n::Int)
 
 List the `n` smallest values in `da` in a descending order. The default `n` is 5.
 """
-function smallest(da::DataArray; n::Int = 5)
-	return sort(dropna(da))[1:n]
+function smallest(da::AbstractArray; n::Int = 5)
+	return sort(dropmissing)(da))[1:n]
 end
 smallest(df::DataFrame,varname::Symbol; n = 5) = smallest(df[varname], n = n)
 
 """
-    largest(da::DataArray, n::Int) or largest(df::DataFrame, varname::Symbol, n::Int)
+    largest(da::AbstractArray, n::Int) or largest(df::DataFrame, varname::Symbol, n::Int)
 
 List the `n` largest values in `da` in an ascending order. The default `n` is 5.
 """
-function largest(da::DataArray; n::Int = 5)
-	return sort(dropna(da))[end-n+1:end]
+function largest(da::AbstractArray; n::Int = 5)
+	return sort(dropmissing(da))[end-n+1:end]
 end
 largest(df::DataFrame,varname::Symbol; n = 5) = largest(df[varname], n = n)
 
 """
-    univariate(da::DataArray) or univariate(df::DataFrame,varname::Symbol)
+    univariate(da::AbstractArray) or univariate(df::DataFrame,varname::Symbol)
 
 Produce univariate statistics from the `da` and return a DataFrame with two columns,
 :Statistic and :Value. Computed statistics include `N_Total` (number of rows
-in the input DataArray), `N_Missing` (number of rows with NA's), `N_Used` (number of non-NA rows),
+in the input DataArray), `N_Missing` (number of rows with missing values), `N_Used` (number of non-missing rows),
 `Sum` (sum), `Mean` (mean), `SD` (standard deviation), `Var` (variance), `Min` (minimum),
 `P25` (25th percentile), `Median` (median), `P75` (75th percentile), `Max` (maximum),
 `Skewness` (skewness), and `Kurtosis` (kurtosis).
 """
 function univariate(da::AbstractVector)
 
-    if typeof(da) <: DataArray
-	    da2 = dropna(da)
-    else
-        da2 = da
-    end
+    da2 = dropmissing(da)
 
 	return DataFrame(
 		Statistic = [:N_Total,
@@ -178,14 +174,14 @@ function getdictval(dt::Dict,val)
 end
 
 """
-    tabstat(df::DataFrame,varname::Symbol,groupvar::Symbol)
+    tabstat(df::DataFrame,varname::Symbol,groupvar::Symbol;s::Vector{Function} = [N,mean,sd,minimum,p25,median,p75,maximum ],wt::Union{Void,Symbol}=nothing)
 
 Produce a DataFrame that contains summary statistics for each `groupvar` subgroup
 of the `varname` column in the `df`. The following are computed: `n` (total non-missing rows),
 `mean` (mean), `sd` (standard deviation), `min` (minimum), `p25` (25th percentile),
 `median` (median), `p75` (75th percentile), and `max` (maximum).
 """
-function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Function} = [N,mean,sd,minimum,p25,median,p75,maximum ])
+function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Function} = [N,mean,sd,minimum,p25,median,p75,maximum ],wt::Union{Void,Symbol}=nothing)
 
     if length(s) == 0
         error("No statistic function was specified.")
@@ -197,18 +193,18 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
     gvnum = length(levels(indf[groupvar]))
 
     outdf = DataFrame()
-    outdf[groupvar] = DataArray(eltype(groupvar),gvnum)
+    outdf[groupvar] = Vector{Union{Missing,eltype(groupvar)}}(gvnum)
     for j = 1:length(namevec)
         if namevec[j] == :N
-            outdf[namevec[j]] = DataArray(Int,gvnum)
+            outdf[namevec[j]] = Vector{Union{Missing,Int}}(gvnum)
         else
-            outdf[namevec[j]] = DataArray(Float64,gvnum)
+            outdf[namevec[j]] = Vector{Union{Missing,Float64}}(gvnum)
         end
     end
 
     i = 1
     for subdf in groupby(indf, groupvar)
-        da = dropna(subdf[var1])
+        da = dropmissing(subdf[var1])
         if length(da) == 0
             continue
         end
@@ -219,27 +215,6 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
         i += 1
     end
     return outdf
-end
-
-"""
-    toNA(da::DataArray,v::Vector)
-
-Convert values in `v` array to NAs in the `da` DataArray and return a new DataArray.
-"""
-function toNA(da::DataArray, v = [])
-    if isempty(v) || typeof(da) == PooledDataArray
-        warn("Data array is either empty or a pooled data array.")
-        exit()
-    end
-
-    for i = 1:length(da)
-        if isna(da[i])
-            continue
-        elseif in(da[i],v)
-            da[i] = NA
-        end
-    end
-    return da
 end
 
 #----------------------------------------------------------------------------
@@ -261,7 +236,7 @@ function pickone(df::DataFrame,groupvars::Array{Symbol,1})
         done[subdf[1,:___obs___]]=1
     end
     delete!(df,:___obs___)
-    return DataArray(done)
+    return convert(Vector{Union{Missing,Int8}},done)
 end
 pickone(df::DataFrame,groupvar::Symbol) = pickone(df, [groupvar])
 
@@ -341,7 +316,7 @@ function substat(df::DataFrame, varname::Symbol, groupvars::Vector{Symbol}, func
     end
 
     df2 = by(df,groupvars) do subdf
-        df3 = dropna(subdf[varname])
+        df3 = dropmissing(subdf[varname])
         if size(df3,1) == 0
             DataFrame(x1 = NaN)
         else
@@ -416,7 +391,7 @@ Convert a string DataArray to a numeric DataArray. Use `force = true` to coerce 
 Use `replace = true` in `destring!` to replace the original string DataArray with a new converted numeric DataArray.
 If `replace` option is specified, `newvars` array is ignored.
 """
-function destring(da::DataArray; force=true)
+function destring(da::AbstractArray; force=true)
     if length(da) == 0
         error(da,"Input data array is empty!")
     end
@@ -427,7 +402,7 @@ function destring(da::DataArray; force=true)
     # check if the values include any alphabetic characters or decimals
     isfloat = false
     alpha = false
-    da_safe = dropna(da)
+    da_safe = dropmissing(da)
     for i in length(da_safe)
         if sum([isalpha(x) for x in da_safe[i]]) > 0
             alpha = true
@@ -442,13 +417,13 @@ function destring(da::DataArray; force=true)
     end
 
     T = isfloat ? Float64 : Int64
-    da2 = DataArray(T,size(da,1))
+    da2 = Vector{Union{Missing,T}}(length(da))
 
-    for i in 1:size(da,1)
-        da2[i] = isna(da[i]) ? NA : parse(T,da[i])
+    for i in 1:length(da)
+        da2[i] = ismissing(da[i]) ? missing : parse(T,da[i])
     end
 
-    return dacompress(da2)
+    return compress(da2)
 end
 destring(df::DataFrame,strvar::Symbol; force=true) = destring(df[strvar],force=force)
 function destring!(df::DataFrame,strvars; newvars::Vector{Symbol} = [], force=true, replace=false)
@@ -497,15 +472,15 @@ function rowsum(df::DataFrame)
     end
 
     if isfloat
-        da = DataArray(zeros(Float64,size(df,1)))
+        da = zeros(Union{Missing,Float64},size(df,1)))
     else
-        da = DataArray(zeros(Int64,size(df,1)))
+        da = zeros(Union{Missing,Int64},size(df,1)))
     end
 
     ba = completecases(df)
     for i = 1:size(df,1)
         if ba[i] == false
-            da[i] = NA
+            da[i] = missing
         else
             for j = 1:size(df,2)
                 da[i] += df[i,j]
@@ -535,7 +510,7 @@ julia>df[:rowstd] = rowstat(df[collect(4:6)],std)
 """
 function rowstat(df::DataFrame,func::Function)
 
-    da = DataArray(zeros(Float64,size(df,1)))
+    da = zeros(Union{Missing,Float64},size(df,1)))
     ta = Array{Float64,1}(size(df,2))
 
     for i = 1:size(df,1)
@@ -547,10 +522,10 @@ function rowstat(df::DataFrame,func::Function)
             end
         end
         if k == 0
-            da[i] = NA
+            da[i] = missing
         else
             tmpfloat = func(ta[1:k])
-            da[i] = isnan(tmpfloat) ? NA : tmpfloat
+            da[i] = isnan(tmpfloat) ? missing : tmpfloat
         end
     end
     return da
@@ -569,7 +544,7 @@ will be computed.
 julia> df[:agecat] = xtile(df[:age], nq = 3)
 ```
 """
-function xtile(da::DataArray ; nq::Int = 4, cutoffs::Union{Void,AbstractVector} = nothing)
+function xtile(da::AbstractArray ; nq::Int = 4, cutoffs::Union{Void,AbstractVector} = nothing)
 
 	function qval(val::Real,cut::Vector)
         cl = length(cut)
@@ -585,89 +560,89 @@ function xtile(da::DataArray ; nq::Int = 4, cutoffs::Union{Void,AbstractVector} 
 		warn("Error - check qval function")
 	end
     if cutoffs == nothing
-	    cutoffs = nquantile(dropna(da),nq)
+	    cutoffs = nquantile(dropmissing(da),nq)
     elseif length(cutoffs) == nq - 1
-        cutoffs = vcat(minimum(dropna(da)), cutoffs, maximum(dropna(da)))
+        cutoffs = vcat(minimum(dropmissing(da)), cutoffs, maximum(dropmissing(da)))
     else
         error("`cutoffs` vector length is not consistent with `nq`. It must be 1 greater or 1 less than `nq`.")
     end
 
-	return convert(DataArray{Int8,1},DataArray([isna(x) ? NA : qval(x,cutoffs) for x in da]))
+	return [ismissing(x) ? missing : qval(x,cutoffs) for x in da]
 end
 xtile(df::DataFrame,arg::Symbol; nq::Int = 4, cutoffs::Union{Void,AbstractVector} = nothing) = xtile(df[arg], nq = nq, cutoffs = cutoffs)
-
-"""
-    recode(da::DataArray,dict::Dict; restna=false)
-    recode(df::DataFrame,v::Symbol,dict::Dict; restna=false)
-
-Recodes values in `da` or `df[v]` to values specified in `dict` dictionary.
-An option `restna = true` will convert all values in the original data array that are
-not a key in `dict` to NAs. Values in `dict` must be the same type as the original
-value or integer.
-
-## Example
-
-```jldoctest
-julia> df = DataFrame(race = ["White","White","Black","Other","Hispanic"], sex = ["M","F","M","M","F"])
-5×2 DataFrames.DataFrame
-│ Row │ race       │ sex │
-├─────┼────────────┼─────┤
-│ 1   │ "White"    │ "M" │
-│ 2   │ "White"    │ "F" │
-│ 3   │ "Black"    │ "M" │
-│ 4   │ "Other"    │ "M" │
-│ 5   │ "Hispanic" │ "F" │
-
-julia> df[:race2] = recode(df,:race,Dict("White" => 1,"Black" => 2, "Hispanic" => 3, "Other" => 4))
-5-element DataArrays.DataArray{Int8,1}:
- 1
- 1
- 2
- 4
- 3
-
- julia> df
-5×3 DataFrames.DataFrame
-│ Row │ race       │ sex │ race2 │
-├─────┼────────────┼─────┼───────┤
-│ 1   │ "White"    │ "M" │ 1     │
-│ 2   │ "White"    │ "F" │ 1     │
-│ 3   │ "Black"    │ "M" │ 2     │
-│ 4   │ "Other"    │ "M" │ 4     │
-│ 5   │ "Hispanic" │ "F" │ 3     │
-
-```
-
-"""
-function recode(da::AbstractDataArray, coding::Dict; restna = false)
-    val = values(coding)
-
-    # if the da is not integer type
-    # check to see if all values in the coding dictionary are integers or NAs
-    # if so, construct a return data array whose elements are integers
-    # otherwise, keep the original data type
-    if !(eltype(da) <: Integer) && sum([typeof(v) <: Integer || isna(v) for v in val]) == length(val)
-        ra = DataArray(Int64,length(da))
-    else
-        ra = DataArray(eltype(da),length(da))
-    end
-
-    for i in 1:length(da)
-        if isna(da[i])
-            continue
-        end
-        if restna
-            ra[i] = haskey(coding,da[i]) ? coding[da[i]] : NA
-        else
-            ra[i] = haskey(coding,da[i]) ? coding[da[i]] : da[i]
-        end
-    end
-    if eltype(ra) <: Integer
-        return dacompress(ra)
-    end
-    return ra
-end
-recode(df::DataFrame,varname::Symbol,coding::Dict; restna = false) = recode(df[varname],coding,restna=restna)
+#
+# """
+#     recode(da::DataArray,dict::Dict; restna=false)
+#     recode(df::DataFrame,v::Symbol,dict::Dict; restna=false)
+#
+# Recodes values in `da` or `df[v]` to values specified in `dict` dictionary.
+# An option `restna = true` will convert all values in the original data array that are
+# not a key in `dict` to NAs. Values in `dict` must be the same type as the original
+# value or integer.
+#
+# ## Example
+#
+# ```jldoctest
+# julia> df = DataFrame(race = ["White","White","Black","Other","Hispanic"], sex = ["M","F","M","M","F"])
+# 5×2 DataFrames.DataFrame
+# │ Row │ race       │ sex │
+# ├─────┼────────────┼─────┤
+# │ 1   │ "White"    │ "M" │
+# │ 2   │ "White"    │ "F" │
+# │ 3   │ "Black"    │ "M" │
+# │ 4   │ "Other"    │ "M" │
+# │ 5   │ "Hispanic" │ "F" │
+#
+# julia> df[:race2] = recode(df,:race,Dict("White" => 1,"Black" => 2, "Hispanic" => 3, "Other" => 4))
+# 5-element DataArrays.DataArray{Int8,1}:
+#  1
+#  1
+#  2
+#  4
+#  3
+#
+#  julia> df
+# 5×3 DataFrames.DataFrame
+# │ Row │ race       │ sex │ race2 │
+# ├─────┼────────────┼─────┼───────┤
+# │ 1   │ "White"    │ "M" │ 1     │
+# │ 2   │ "White"    │ "F" │ 1     │
+# │ 3   │ "Black"    │ "M" │ 2     │
+# │ 4   │ "Other"    │ "M" │ 4     │
+# │ 5   │ "Hispanic" │ "F" │ 3     │
+#
+# ```
+#
+# """
+# function recode(da::AbstractDataArray, coding::Dict; restna = false)
+#     val = values(coding)
+#
+#     # if the da is not integer type
+#     # check to see if all values in the coding dictionary are integers or NAs
+#     # if so, construct a return data array whose elements are integers
+#     # otherwise, keep the original data type
+#     if !(eltype(da) <: Integer) && sum([typeof(v) <: Integer || isna(v) for v in val]) == length(val)
+#         ra = DataArray(Int64,length(da))
+#     else
+#         ra = DataArray(eltype(da),length(da))
+#     end
+#
+#     for i in 1:length(da)
+#         if isna(da[i])
+#             continue
+#         end
+#         if restna
+#             ra[i] = haskey(coding,da[i]) ? coding[da[i]] : NA
+#         else
+#             ra[i] = haskey(coding,da[i]) ? coding[da[i]] : da[i]
+#         end
+#     end
+#     if eltype(ra) <: Integer
+#         return dacompress(ra)
+#     end
+#     return ra
+# end
+# recode(df::DataFrame,varname::Symbol,coding::Dict; restna = false) = recode(df[varname],coding,restna=restna)
 
 #----------------------------------------------------------------------------
 # eform
@@ -796,9 +771,9 @@ function anova(df::DataFrame,dep::Symbol,cat::Symbol)
 		P = [ccdf(FDist(dfwithin,dfbetween),fstat),0.,0.])
 
 	# assign NA's to empty cells
-	df2[3,:MS] = NA
-	df2[2:3,:F] = NA
-	df2[2:3,:P] = NA
+	df2[3,:MS] = missing
+	df2[2:3,:F] = missing
+	df2[2:3,:P] = missing
 
 	return df2
 end
@@ -870,8 +845,6 @@ pwcorr(a::DataFrame, args::Vector{Symbol}; out=true) = pwcorr(df[args], out = ou
 #--------------------------------------------------------------------------
 # t-test
 #--------------------------------------------------------------------------
-using DataFrames, HypothesisTests
-
 immutable ttest_return
     df::DataFrame
     t::Float64
@@ -1023,8 +996,8 @@ function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = tru
         x = Vector(df[ba,var1])
         y = Vector(df[ba,var2])
     else
-        x = Vector(dropna(df[var1]))
-        y = Vector(dropna(df[var2]))
+        x = Vector(dropmissing(df[var1]))
+        y = Vector(dropmissing(df[var2]))
     end
 
     # calculate confidence intervals
@@ -1107,185 +1080,185 @@ end
 #--------------------------------------------------------------------------
 # ranksum(), signrank(), signtest()
 #--------------------------------------------------------------------------
-
-immutable ranksum_return
-    df::DataFrame
-    varname::Symbol
-    t::Float64
-    U::Float64
-    s²::Float64
-    var_t::Float64
-    z::Float64
-    pvalue::Float64
-    porder::Float64
-end
-
-function ranksum(df::DataFrame,varname::Symbol; group::Symbol = nothing)
-    if group == nothing
-        error("`group` variable is required")
-    end
-
-    df2 = df[completecases(df[[varname,group]]),[varname,group]]
-    df2[:__ranking] = tiedrank(df[varname])
-
-    df3 = by(df2,group) do subdf
-        DataFrame(
-            obs = size(subdf,1),
-            ranksum = sum(subdf[:__ranking]),
-            expected = size(subdf,1)*(size(df2,1)+1) / 2
-        )
-    end
-
-    # test statistic
-    t = df3[1,:ranksum]
-    n1 = df3[1,:obs]
-    U = t - n1*(n1+1) / 2
-    meanrank = mean(df2[:__ranking])
-    s² = var(df2[:__ranking])
-    vart = df3[1,:obs]*df3[2,:obs]*s² / size(df2,1)
-    z = (t - df3[1,:expected]) / sqrt(vart)
-    pval = ccdf()
-    porder = U / (df3[1,:obs]*df3[2,:obs])
-    pval = 2*Distributions.cdf(Distributions.Normal(), z)
-    return ranksum_return(df3,varname,t,U,s²,vart,z,pval,porder)
-end
 #
-# function print(r::ranksum_return)
-#     group = names(r.df)[1]
-#     print(r.df,"\n\n")
-#     @printf("         z = %.3f\n",r.z)
-#     @printf("Prob > |z| = %.3f\n",r.pvalue)
-#     @printf("P{%s(%s == %s)} >  P{%s(%s == %s)} = %.3f\n",
-#         string(r.varname),
-#         string(group),
-#         string(r.df[1,1]),
-#         string(r.varname),
-#         string(group),
-#         string(r.df[2,1]),
-#         r.porder
+# immutable ranksum_return
+#     df::DataFrame
+#     varname::Symbol
+#     t::Float64
+#     U::Float64
+#     s²::Float64
+#     var_t::Float64
+#     z::Float64
+#     pvalue::Float64
+#     porder::Float64
+# end
+#
+# function ranksum(df::DataFrame,varname::Symbol; group::Symbol = nothing)
+#     if group == nothing
+#         error("`group` variable is required")
+#     end
+#
+#     df2 = df[completecases(df[[varname,group]]),[varname,group]]
+#     df2[:__ranking] = tiedrank(df[varname])
+#
+#     df3 = by(df2,group) do subdf
+#         DataFrame(
+#             obs = size(subdf,1),
+#             ranksum = sum(subdf[:__ranking]),
+#             expected = size(subdf,1)*(size(df2,1)+1) / 2
 #         )
-# end
-
-immutable signrank_return
-    df::DataFrame
-    t::Float64
-    var_t::Float64
-    z::Float64
-    p::Float64
-end
-
-function signrank(df::DataFrame,var1::Symbol,var2::Symbol)
-
-    # complete cases only
-    df2 = df[completecases(df[[var1,var2]]),[var1,var2]]
-
-    # difference
-    d = df[var1] .- df[var2]
-
-    # sign
-    s = sign.(d)
-
-    # rank the absolute difference
-    r = tiedrank(abs(d)).*s
-
-    # test statistic
-    t = sum(r)
-
-    # dataframe output
-    n = size(df2,1)
-    n0 = sum(s .== 0)
-    et = (n*(n + 1)/2 - sum(s .== 0))/2
-    df = DataFrame(
-        sign = ["positive","negative","zero"],
-        obs = [
-            sum(s .== 1),
-            sum(s .== -1),
-            n0
-        ],
-        sum_ranks = [
-            sum((s .== 1) .* r),
-            abs(sum((s .== -1) .* r)),
-            n0
-        ],
-        expected = [et,et,n0]
-    )
-
-    varadjt = sum(r.^2) / 4
-    varunadjt = (n*(n + 1)*(2n + 1))/24
-    Δvarzeroadj = -1 * n0*(n0 + 1)*(2*n0 + 1) / 24
-    Δvartiesadj = varadjt - varunadjt - Δvarzeroadj
-
-    # z-value
-    z = (df[1,:sum_ranks] - et) / sqrt(varadjt)
-
-    # p-value
-    pval = 2*Distributions.cdf(Distributions.Normal(), z)
-
-    return signrank_return(df, et, varadjt, z, pval)
-end
+#     end
 #
-# function print(sr::signrank_return)
-#     print(sr.df,"\n\n")
-#     @printf("Adj variance = %.3f\n",sr.var_t)
-#     @printf("           z = %.3f\n",sr.z)
-#     @printf("  Prob > |z| = %.3f\n",sr.p)
+#     # test statistic
+#     t = df3[1,:ranksum]
+#     n1 = df3[1,:obs]
+#     U = t - n1*(n1+1) / 2
+#     meanrank = mean(df2[:__ranking])
+#     s² = var(df2[:__ranking])
+#     vart = df3[1,:obs]*df3[2,:obs]*s² / size(df2,1)
+#     z = (t - df3[1,:expected]) / sqrt(vart)
+#     pval = ccdf()
+#     porder = U / (df3[1,:obs]*df3[2,:obs])
+#     pval = 2*Distributions.cdf(Distributions.Normal(), z)
+#     return ranksum_return(df3,varname,t,U,s²,vart,z,pval,porder)
 # end
-
-
-immutable signtest_return
-    df::DataFrame
-    p_left::Float64
-    p_right::Float64
-    p_both::Float64
-end
-
-function signtest(df::DataFrame,var1::Symbol,var2::Symbol)
-
-    # complete cases only
-    df2 = df[completecases(df[[var1,var2]]),[var1,var2]]
-
-    # difference
-    d = df[var1] .- df[var2]
-
-    # sign
-    s = sign.(d)
-
-    # test statistic
-    nplus = sum(s .> 0)
-    n0 = sum(s .== 0)
-    n_nonzero = size(df2,1) - n0
-    et = n_nonzero / 2
-
-    # output dataframe
-    df3 = DataFrame(
-        sign = ["positive","negative","zero"],
-        observed = [
-            sum(s .== 1),
-            sum(s .== -1),
-            n0
-        ],
-        expected = [et,et,n0]
-    )
-
-    # p1 - Ha: median of var1 - var2 > 0
-    p1 = Distributions.cdf(Distributions.Binomial(n_nonzero,.5),df3[2,:observed])
-
-    # p2 - Ha: median of var1 - var2 < 0
-    p2 = Distributions.cdf(Distributions.Binomial(n_nonzero,.5),df3[1,:observed])
-
-    # p2 - Ha: median of var1 - var2 != 0
-    p3 = min(1.0, 2.0*Distributions.cdf(Distributions.Binomial(n_nonzero,.5),df3[1,:observed]))
-
-    return signtest_return(df3, p1, p2, p3)
-end
+# #
+# # function print(r::ranksum_return)
+# #     group = names(r.df)[1]
+# #     print(r.df,"\n\n")
+# #     @printf("         z = %.3f\n",r.z)
+# #     @printf("Prob > |z| = %.3f\n",r.pvalue)
+# #     @printf("P{%s(%s == %s)} >  P{%s(%s == %s)} = %.3f\n",
+# #         string(r.varname),
+# #         string(group),
+# #         string(r.df[1,1]),
+# #         string(r.varname),
+# #         string(group),
+# #         string(r.df[2,1]),
+# #         r.porder
+# #         )
+# # end
 #
-# function print(sr::signtest_return)
-#     print(sr.df,"\n\n")
-#     @printf("Pr(#positive ≥ %d) = %.3f\n",sr.df[1,:observed],sr.p_left)
-#     @printf("Pr(#negative ≥ %d) = %.3f\n",sr.df[2,:observed],sr.p_right)
-#     @printf("Pr(#positive ≥ %d or #negative ≥ %d) = %.3f\n",sr.df[1,:observed],sr.df[2,:observed],sr.p_both)
+# immutable signrank_return
+#     df::DataFrame
+#     t::Float64
+#     var_t::Float64
+#     z::Float64
+#     p::Float64
 # end
 #
+# function signrank(df::DataFrame,var1::Symbol,var2::Symbol)
+#
+#     # complete cases only
+#     df2 = df[completecases(df[[var1,var2]]),[var1,var2]]
+#
+#     # difference
+#     d = df[var1] .- df[var2]
+#
+#     # sign
+#     s = sign.(d)
+#
+#     # rank the absolute difference
+#     r = tiedrank(abs(d)).*s
+#
+#     # test statistic
+#     t = sum(r)
+#
+#     # dataframe output
+#     n = size(df2,1)
+#     n0 = sum(s .== 0)
+#     et = (n*(n + 1)/2 - sum(s .== 0))/2
+#     df = DataFrame(
+#         sign = ["positive","negative","zero"],
+#         obs = [
+#             sum(s .== 1),
+#             sum(s .== -1),
+#             n0
+#         ],
+#         sum_ranks = [
+#             sum((s .== 1) .* r),
+#             abs(sum((s .== -1) .* r)),
+#             n0
+#         ],
+#         expected = [et,et,n0]
+#     )
+#
+#     varadjt = sum(r.^2) / 4
+#     varunadjt = (n*(n + 1)*(2n + 1))/24
+#     Δvarzeroadj = -1 * n0*(n0 + 1)*(2*n0 + 1) / 24
+#     Δvartiesadj = varadjt - varunadjt - Δvarzeroadj
+#
+#     # z-value
+#     z = (df[1,:sum_ranks] - et) / sqrt(varadjt)
+#
+#     # p-value
+#     pval = 2*Distributions.cdf(Distributions.Normal(), z)
+#
+#     return signrank_return(df, et, varadjt, z, pval)
+# end
+# #
+# # function print(sr::signrank_return)
+# #     print(sr.df,"\n\n")
+# #     @printf("Adj variance = %.3f\n",sr.var_t)
+# #     @printf("           z = %.3f\n",sr.z)
+# #     @printf("  Prob > |z| = %.3f\n",sr.p)
+# # end
+#
+#
+# immutable signtest_return
+#     df::DataFrame
+#     p_left::Float64
+#     p_right::Float64
+#     p_both::Float64
+# end
+#
+# function signtest(df::DataFrame,var1::Symbol,var2::Symbol)
+#
+#     # complete cases only
+#     df2 = df[completecases(df[[var1,var2]]),[var1,var2]]
+#
+#     # difference
+#     d = df[var1] .- df[var2]
+#
+#     # sign
+#     s = sign.(d)
+#
+#     # test statistic
+#     nplus = sum(s .> 0)
+#     n0 = sum(s .== 0)
+#     n_nonzero = size(df2,1) - n0
+#     et = n_nonzero / 2
+#
+#     # output dataframe
+#     df3 = DataFrame(
+#         sign = ["positive","negative","zero"],
+#         observed = [
+#             sum(s .== 1),
+#             sum(s .== -1),
+#             n0
+#         ],
+#         expected = [et,et,n0]
+#     )
+#
+#     # p1 - Ha: median of var1 - var2 > 0
+#     p1 = Distributions.cdf(Distributions.Binomial(n_nonzero,.5),df3[2,:observed])
+#
+#     # p2 - Ha: median of var1 - var2 < 0
+#     p2 = Distributions.cdf(Distributions.Binomial(n_nonzero,.5),df3[1,:observed])
+#
+#     # p2 - Ha: median of var1 - var2 != 0
+#     p3 = min(1.0, 2.0*Distributions.cdf(Distributions.Binomial(n_nonzero,.5),df3[1,:observed]))
+#
+#     return signtest_return(df3, p1, p2, p3)
+# end
+# #
+# # function print(sr::signtest_return)
+# #     print(sr.df,"\n\n")
+# #     @printf("Pr(#positive ≥ %d) = %.3f\n",sr.df[1,:observed],sr.p_left)
+# #     @printf("Pr(#negative ≥ %d) = %.3f\n",sr.df[2,:observed],sr.p_right)
+# #     @printf("Pr(#positive ≥ %d or #negative ≥ %d) = %.3f\n",sr.df[1,:observed],sr.df[2,:observed],sr.p_both)
+# # end
+# #
 
 function dir(str::String)
   if contains(str,"*") || contains(str,"?")
@@ -1311,26 +1284,26 @@ function printdir(vstr::Vector{String})
     println(append_spaces(vstr[i],maxlen),"  ", datasize(stat(vstr[i]).size))
   end
 end
-
-"""
-    deleterc(m::Matrix)
-
-Drops rows and columns from a 2-dimensional matrix that have zeros in their margin totals.
-"""
-function deleterc(m::Matrix)
-    colsum = sum(m,1)
-    colindex = Vector{Int64}()
-    for i=1:length(colsum)
-        if colsum[i] != 0
-            push!(colindex,i)
-        end
-    end
-    rowsum = sum(m,2)
-    rowindex = Vector{Int64}()
-    for i=1:length(rowsum)
-        if rowsum[i] != 0
-            push!(rowindex,i)
-        end
-    end
-    return m[rowindex,colindex]
-end
+#
+# """
+#     deleterc(m::Matrix)
+#
+# Drops rows and columns from a 2-dimensional matrix that have zeros in their margin totals.
+# """
+# function deleterc(m::Matrix)
+#     colsum = sum(m,1)
+#     colindex = Vector{Int64}()
+#     for i=1:length(colsum)
+#         if colsum[i] != 0
+#             push!(colindex,i)
+#         end
+#     end
+#     rowsum = sum(m,2)
+#     rowindex = Vector{Int64}()
+#     for i=1:length(rowsum)
+#         if rowsum[i] != 0
+#             push!(rowindex,i)
+#         end
+#     end
+#     return m[rowindex,colindex]
+# end
