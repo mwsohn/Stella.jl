@@ -1,4 +1,4 @@
-using DataFrames, DataStructures
+using DataFrames, DataStructures, Missings
 
 function get_numbytes(typelist,nvar)
     nb = Array{UInt16,1}(nvar)
@@ -81,6 +81,11 @@ function alloc_array(vtype,vfmt,nobs::Int64)
     error(vtype, " is not a valid variable type in Stata.")
 end
 
+function memory_saved(da::AbstractVector)
+    # space holder
+    return false
+end
+
 function read_stata(fn; categorize=true,verbose=false,exclude=[])
     df = DataFrame()
     label = Dict()
@@ -90,7 +95,7 @@ function read_stata(fn; categorize=true,verbose=false,exclude=[])
     return (df,label)
 end
 
-function read_stata!(fn,df::DataFrame,label::Dict; categorize=true, verbose=false, exclude=[])
+function read_stata!(fn::String,df::DataFrame,label::Dict; categorize=true, verbose=false, exclude=[])
 
     fh = open(fn)
 
@@ -361,10 +366,11 @@ function read_stata!(fn,df::DataFrame,label::Dict; categorize=true, verbose=fals
         # strls will be converted to categorical regardless of `categorize` option
         if typelist[j] == 32768
             categorical!(df,varlist[j])
+            gc()
         end
 
         # string variables can optionally be converted to categorical with the categorize option
-        if categorize && 0 < typelist[j] < 2045 && in(varlist[j],exclude) # character variable
+        if categorize && 0 < typelist[j] < 2045 && in(varlist[j],exclude) && memory_saved(df[j])
             categorical!(df,varlist[j])
             gc()
         end

@@ -32,7 +32,7 @@ function dfcompress!(df::DataFrame)
     end
 end
 
-function compress(da::Vector{Missing,T}) where T <: Real
+function compress(da::AbstractVector)
     # get the original eltype
     eltype_old = eltype(da)
 
@@ -299,7 +299,7 @@ function desc(df::DataFrame,varnames::Vector=[];label_dict::Union{Void,Dict}=not
 
     for (i,v) in enumerate(varnames)
 
-        eltyp = string(eltype(df[v]))
+        eltyp = string(eltype(df[v]).b)
 
         if in(eltyp,["String","AbstractString"])
             eltyp = string("Str",getmaxlength(df[v]))
@@ -330,11 +330,8 @@ function desc(df::DataFrame,varnames::Vector=[];label_dict::Union{Void,Dict}=not
     end
 end
 
-function getmaxlength(s::AbstractVector{String})
-  if typeof(s) == DataArray
-    return maximum(length.(skipmissing(s)))
-  end
-  return maximum(length.(s))
+function getmaxlength(s::AbstractVector)
+    return maximum(length.(dropmissing(s)))
 end
 
 """

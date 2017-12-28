@@ -451,14 +451,14 @@ Creates a DataArray that contains the row total of all values on the same row of
 If one of the columns contain an NA value on a row, an NA value will be returned for that
 row. This function emulates Stata's `egen rowsum = rowtotal(var1 - var3)`.
 
-```jldoctest
+```
 julia>df[:rowsum] = df[[:var1,:var2,:var3]]
 ```
 
 If the position numbers for `:var1` (e.g., 4), `:var2` (5), `:var3` (6) are known and consecutive,
 you can specify them as follows:
 
-```jldoctest
+```
 julia>df[:rowsum] = df[collect(4:6)]
 ```
 """
@@ -472,9 +472,9 @@ function rowsum(df::DataFrame)
     end
 
     if isfloat
-        da = zeros(Union{Missing,Float64},size(df,1)))
+        da = zeros(Union{Missing,Float64},size(df,1))
     else
-        da = zeros(Union{Missing,Int64},size(df,1)))
+        da = zeros(Union{Missing,Int64},size(df,1))
     end
 
     ba = completecases(df)
@@ -510,7 +510,7 @@ julia>df[:rowstd] = rowstat(df[collect(4:6)],std)
 """
 function rowstat(df::DataFrame,func::Function)
 
-    da = zeros(Union{Missing,Float64},size(df,1)))
+    da = zeros(Union{Missing,Float64},size(df,1))
     ta = Array{Float64,1}(size(df,2))
 
     for i = 1:size(df,1)
