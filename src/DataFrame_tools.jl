@@ -299,7 +299,7 @@ function desc(df::DataFrame,varnames::Vector=[];label_dict::Union{Void,Dict}=not
 
     for (i,v) in enumerate(varnames)
 
-        eltyp = string(eltype(df[v]).b)
+        eltyp = string(eltype(df[v]))
 
         if in(eltyp,["String","AbstractString"])
             eltyp = string("Str",getmaxlength(df[v]))
@@ -330,8 +330,11 @@ function desc(df::DataFrame,varnames::Vector=[];label_dict::Union{Void,Dict}=not
     end
 end
 
-function getmaxlength(s::AbstractVector)
-    return maximum(length.(dropmissing(s)))
+function getmaxlength(s::DataArray)
+    if sum(s.na) < size(s,1)
+        return maximum(length.(dropna(s)))
+    end
+    return 0
 end
 
 """

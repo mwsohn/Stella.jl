@@ -1,4 +1,4 @@
-using DataFrames, DataStructures, Missings
+using DataFrames, DataStructures, CategoricalArrays
 
 function get_numbytes(typelist,nvar)
     nb = Array{UInt16,1}(nvar)
@@ -43,39 +43,39 @@ function alloc_array(vtype,vfmt,nobs::Int64)
 
     # create a DataArray for the relevant type
     if 0 <= vtype < 2045 || vtype == 32768 # string variable
-        return Vector{Union{Missing,String}}(nobs)
+        return DataArray(String,nobs) #Vector{Union{Missing,String}}(nobs)
     elseif vtype == 65526
         if vfmt == "%d" || vfmt[1:3] == "%td"
-            return Vector{Union{Missing,Date}}(nobs)
+            return DataArray(Date,nobs) # Vector{Union{Missing,Date}}(nobs)
         elseif vfmt[1:3] == "%tc" || vfmt[1:3] == "%tC"
-            return Vector{Union{Missing,DateTime}}(nobs)
+            return DataArray(DateTime,nobs) #Vector{Union{Missing,DateTime}}(nobs)
         else
-            return Vector{Union{Missing,Float64}}(nobs)
+            return DataArray(Float64,nobs) #Vector{Union{Missing,Float64}}(nobs)
         end
     elseif vtype == 65527
         if vfmt == "%d" || vfmt[1:3] == "%td"
-            return Vector{Union{Missing,Date}}(nobs)
+            return DataArray(Date,nobs) #Vector{Union{Missing,Date}}(nobs)
         elseif vfmt[1:3] == "%tc" || vfmt[1:3] == "%tC"
-            return Vector{Union{Missing,DateTime}}(nobs)
+            return DataArray(DateTime,nobs) #Vector{Union{Missing,DateTime}}(nobs)
         else
-            return Vector{Union{Missing,Float32}}(nobs)
+            return DataArray(Float32,nobs) #Vector{Union{Missing,Float32}}(nobs)
         end
     elseif vtype == 65528
         if vfmt == "%d" || vfmt[1:3] == "%td"
-            return Vector{Union{Missing,Date}}(nobs)
+            return DataArray(Date,nobs) #Vector{Union{Missing,Date}}(nobs)
         elseif vfmt[1:3] == "%tc" || vfmt[1:3] == "%tC"
-            return Vector{Union{Missing,DateTime}}(nobs)
+            return DataArray(DateTime,nobs) #Vector{Union{Missing,DateTime}}(nobs)
         else
-            return Vector{Union{Missing,Int32}}(nobs)
+            return DataArray(Int32,nobs) #Vector{Union{Missing,Int32}}(nobs)
         end
     elseif vtype == 65529
         if vfmt == "%d" || vfmt[1:3] == "%td"
-            return Vector{Union{Missing,Date}}(nobs)
+            return DataArray(Date,nobs) #Vector{Union{Missing,Date}}(nobs)
         else
-            return Vector{Union{Missing,Int16}}(nobs)
+            return DataArray(Int16,nobs) #Vector{Union{Missing,Int16}}(nobs)
         end
     elseif vtype == 65530
-        return Vector{Union{Missing,Int8}}(nobs)
+        return DataArray(Int8,nobs) #Vector{Union{Missing,Int8}}(nobs)
     end
 
     error(vtype, " is not a valid variable type in Stata.")
@@ -292,7 +292,7 @@ function read_stata!(fn::String,df::DataFrame,label::Dict; categorize=true, verb
                 df[i,j] = strtonull(String(read(io,UInt8,typelist[j])))
                 # if empty string, return missing
                 if df[i,j] == ""
-                    df[i,j] = missing
+                    df[i,j] = NA #missing
                 end
             elseif typelist[j] == 32768 # long string
                 if release == 117
@@ -304,14 +304,14 @@ function read_stata!(fn::String,df::DataFrame,label::Dict; categorize=true, verb
                     o = (reinterpret(Int64,z)[1] >> 16)
                 end
                 if (v,o) == (0,0)
-                    df[i,j] = missing
+                    df[i,j] = NA #missing
                 else
                     df[i,j] = strls[(v,o)]
                 end
             elseif typelist[j] == 65526
                 dataitemf64 = read(io,Float64)
                 if dataitemf64 > 8.9884656743e307
-                    df[i,j] = missing
+                    df[i,j] = NA #missing
                 elseif fmtlist[j] == "%d" || fmtlist[j][1:3] == "%td"
                     # convert it to Julia date
                     df[i,j] = Date(1960,1,1) + Dates.Day(round(Int,dataitemf64))
@@ -323,7 +323,7 @@ function read_stata!(fn::String,df::DataFrame,label::Dict; categorize=true, verb
             elseif typelist[j] == 65527
                 dataitemf32 = read(io,Float32)
                 if dataitemf32 > 1.70141173319e38
-                    df[i,j] = missing
+                    df[i,j] = NA #missing
                 elseif fmtlist[j] == "%d" || fmtlist[j][1:3] == "%td"
                     # convert it to Julia date
                     df[i,j] = Date(1960,1,1) + Dates.Day(round(Int,dataitemf32))
@@ -335,7 +335,7 @@ function read_stata!(fn::String,df::DataFrame,label::Dict; categorize=true, verb
             elseif typelist[j] == 65528
                 dataitemi32 = read(io,Int32)
                 if dataitemi32 > 2147483620
-                    df[i,j] = missing
+                    df[i,j] = NA #missing
                 elseif fmtlist[j] == "%d" || fmtlist[j][1:3] == "%td"
                     # convert it to Julia date
                     df[i,j] = Date(1960,1,1) + Dates.Day(dataitemi32)
@@ -347,7 +347,7 @@ function read_stata!(fn::String,df::DataFrame,label::Dict; categorize=true, verb
             elseif typelist[j] == 65529
                 dataitemi16 = read(io,Int16)
                 if dataitemi16 > 32740
-                    df[i,j] = missing
+                    df[i,j] = NA #missing
                 elseif fmtlist[j] == "%d" || fmtlist[j][1:3] == "%td"
                     # convert it to Julia date
                     df[i,j] = Date(1960,1,1) + Dates.Day(dataitemi16)
@@ -357,7 +357,7 @@ function read_stata!(fn::String,df::DataFrame,label::Dict; categorize=true, verb
             elseif typelist[j] == 65530
                 dataitemi8 = read(io,Int8)
                 if dataitemi8 > 100
-                    df[i,j] = missing
+                    df[i,j] = NA #missing
                 else
                     df[i,j] = dataitemi8
                 end
@@ -449,5 +449,4 @@ function read_stata!(fn::String,df::DataFrame,label::Dict; categorize=true, verb
     strls = Dict()
     gc()
 
-    # return df, label
 end
