@@ -15,7 +15,7 @@ function dfcompress!(df::DataFrame)
 
         # if Array is empty after all missings are dropped
         # drop it from the df
-        if length(skipmissing(df[v])) == 0
+        if length(df[v]) == sum(df[v].na)
             delete!(df,v)
             println(v, " was empty, now deleted")
             continue
@@ -24,7 +24,7 @@ function dfcompress!(df::DataFrame)
         # get the original eltype
         eltype_old = eltype(df[v])
 
-        df[v] = compress(df[v])
+        df[v] = acompress(df[v])
 
         if eltype_old != eltype(df[v])
             println(v, " was ", eltype_old, ", now ", eltype(df[v]))
@@ -32,7 +32,7 @@ function dfcompress!(df::DataFrame)
     end
 end
 
-function compress(da::AbstractVector)
+function acompress(da::AbstractVector)
     # get the original eltype
     eltype_old = eltype(da)
 
@@ -48,8 +48,8 @@ function compress(da::AbstractVector)
 
     if  eltype_old <: Integer
         # get minimum and maximum values
-        varmin = minimum(skipmissing(da))
-        varmax = maximum(skipmissing(da))
+        varmin = minimum(dropna(da))
+        varmax = maximum(dropna(da))
         # test if Int8
         if eltype_old != Int8 && varmin >= typemin(Int8) && varmax <= typemax(Int8)
             return convert(Vector{Union{Missing,Int8}},da)
@@ -60,12 +60,12 @@ function compress(da::AbstractVector)
         end
     elseif eltype_old <: AbstractFloat
         # first test if the floats are integer numbers
-        if sum(isinteger.(skipmissing(da)).==false) == 0
+        if sum(isinteger.(dropna(da)).==false) == 0
             return compress(convert(Vector{Union{Missing,Int64}},da))
         end
 
         # get minimum and maximum values
-        if eltype_old != Float32 && minimum(skipmissing(da)) >= typemin(Float32) && maximum(skipmissing(da)) <= typemin(Float32)
+        if eltype_old != Float32 && minimum(dropna(da)) >= typemin(Float32) && maximum(dropna(da)) <= typemin(Float32)
             return convert(Vector{Union{Missing,Float32}},da)
         else
             return da
@@ -73,121 +73,121 @@ function compress(da::AbstractVector)
     end
 end
 
-function get_disp_length(dat::AbstractVector; precision = 2)
-
-    vtype = eltype(dat)
-    if vtype == Date
-        return 10 # 10/10/2017
-    end
-
-    if vtype == DateTime # 10/10/2017 14:20
-        return 16
-    end
-
-    if vtype <: Number
-        da = skipmissing(dat)
-        _max = size(da,1) == 0 ? 0 : maximum(da)
-        for k = 1:30
-            if _max < 10^k
-                if vtype <: Integer || precision == 0
-                    return k
-                else
-                    return k + precision + 1
-                end
-            end
-        end
-        error("Cannot display numbers that are 10³¹ long.")
-    end
-
-    if vtype <: AbstractString
-        return Stella.getmaxlength(dat)
-    end
-
-    error(eltype(dat)," is not recognized.")
-end
-
-
-function dflist(df::DataFrame; precision = 2, n = 10)
-
-    nvars = size(df,2)
-    vars = names(df)
-
-    lenvec = [ get_disp_length(df[y], precision = precision) for y in vars ]
-    # println(lenvec)
-
-    # change lenvec to account for column names up to 8 characters
-    vtypes =eltypes(df)
-
-    #headers
-    for i = 1:nvars
-        if vtypes[i] <: Number || vtypes[i] == Date || vtypes[i] == DateTime
-            print(prepend_spaces(string(vars[i]),lenvec[i]))
-        else
-            print(append_spaces(string(vars[i]),lenvec[i]))
-        end
-
-        if i < nvars
-            print("  ")
-        end
-    end
-    print("\n")
-
-    if n==0
-        n = size(df,1)
-    end
-
-    for ln = 1:n
-        for i = 1:nvars
-            if isna(df[ln,i])
-                if vtypes[i] <: AbstractString
-                    print(append_spaces("NA",lenvec[i]))
-                else
-                    print(prepend_spaces("NA",lenvec[i]))
-                end
-                if ln < nvars
-                    print("  ")
-                end
-                continue
-            end
-            if vtypes[i] == DateTime
-                print(Dates.format(df[ln,i],"mm/dd/yyyy HH:MM"))
-            elseif vtypes[i] == Date
-                print(Dates.format(df[ln,i],"mm/dd/yyyy"))
-            elseif vtypes[i] <: AbstractString
-                print(append_spaces(df[ln,i],lenvec[i]))
-            elseif vtypes[i] <: Integer
-                print(prepend_spaces(string(df[ln,i]),lenvec[i]))
-            elseif vtypes[i] <: AbstractFloat
-                if precision == 0
-                    nstr = @sprintf("%.0f",df[ln,i])
-                elseif precision == 1
-                    nstr = @sprintf("%.1f",df[ln,i])
-                elseif precision == 2
-                    nstr = @sprintf("%.2f",df[ln,i])
-                elseif precision == 3
-                    nstr = @sprintf("%.3f",df[ln,i])
-                elseif precision == 4
-                    nstr = @sprintf("%.4f",df[ln,i])
-                elseif precision == 5
-                    nstr = @sprintf("%.5f",df[ln,i])
-                elseif precision == 6
-                    nstr = @sprintf("%.6f",df[ln,i])
-                elseif precision == 7
-                    nstr = @sprintf("%.7f",df[ln,i])
-                elseif precision == 8
-                    nstr = @sprintf("%.8f",df[ln,i])
-                else
-                    error("Can't display that much precision.")
-                end
-                print(prepend_spaces(nstr,lenvec[i]))
-            end
-            if i < nvars
-                print("  ")
-            end
-        end
-        print("\n")
-    end
-end
+# function get_disp_length(dat::AbstractVector; precision = 2)
+#
+#     vtype = eltype(dat)
+#     if vtype == Date
+#         return 10 # 10/10/2017
+#     end
+#
+#     if vtype == DateTime # 10/10/2017 14:20
+#         return 16
+#     end
+#
+#     if vtype <: Number
+#         da = skipmissing(dat)
+#         _max = size(da,1) == 0 ? 0 : maximum(da)
+#         for k = 1:30
+#             if _max < 10^k
+#                 if vtype <: Integer || precision == 0
+#                     return k
+#                 else
+#                     return k + precision + 1
+#                 end
+#             end
+#         end
+#         error("Cannot display numbers that are 10³¹ long.")
+#     end
+#
+#     if vtype <: AbstractString
+#         return Stella.getmaxlength(dat)
+#     end
+#
+#     error(eltype(dat)," is not recognized.")
+# end
+#
+#
+# function dflist(df::DataFrame; precision = 2, n = 10)
+#
+#     nvars = size(df,2)
+#     vars = names(df)
+#
+#     lenvec = [ get_disp_length(df[y], precision = precision) for y in vars ]
+#     # println(lenvec)
+#
+#     # change lenvec to account for column names up to 8 characters
+#     vtypes =eltypes(df)
+#
+#     #headers
+#     for i = 1:nvars
+#         if vtypes[i] <: Number || vtypes[i] == Date || vtypes[i] == DateTime
+#             print(prepend_spaces(string(vars[i]),lenvec[i]))
+#         else
+#             print(append_spaces(string(vars[i]),lenvec[i]))
+#         end
+#
+#         if i < nvars
+#             print("  ")
+#         end
+#     end
+#     print("\n")
+#
+#     if n==0
+#         n = size(df,1)
+#     end
+#
+#     for ln = 1:n
+#         for i = 1:nvars
+#             if isna(df[ln,i])
+#                 if vtypes[i] <: AbstractString
+#                     print(append_spaces("NA",lenvec[i]))
+#                 else
+#                     print(prepend_spaces("NA",lenvec[i]))
+#                 end
+#                 if ln < nvars
+#                     print("  ")
+#                 end
+#                 continue
+#             end
+#             if vtypes[i] == DateTime
+#                 print(Dates.format(df[ln,i],"mm/dd/yyyy HH:MM"))
+#             elseif vtypes[i] == Date
+#                 print(Dates.format(df[ln,i],"mm/dd/yyyy"))
+#             elseif vtypes[i] <: AbstractString
+#                 print(append_spaces(df[ln,i],lenvec[i]))
+#             elseif vtypes[i] <: Integer
+#                 print(prepend_spaces(string(df[ln,i]),lenvec[i]))
+#             elseif vtypes[i] <: AbstractFloat
+#                 if precision == 0
+#                     nstr = @sprintf("%.0f",df[ln,i])
+#                 elseif precision == 1
+#                     nstr = @sprintf("%.1f",df[ln,i])
+#                 elseif precision == 2
+#                     nstr = @sprintf("%.2f",df[ln,i])
+#                 elseif precision == 3
+#                     nstr = @sprintf("%.3f",df[ln,i])
+#                 elseif precision == 4
+#                     nstr = @sprintf("%.4f",df[ln,i])
+#                 elseif precision == 5
+#                     nstr = @sprintf("%.5f",df[ln,i])
+#                 elseif precision == 6
+#                     nstr = @sprintf("%.6f",df[ln,i])
+#                 elseif precision == 7
+#                     nstr = @sprintf("%.7f",df[ln,i])
+#                 elseif precision == 8
+#                     nstr = @sprintf("%.8f",df[ln,i])
+#                 else
+#                     error("Can't display that much precision.")
+#                 end
+#                 print(prepend_spaces(nstr,lenvec[i]))
+#             end
+#             if i < nvars
+#                 print("  ")
+#             end
+#         end
+#         print("\n")
+#     end
+# end
 
 
 """
@@ -331,10 +331,8 @@ function desc(df::DataFrame,varnames::Vector=[];label_dict::Union{Void,Dict}=not
 end
 
 function getmaxlength(s::DataArray)
-    if sum(s.na) < size(s,1)
-        return maximum(length.(dropna(s)))
-    end
-    return 0
+    # .function does not work on empty arrays
+    return sum(s.na) < size(s,1) ? maximum(length.(dropna(s))) : 0
 end
 
 """
@@ -618,7 +616,7 @@ end
 """
     classify(da::DataArray,thresholds::Vector; lower::Bool = false)
 
-Produces a categorical variable based on a data array and a vector of throsholds.
+Produces a categorical variable based on a data array and a vector of thresholds.
 Use `lower = true` to classify the threshold value to the lower class.
 """
 function classify(da::AbstractVector,thresholds::Vector; lower::Bool = false)
@@ -677,3 +675,227 @@ function addvars(fmm::Formula,v::Vector{Symbol})
 
     return fm
 end
+
+
+"""
+    renvars!(df::DataFrame; vars::Array{Symbol,1}, case = "lower")
+
+Rename column names in `vars` to either upper or lower cases. The default is to convert
+all columns to lower case names.
+"""
+function renvars!(df::DataFrame; vars=[], case="lower")
+    numvar = length(vars)
+    symnames = names(df)
+
+    if numvar == 0
+        varnames = names(df)
+    else
+        varnames = names(df[vars])
+    end
+
+    for nm in varnames
+
+        if case == "lower" || case == "LOWER"
+            newname = lowercase(string(nm))
+        elseif case == "upper" || case == "UPPER"
+            newname = uppercase(string(nm))
+        else
+            error(option," ", case," is not allowed.")
+        end
+        if nm != Symbol(newname)
+            rename!(df,nm,Symbol(newname))
+        end
+    end
+end
+
+vidx(df::DataFrame,varname::Symbol) = findfirst(varname, names(df))
+
+"""
+    destring(da::DataArray;force=true)
+    destring(df::DataFrmae,strvar::Symbol;force=true)
+    destring!(df::DataFrame,strvars; newvars::Vector{Symbol} = [], force=true, replace=false)
+
+Convert a string DataArray to a numeric DataArray. Use `force = true` to coerce conversion of alphanumeric strings to
+`NA` values. If `force = false`, any DataArray containing non-numeric values are not converted.
+Use `replace = true` in `destring!` to replace the original string DataArray with a new converted numeric DataArray.
+If `replace` option is specified, `newvars` array is ignored.
+"""
+function destring(da::AbstractArray; force=true)
+    if length(da) == 0
+        error(da,"Input data array is empty!")
+    end
+    if eltype(da) <: Number
+        error(da," is a numeric DataArray.")
+    end
+
+    # check if the values include any alphabetic characters or decimals
+    isfloat = false
+    alpha = false
+    da_safe = dropna(da)
+    for i in length(da_safe)
+        if sum([isalpha(x) for x in da_safe[i]]) > 0
+            alpha = true
+        end
+        if ismatch(r"[,0-9]*\.[0-9]+",da_safe[i])
+            isfloat = true
+        end
+    end
+
+    if alpha && force == false
+        error(arg," contains alphabetic letters. Use 'force=true' option to coerce conversion.")
+    end
+
+    T = isfloat ? Float64 : Int64
+    da2 = Vector{Union{Missing,T}}(length(da))
+
+    for i in 1:length(da)
+        da2[i] = ismissing(da[i]) ? missing : parse(T,da[i])
+    end
+
+    return compress(da2)
+end
+destring(df::DataFrame,strvar::Symbol; force=true) = destring(df[strvar],force=force)
+function destring!(df::DataFrame,strvars; newvars::Vector{Symbol} = [], force=true, replace=false)
+
+    if replace
+        for v in strvars
+            df[v] = destring(df[v],force=force)
+        end
+    else
+        # check if there are same number of symbols in strvars
+        if length(strvars) != length(newvars)
+            error("The number of symbols in ", strvars, " and ", newvars, " are not the same.")
+        end
+        for i in 1:length(strvars)
+            df[newvars[i]] = destring(df[strvars[i]], force=force)
+        end
+    end
+end
+
+
+"""
+    rowsum(df::DataFrame)
+
+Creates a DataArray that contains the row total of all values on the same row of `df`.
+If one of the columns contain an NA value on a row, an NA value will be returned for that
+row. This function emulates Stata's `egen rowsum = rowtotal(var1 - var3)`.
+
+```
+julia>df[:rowsum] = df[[:var1,:var2,:var3]]
+```
+
+If the position numbers for `:var1` (e.g., 4), `:var2` (5), `:var3` (6) are known and consecutive,
+you can specify them as follows:
+
+```
+julia>df[:rowsum] = df[collect(4:6)]
+```
+"""
+function rowsum(df::DataFrame)
+
+    isfloat = false
+    for i in 1:size(df,2)
+        if eltype(df[i]) <: AbstractFloat
+            isfloat = true
+        end
+    end
+
+    if isfloat
+        da = zeros(Union{Missing,Float64},size(df,1))
+    else
+        da = zeros(Union{Missing,Int64},size(df,1))
+    end
+
+    ba = completecases(df)
+    for i = 1:size(df,1)
+        if ba[i] == false
+            da[i] = missing
+        else
+            for j = 1:size(df,2)
+                da[i] += df[i,j]
+            end
+        end
+    end
+    return da
+end
+
+"""
+    rowstat(df::DataFrame,func::Function)
+
+Creates a DataArray that contains the row statistic of all values on the same row of `df`
+produced by the `func` function. If one of the columns contain an NA value on a row, an NA value will be returned for that
+row. This function emulates Stata's `egen` row functions such as `rowtotal`, `rowmean`, etc.
+
+```
+julia>df[:rowmean] = rowstat(df[[:var1,:var2,:var3]],mean)
+```
+
+If the position numbers for `:var1` (e.g., 4), `:var2` (5), `:var3` (6) are known and consecutive,
+you can specify them as follows:
+
+```
+julia>df[:rowstd] = rowstat(df[collect(4:6)],std)
+```
+"""
+function rowstat(df::DataFrame,func::Function)
+
+    da = zeros(Float64,size(df,1))
+    ta = Array{Float64,1}(size(df,2))
+
+    for i = 1:size(df,1)
+        k=0
+        for j = 1:size(df,2)
+            if isna(df[i,j]) == false
+                k += 1
+                ta[k] = df[i,j]
+            end
+        end
+        if k == 0
+            da[i] = missing
+        else
+            tmpfloat = func(ta[1:k])
+            da[i] = isnan(tmpfloat) ? missing : tmpfloat
+        end
+    end
+    return da
+end
+
+"""
+    xtile(da::DataArray;nq::Int = 4, cutoffs::Union{Void,AbstractVector} = nothing)
+    xtile(df::DataFrame,varname::Symbol;nq::Int = 4, cutoffs::Union{Void,AbstractVector} = nothing)
+
+Create a DataArray{Int8,1} that identifies `nq` categories based on values in `da`.
+The default `nq` is 4. `cutoffs` vector can be provided to make custom categories.
+`cutoffs` vector is expected to contain `nq - 1` elements. The minimum and maximum values
+will be computed.
+
+```
+julia> df[:agecat] = xtile(df[:age], nq = 3)
+```
+"""
+function xtile(da::AbstractArray ; nq::Int = 4, cutoffs::Union{Void,AbstractVector} = nothing)
+
+	function qval(val::Real,cut::Vector)
+        cl = length(cut)
+		for i in 2:cl-1
+            if i == 2 && val < cut[i]
+                return 1
+            elseif i == cl-1 && cut[i] <= val
+                return i
+            elseif cut[i] <= val < cut[i+1]
+				return i
+			end
+		end
+		warn("Error - check qval function")
+	end
+    if cutoffs == nothing
+	    cutoffs = nquantile(dropmissing(da),nq)
+    elseif length(cutoffs) == nq - 1
+        cutoffs = vcat(minimum(dropmissing(da)), cutoffs, maximum(dropmissing(da)))
+    else
+        error("`cutoffs` vector length is not consistent with `nq`. It must be 1 greater or 1 less than `nq`.")
+    end
+
+	return [ismissing(x) ? missing : qval(x,cutoffs) for x in da]
+end
+xtile(df::DataFrame,arg::Symbol; nq::Int = 4, cutoffs::Union{Void,AbstractVector} = nothing) = xtile(df[arg], nq = nq, cutoffs = cutoffs)

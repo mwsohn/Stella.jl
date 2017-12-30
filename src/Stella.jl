@@ -9,7 +9,7 @@ module Stella
 ################################################################################
 
 using DataFrames, Distributions, GLM, StatsBase, Glob,
-        DataStructures, HypothesisTests, NamedArrays, FreqTables
+        DataStructures, HypothesisTests, NamedArrays, FreqTables, Formatting
 
 ##############################################################################
 ##
@@ -32,8 +32,7 @@ export  read_stata,  # read stata 13 and 14 files into DF
         xtile,       # create variable that classify a column into percentiles
         rowsum,      # create variable that sums rows
         strval,      # convert floats or ints to strings
-        #print,       # print NamedArray
-        chisq_2way,  # compute chisquare statistics from na.array
+        chisq2,  # compute chisquare statistics from na.array
         prepend_spaces, append_spaces, # create fixed length strings
         smallest, largest, # list smallest and largest values in a DA
         pickone,     # create a binary variable that identifies one records in a subgroup
@@ -58,8 +57,7 @@ export  read_stata,  # read stata 13 and 14 files into DF
         ttest,       # t-test
         dir,        # directory listing
         ds,         # filenames according to type, length, or regex
-        getmaxlength, # maximum length of a string variable
-        show
+        getmaxlength # maximum length of a string variable
 
 ##############################################################################
 ##
@@ -70,6 +68,7 @@ include("stella_tools.jl")
 include("DataFrame_tools.jl")
 include("Stata_Reader.jl")
 include("tab.jl")
+include("t-test.jl")
 include("show.jl")
 
 end

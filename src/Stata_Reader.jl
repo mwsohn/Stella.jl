@@ -81,8 +81,25 @@ function alloc_array(vtype,vfmt,nobs::Int64)
     error(vtype, " is not a valid variable type in Stata.")
 end
 
-function memory_saved(da::AbstractVector)
-    # space holder
+function memory_saved(da::DataArray)
+    if sum(s.na) == length(da)
+        return false
+    end
+
+    # total bytes
+    tsize = sum(length.(dropna(s)))
+
+    # reduced size
+    lev = levels(dropna(s))
+    if length(lev) > typmax(Int16)
+        return false
+    end
+    rsize = sum(length.(lev)) + 4*length(da)
+
+    if tsize > rsize
+        return true
+    end
+
     return false
 end
 
@@ -365,13 +382,15 @@ function read_stata!(fn::String,df::DataFrame,label::Dict; categorize=true, verb
         end
         # strls will be converted to categorical regardless of `categorize` option
         if typelist[j] == 32768
-            categorical!(df,varlist[j])
+            #categorical!(df,varlist[j])
+            pool!(df,varlist[j])
             gc()
         end
 
         # string variables can optionally be converted to categorical with the categorize option
         if categorize && 0 < typelist[j] < 2045 && in(varlist[j],exclude) && memory_saved(df[j])
-            categorical!(df,varlist[j])
+            #categorical!(df,varlist[j])
+            pool!(df,varlist[j])
             gc()
         end
     end

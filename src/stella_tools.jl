@@ -33,7 +33,7 @@ truncated to fit within the `maxlength`. This function is used to left-justify
 `str` in output.
 
 # Example
-```jldoctest
+```
 julia> append_spaces("test",8)
 "test    "
 
@@ -117,7 +117,13 @@ function univariate(da::AbstractVector)
 end
 univariate(df::DataFrame,var::Symbol) = univariate(df[var])
 
-function chisq_2way(t::NamedArray)
+struct XsqReturn
+    chisq::Float64
+    dof::Int
+    p::Float64
+end
+
+function chisq2(t::AbstractArray)
 
   if ndims(t) != 2
       error("Only two dimensional arrays are supported")
@@ -134,7 +140,7 @@ function chisq_2way(t::NamedArray)
   for i = 1:nrow
     for j = 1:ncol
       expected = rowsum[i]*colsum[j]/total
-      chisq += ((t.array[i,j] - expected)^2)/expected
+      chisq += ((t[i,j] - expected)^2)/expected
     end
   end
 
@@ -142,7 +148,7 @@ function chisq_2way(t::NamedArray)
   df = (ncol-1)*(nrow-1)
 
   # return a tuple of chisq, df, p-value
-  return (chisq,df,Distributions.ccdf(Distributions.Chisq(df),chisq))
+  return XsqReturn(chisq,df,Distributions.ccdf(Distributions.Chisq(df),chisq))
 end
 
 function strval(val::AbstractFloat)
@@ -306,7 +312,7 @@ should first be converted to a function that takes one argument (e.g, `p25(x) = 
 The following percentile functions are available: `p5`, `p10`, `p25`, 'p50', `p75`, and `p90`.
 This function emulates the Stata's `egen functions` such as `egen testmean = mean(test), by(groupvar)`.
 
-```jldoctest
+```
 julia> df[:testmean] = substat(df,:test, :class, mean)
 ```
 """
@@ -316,11 +322,11 @@ function substat(df::DataFrame, varname::Symbol, groupvars::Vector{Symbol}, func
     end
 
     df2 = by(df,groupvars) do subdf
-        df3 = dropmissing(subdf[varname])
+        df3 = dropna(subdf[varname])
         if size(df3,1) == 0
-            DataFrame(x1 = NaN)
+            DataFrame(x1 = NA)
         else
-            DataFrame(x1 = func(df3))
+            DataFrame(x1 = func(df3[varname]))
         end
     end
 
@@ -338,311 +344,78 @@ substat(df::DataFrame, varname::Symbol, groupvar::Symbol, func::Function) = subs
 #----------------------------------------------------------------------------
 # stats by subdataframe - end
 #----------------------------------------------------------------------------
+"""
+    recode(da::DataArray,dict::Dict; restna=false)
+    recode(df::DataFrame,v::Symbol,dict::Dict; restna=false)
 
+Recode values in `da` or `df[v]` to values specified in `dict` dictionary.
+An option `restna = true` will convert all values in the original data array that are
+not a key in `dict` to NAs. Values in `dict` must be the same type as the original
+value or integer.
+
+## Example
+
+```
+julia> df = DataFrame(race = ["White","White","Black","Other","Hispanic"], sex = ["M","F","M","M","F"])
+5×2 DataFrames.DataFrame
+│ Row │ race       │ sex │
+├─────┼────────────┼─────┤
+│ 1   │ "White"    │ "M" │
+│ 2   │ "White"    │ "F" │
+│ 3   │ "Black"    │ "M" │
+│ 4   │ "Other"    │ "M" │
+│ 5   │ "Hispanic" │ "F" │
+
+julia> df[:race2] = recode(df,:race,Dict("White" => 1,"Black" => 2, "Hispanic" => 3, "Other" => 4))
+5-element DataArrays.DataArray{Int8,1}:
+ 1
+ 1
+ 2
+ 4
+ 3
+
+ julia> df
+5×3 DataFrames.DataFrame
+│ Row │ race       │ sex │ race2 │
+├─────┼────────────┼─────┼───────┤
+│ 1   │ "White"    │ "M" │ 1     │
+│ 2   │ "White"    │ "F" │ 1     │
+│ 3   │ "Black"    │ "M" │ 2     │
+│ 4   │ "Other"    │ "M" │ 4     │
+│ 5   │ "Hispanic" │ "F" │ 3     │
+
+```
 
 """
-    renvars!(df::DataFrame; vars::Array{Symbol,1}, case = "lower")
+function recode(da::AbstractDataArray, coding::Dict; restna = false)
+    val = values(coding)
 
-Rename column names in `vars` to either upper or lower cases. The default is to convert
-all columns to lower case names.
-"""
-function renvars!(df::DataFrame; vars=[], case="lower")
-    numvar = length(vars)
-    symnames = names(df)
-
-    if numvar == 0
-        varnames = names(df)
+    # if the da is not integer type
+    # check to see if all values in the coding dictionary are integers or NAs
+    # if so, construct a return data array whose elements are integers
+    # otherwise, keep the original data type
+    if !(eltype(da) <: Integer) && sum([typeof(v) <: Integer || isna(v) for v in val]) == length(val)
+        ra = DataArray(Int64,length(da))
     else
-        varnames = names(df[vars])
+        ra = DataArray(eltype(da),length(da))
     end
-
-    for nm in varnames
-
-        if case == "lower" || case == "LOWER"
-            newname = lowercase(string(nm))
-        elseif case == "upper" || case == "UPPER"
-            newname = uppercase(string(nm))
-        else
-            error(option," ", case," is not allowed.")
-        end
-        if nm != Symbol(newname)
-            rename!(df,nm,Symbol(newname))
-        end
-    end
-end
-
-function vidx(df::DataFrame,varname::Symbol)
-    varnames = names(df)
-    for i=1:length(varnames)
-        if varnames[i] == varname
-            return i
-        end
-    end
-    return 0 # not found
-end
-
-"""
-    destring(da::DataArray;force=true)
-    destring(df::DataFrmae,strvar::Symbol;force=true)
-    destring!(df::DataFrame,strvars; newvars::Vector{Symbol} = [], force=true, replace=false)
-
-Convert a string DataArray to a numeric DataArray. Use `force = true` to coerce conversion of alphanumeric strings to
-`NA` values. If `force = false`, any DataArray containing non-numeric values are not converted.
-Use `replace = true` in `destring!` to replace the original string DataArray with a new converted numeric DataArray.
-If `replace` option is specified, `newvars` array is ignored.
-"""
-function destring(da::AbstractArray; force=true)
-    if length(da) == 0
-        error(da,"Input data array is empty!")
-    end
-    if eltype(da) <: Number
-        error(da," is a numeric DataArray.")
-    end
-
-    # check if the values include any alphabetic characters or decimals
-    isfloat = false
-    alpha = false
-    da_safe = dropmissing(da)
-    for i in length(da_safe)
-        if sum([isalpha(x) for x in da_safe[i]]) > 0
-            alpha = true
-        end
-        if ismatch(r"[,0-9]*\.[0-9]+",da_safe[i])
-            isfloat = true
-        end
-    end
-
-    if alpha && force == false
-        error(arg," contains alphabetic letters. Use 'force=true' option to coerce conversion.")
-    end
-
-    T = isfloat ? Float64 : Int64
-    da2 = Vector{Union{Missing,T}}(length(da))
 
     for i in 1:length(da)
-        da2[i] = ismissing(da[i]) ? missing : parse(T,da[i])
-    end
-
-    return compress(da2)
-end
-destring(df::DataFrame,strvar::Symbol; force=true) = destring(df[strvar],force=force)
-function destring!(df::DataFrame,strvars; newvars::Vector{Symbol} = [], force=true, replace=false)
-
-    if replace
-        for v in strvars
-            df[v] = destring(df[v],force=force)
+        if isna(da[i])
+            continue
         end
-    else
-        # check if there are same number of symbols in strvars
-        if length(strvars) != length(newvars)
-            error("The number of symbols in ", strvars, " and ", newvars, " are not the same.")
-        end
-        for i in 1:length(strvars)
-            df[newvars[i]] = destring(df[strvars[i]], force=force)
-        end
-    end
-end
-
-
-"""
-    rowsum(df::DataFrame)
-
-Creates a DataArray that contains the row total of all values on the same row of `df`.
-If one of the columns contain an NA value on a row, an NA value will be returned for that
-row. This function emulates Stata's `egen rowsum = rowtotal(var1 - var3)`.
-
-```
-julia>df[:rowsum] = df[[:var1,:var2,:var3]]
-```
-
-If the position numbers for `:var1` (e.g., 4), `:var2` (5), `:var3` (6) are known and consecutive,
-you can specify them as follows:
-
-```
-julia>df[:rowsum] = df[collect(4:6)]
-```
-"""
-function rowsum(df::DataFrame)
-
-    isfloat = false
-    for i in 1:size(df,2)
-        if eltype(df[i]) <: AbstractFloat
-            isfloat = true
-        end
-    end
-
-    if isfloat
-        da = zeros(Union{Missing,Float64},size(df,1))
-    else
-        da = zeros(Union{Missing,Int64},size(df,1))
-    end
-
-    ba = completecases(df)
-    for i = 1:size(df,1)
-        if ba[i] == false
-            da[i] = missing
+        if restna
+            ra[i] = haskey(coding,da[i]) ? coding[da[i]] : NA
         else
-            for j = 1:size(df,2)
-                da[i] += df[i,j]
-            end
+            ra[i] = haskey(coding,da[i]) ? coding[da[i]] : da[i]
         end
     end
-    return da
-end
-
-"""
-    rowstat(df::DataFrame,func::Function)
-
-Creates a DataArray that contains the row statistic of all values on the same row of `df`
-produced by the `func` function. If one of the columns contain an NA value on a row, an NA value will be returned for that
-row. This function emulates Stata's `egen` row functions such as `rowtotal`, `rowmean`, etc.
-
-```jldoctest
-julia>df[:rowmean] = rowstat(df[[:var1,:var2,:var3]],mean)
-```
-
-If the position numbers for `:var1` (e.g., 4), `:var2` (5), `:var3` (6) are known and consecutive,
-you can specify them as follows:
-
-```jldoctest
-julia>df[:rowstd] = rowstat(df[collect(4:6)],std)
-```
-"""
-function rowstat(df::DataFrame,func::Function)
-
-    da = zeros(Union{Missing,Float64},size(df,1))
-    ta = Array{Float64,1}(size(df,2))
-
-    for i = 1:size(df,1)
-        k=0
-        for j = 1:size(df,2)
-            if isna(df[i,j]) == false
-                k += 1
-                ta[k] = df[i,j]
-            end
-        end
-        if k == 0
-            da[i] = missing
-        else
-            tmpfloat = func(ta[1:k])
-            da[i] = isnan(tmpfloat) ? missing : tmpfloat
-        end
+    if eltype(ra) <: Integer
+        return compress(ra)
     end
-    return da
+    return ra
 end
-
-"""
-    xtile(da::DataArray;nq::Int = 4, cutoffs::Union{Void,AbstractVector} = nothing)
-    xtile(df::DataFrame,varname::Symbol;nq::Int = 4, cutoffs::Union{Void,AbstractVector} = nothing)
-
-Create a DataArray{Int8,1} that identifies `nq` categories based on values in `da`.
-The default `nq` is 4. `cutoffs` vector can be provided to make custom categories.
-`cutoffs` vector is expected to contain `nq - 1` elements. The minimum and maximum values
-will be computed.
-
-```jldoctest
-julia> df[:agecat] = xtile(df[:age], nq = 3)
-```
-"""
-function xtile(da::AbstractArray ; nq::Int = 4, cutoffs::Union{Void,AbstractVector} = nothing)
-
-	function qval(val::Real,cut::Vector)
-        cl = length(cut)
-		for i in 2:cl-1
-            if i == 2 && val < cut[i]
-                return 1
-            elseif i == cl-1 && cut[i] <= val
-                return i
-            elseif cut[i] <= val < cut[i+1]
-				return i
-			end
-		end
-		warn("Error - check qval function")
-	end
-    if cutoffs == nothing
-	    cutoffs = nquantile(dropmissing(da),nq)
-    elseif length(cutoffs) == nq - 1
-        cutoffs = vcat(minimum(dropmissing(da)), cutoffs, maximum(dropmissing(da)))
-    else
-        error("`cutoffs` vector length is not consistent with `nq`. It must be 1 greater or 1 less than `nq`.")
-    end
-
-	return [ismissing(x) ? missing : qval(x,cutoffs) for x in da]
-end
-xtile(df::DataFrame,arg::Symbol; nq::Int = 4, cutoffs::Union{Void,AbstractVector} = nothing) = xtile(df[arg], nq = nq, cutoffs = cutoffs)
-#
-# """
-#     recode(da::DataArray,dict::Dict; restna=false)
-#     recode(df::DataFrame,v::Symbol,dict::Dict; restna=false)
-#
-# Recodes values in `da` or `df[v]` to values specified in `dict` dictionary.
-# An option `restna = true` will convert all values in the original data array that are
-# not a key in `dict` to NAs. Values in `dict` must be the same type as the original
-# value or integer.
-#
-# ## Example
-#
-# ```jldoctest
-# julia> df = DataFrame(race = ["White","White","Black","Other","Hispanic"], sex = ["M","F","M","M","F"])
-# 5×2 DataFrames.DataFrame
-# │ Row │ race       │ sex │
-# ├─────┼────────────┼─────┤
-# │ 1   │ "White"    │ "M" │
-# │ 2   │ "White"    │ "F" │
-# │ 3   │ "Black"    │ "M" │
-# │ 4   │ "Other"    │ "M" │
-# │ 5   │ "Hispanic" │ "F" │
-#
-# julia> df[:race2] = recode(df,:race,Dict("White" => 1,"Black" => 2, "Hispanic" => 3, "Other" => 4))
-# 5-element DataArrays.DataArray{Int8,1}:
-#  1
-#  1
-#  2
-#  4
-#  3
-#
-#  julia> df
-# 5×3 DataFrames.DataFrame
-# │ Row │ race       │ sex │ race2 │
-# ├─────┼────────────┼─────┼───────┤
-# │ 1   │ "White"    │ "M" │ 1     │
-# │ 2   │ "White"    │ "F" │ 1     │
-# │ 3   │ "Black"    │ "M" │ 2     │
-# │ 4   │ "Other"    │ "M" │ 4     │
-# │ 5   │ "Hispanic" │ "F" │ 3     │
-#
-# ```
-#
-# """
-# function recode(da::AbstractDataArray, coding::Dict; restna = false)
-#     val = values(coding)
-#
-#     # if the da is not integer type
-#     # check to see if all values in the coding dictionary are integers or NAs
-#     # if so, construct a return data array whose elements are integers
-#     # otherwise, keep the original data type
-#     if !(eltype(da) <: Integer) && sum([typeof(v) <: Integer || isna(v) for v in val]) == length(val)
-#         ra = DataArray(Int64,length(da))
-#     else
-#         ra = DataArray(eltype(da),length(da))
-#     end
-#
-#     for i in 1:length(da)
-#         if isna(da[i])
-#             continue
-#         end
-#         if restna
-#             ra[i] = haskey(coding,da[i]) ? coding[da[i]] : NA
-#         else
-#             ra[i] = haskey(coding,da[i]) ? coding[da[i]] : da[i]
-#         end
-#     end
-#     if eltype(ra) <: Integer
-#         return dacompress(ra)
-#     end
-#     return ra
-# end
-# recode(df::DataFrame,varname::Symbol,coding::Dict; restna = false) = recode(df[varname],coding,restna=restna)
+recode(df::DataFrame,varname::Symbol,coding::Dict; restna = false) = recode(df[varname],coding,restna=restna)
 
 #----------------------------------------------------------------------------
 # eform
@@ -778,8 +551,6 @@ function anova(df::DataFrame,dep::Symbol,cat::Symbol)
 	return df2
 end
 
-
-
 #--------------------------------------------------------------------------
 # pairwise correlations
 #--------------------------------------------------------------------------
@@ -842,240 +613,8 @@ end
 pwcorr(a::AbstractArray...) = pwcorr(hcat(a...))
 pwcorr(a::DataFrame, args::Vector{Symbol}; out=true) = pwcorr(df[args], out = out)
 
-#--------------------------------------------------------------------------
-# t-test
-#--------------------------------------------------------------------------
-immutable ttest_return
-    df::DataFrame
-    t::Float64
-    dof::Int64
-    p_left::Float64
-    p_both::Float64
-    p_right::Float64
-end
 
-"""
-    ttest(df::DataFrame,varname::Symbol;byvar::Union{Void,Symbol} = nothing,sig=95)
-    ttest(df::DataFrame,varname1::Symbol,varname2::Symbol;paired::Bool=true,sig=95)
-    ttest(df::DataFrame,varname::Symbol,val::Real;sig=95)
 
-Produces t statistic, degree of freedom, and associated p-values. It returns
-a t_return type that includes a DataFrame containing univariate statistics and
-confidence intervals, t statistic, degree of freedom, and p-values.
-
-### Example 1: One sample t test comparing a variable to a value
-
-```jldoctest
-julia> t = ttest(auto, :price, 25000)
-t_return(1××6 DataFrames.DataFrame
-│ Row │  N  │ Mean    │ SD     │ SE      │ LB95%CI │ UB95%CI │
-├─────┼─────┼─────────┼────────┼─────────┼─────────┼─────────┤
-│ 1   │ 74  │ 6165.26 │ 2949.5 │ 342.872 │ 5481.91 │ 6848.6  │, -54.93229
-827384743, 73, 1.9849645235050634e-61, 3.969929047010127e-61, 1.0)
-
-julia>print(t)
-t_return(1××6 DataFrames.DataFrame
-│ Row │  N  │ Mean    │ SD     │ SE      │ LB95%CI │ UB95%CI │
-├─────┼─────┼─────────┼────────┼─────────┼─────────┼─────────┤
-│ 1   │ 74  │ 6165.26 │ 2949.5 │ 342.872 │ 5481.91 │ 6848.6  │
-
-t             = -54.9323
-df            = 73
-Pr(T < t)     = 0.0000
-Pr(|T| > |t|) = 0.0000
-Pr(T > t)     = 1.0000
-```
-
-### Example 2: Two sample t test by groups
-
-```jldoctest
-julia> print(ttest(auto, :price, byvar = :foreign))
-2×7 DataFrames.DataFrame
-│ Row │ foreign │ N  │ Mean    │ SD      │ SE      │ LB95%CI │ UB95%CI │
-├─────┼─────────┼────┼─────────┼─────────┼─────────┼─────────┼─────────┤
-│ 1   │ 0       │ 52 │ 6072.42 │ 3097.1  │ 429.491 │ 5210.18 │ 6934.66 │
-│ 2   │ 1       │ 22 │ 6384.68 │ 2621.92 │ 558.994 │ 5222.19 │ 7547.17 │
-
-t             = -0.4139
-df            = 72
-Pr(T < t)     = 0.3401
-Pr(|T| > |t|) = 0.6802
-Pr(T > t)     = 0.6599
-```
-
-### Example 3: Two sample paired t test comparing two variables
-
-```jldoctest
-julia> ttest(auto, :price, :trunk)
-2×6 DataFrames.DataFrame
-│ Row │ N  │ Mean    │ SD     │ SE       │ LB95%CI │ UB95%CI │
-├─────┼────┼─────────┼────────┼──────────┼─────────┼─────────┤
-│ 1   │ 74 │ 6165.26 │ 2949.5 │ 342.872  │ 5481.91 │ 6848.6  │
-│ 2   │ 74 │ 13.7568 │ 4.2774 │ 0.497238 │ 12.7658 │ 14.7478 │
-
-t             = 17.9493
-df            = 73
-Pr(T < t)     = 1.0000
-Pr(|T| > |t|) = 0.0000
-Pr(T > t)     = 0.0000
-```
-
-### Example 4: Two sample unpaired t test comparing two variables
-
-```jldoctest
-julia> ttest(auto, :price, :trunk, paired=false)
-2×6 DataFrames.DataFrame
-│ Row │ N  │ Mean    │ SD     │ SE       │ LB95%CI │ UB95%CI │
-├─────┼────┼─────────┼────────┼──────────┼─────────┼─────────┤
-│ 1   │ 74 │ 6165.26 │ 2949.5 │ 342.872  │ 5481.91 │ 6848.6  │
-│ 2   │ 74 │ 13.7568 │ 4.2774 │ 0.497238 │ 12.7658 │ 14.7478 │
-
-t             = 17.9411
-df            = 146
-Pr(T < t)     = 1.0000
-Pr(|T| > |t|) = 0.0000
-Pr(T > t)     = 0.0000
-```
-"""
-function ttest(df::DataFrame,varname::Symbol; byvar::Union{Void,Symbol} = nothing, sig = 95)
-    if byvar == nothing
-        error("`byvar` is required.")
-    end
-
-    dft = dropna(df[[varname,byvar]])
-
-    # calculate confidence intervals
-    lbname = Symbol(string("LB",sig,"%CI"))
-    ubname = Symbol(string("UB",sig,"%CI"))
-
-    df2 = by(dft, byvar) do subdf
-        DataFrame(
-            N = size(subdf,1),
-            Mean = mean(subdf[varname]),
-            SD = std(subdf[varname])
-        )
-    end
-
-    lev = levels(dft[byvar])
-    if length(lev) != 2
-        error(byvar," must have two levels; it has ",length(lev), " levels.")
-    end
-
-    for i=1:2
-        if df2[i,:N] == 0
-            error(varname," is empty for ",byvar," = ",lev[i],".")
-        end
-    end
-
-    x = Vector(dft[dft[byvar] .== lev[1],varname])
-    y = Vector(dft[dft[byvar] .== lev[2],varname])
-
-    tt = EqualVarianceTTest(x,y)
-
-    # compute standard errors and confidence intervals
-    df2[:SE] = zeros(Float64,2)
-    df2[lbname] = zeros(Float64,2)
-    df2[ubname] = zeros(Float64,2)
-    for i = 1:2
-        # critical value
-        # critv = 1/Distributions.cdf(Distributions.TDist(df2[i,:N]-1), (1 - sig/100)/2)
-        df2[i,:SE] = df2[i,:SD] / sqrt(df2[i,:N])
-        (df2[i,lbname], df2[i,ubname]) = StatsBase.confint(OneSampleTTest(i == 1 ? x : y,0),1-sig/100)
-    end
-
-    # convert it to a pooleddataarray
-    pool!(df2,[varname])
-    df2[varname].pool = Dict(lev[1] => v1,lev[2] => v2)
-
-    return t_return(df2, tt.t, tt.df, pvalue(tt, tail = :left),pvalue(tt),pvalue(tt, tail = :right))
-end
-function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = true)
-
-    if paired == true
-        ba = completecases(df[[var1,var2]])
-        x = Vector(df[ba,var1])
-        y = Vector(df[ba,var2])
-    else
-        x = Vector(dropmissing(df[var1]))
-        y = Vector(dropmissing(df[var2]))
-    end
-
-    # calculate confidence intervals
-    lbname = Symbol(string("LB",sig,"%CI"))
-    ubname = Symbol(string("UB",sig,"%CI"))
-
-    df2 = DataFrame(
-        N = [length(x),length(y)],
-        Mean = [mean(x), mean(y)],
-        SD = [std(x), std(y)]
-    )
-
-    if df2[1,:N] == 0
-        error(var1," is empty.")
-    elseif df2[2,:N] == 0
-        error(var2," is empty.")
-    end
-
-    if paired == true
-        tt = OneSampleTTest(x, y)
-    else
-        tt = EqualVarianceTTest(x, y)
-    end
-
-    # compute standard errors and confidence intervals
-    df2[:SE] = zeros(Float64,2)
-    df2[lbname] = zeros(Float64,2)
-    df2[ubname] = zeros(Float64,2)
-    vars = [x,y]
-    for i = 1:2
-        # critical value
-        # critv = 1/Distributions.cdf(Distributions.TDist(df2[i,:N]-1), (1 - sig/100)/2)
-        df2[i,:SE] = df2[i,:SD] / sqrt(df2[i,:N])
-        (df2[i,lbname], df2[i,ubname]) = StatsBase.confint(OneSampleTTest(vars[i],0),1-sig/100)
-    end
-
-    return t_return(df2, tt.t, tt.df, pvalue(tt, tail = :left),pvalue(tt),pvalue(tt, tail = :right))
-end
-function ttest(df::DataFrame, varname::Symbol, val::Real; sig = 95)
-
-    # calculate confidence intervals
-    lbname = Symbol(string("LB",sig,"%CI"))
-    ubname = Symbol(string("UB",sig,"%CI"))
-
-    v = Vector(df[completecases(df[[varname]]),varname])
-    df2 = DataFrame(
-        N = [length(v)],
-        Mean = [mean(v)],
-        SD = [std(v)]
-    )
-
-    if df2[1,:N] == 0
-        error(varname," is empty.")
-    end
-
-    tt = OneSampleTTest(v, val)
-
-    # compute standard errors and confidence intervals
-    df2[:SE] = zeros(Float64,1)
-    df2[lbname] = zeros(Float64,1)
-    df2[ubname] = zeros(Float64,1)
-
-    df2[1,:SE] = df2[1,:SD] / sqrt(df2[1,:N])
-    (df2[1,lbname], df2[1,ubname]) = StatsBase.confint(OneSampleTTest(v,0),1-sig/100)
-
-    return t_return(df2, tt.t, tt.df, pvalue(tt, tail = :left),pvalue(tt),pvalue(tt, tail = :right))
-
-end
-#
-# function print(t::ttest_return)
-#     println(t.df)
-#     print("\n")
-#     @printf("t             = %.4f\n",t.t)
-#     println("df            = ",t.dof)
-#     @printf("Pr(T < t)     = %.4f\n",t.p_left)
-#     @printf("Pr(|T| > |t|) = %.4f\n",t.p_both)
-#     @printf("Pr(T > t)     = %.4f\n",t.p_right)
-# end
 
 #--------------------------------------------------------------------------
 # ranksum(), signrank(), signtest()
@@ -1284,26 +823,3 @@ function printdir(vstr::Vector{String})
     println(append_spaces(vstr[i],maxlen),"  ", datasize(stat(vstr[i]).size))
   end
 end
-#
-# """
-#     deleterc(m::Matrix)
-#
-# Drops rows and columns from a 2-dimensional matrix that have zeros in their margin totals.
-# """
-# function deleterc(m::Matrix)
-#     colsum = sum(m,1)
-#     colindex = Vector{Int64}()
-#     for i=1:length(colsum)
-#         if colsum[i] != 0
-#             push!(colindex,i)
-#         end
-#     end
-#     rowsum = sum(m,2)
-#     rowindex = Vector{Int64}()
-#     for i=1:length(rowsum)
-#         if rowsum[i] != 0
-#             push!(rowindex,i)
-#         end
-#     end
-#     return m[rowindex,colindex]
-# end
