@@ -1,54 +1,54 @@
-"""
-    prepend_spaces(str,maxlength)
-
-Create a string of length `maxlength`. When `str` is shorter than `maxlength`,
-blank spaces are prepended. When `str` is longer than `maxlength`, it is
-truncated to fit within the `maxlength`. This function is used to right-justify
-`str` in output.
-
-# Example
-```jldoctest
-julia> prepend_spaces("test",8)
-"    test"
-
-julia> prepend_spaces("test result",8)
-"test res"
-```
-"""
-function prepend_spaces(str,maxlength)
-    len = length(str)
-    if maxlength < len
-        return str[1:maxlength]
-    end
-    return string(repeat(" ",maxlength-len),str)
-end
-
-
-"""
-    append_spaces(str,maxlength)
-
-Create a string of length `maxlength`. When `str` is shorter than `maxlength`,
-blank spaces are appended at the end. When `str` is longer than `maxlength`, it is
-truncated to fit within the `maxlength`. This function is used to left-justify
-`str` in output.
-
-# Example
-```
-julia> append_spaces("test",8)
-"test    "
-
-julia> append_spaces("test result",8)
-"test res"
-```
-"""
-function append_spaces(str,maxlength)
-    len = length(str)
-    if maxlength < len
-        return str[1:maxlength]
-    end
-    return string(str,repeat(" ",maxlength-len))
-end
-
+# """
+#     prepend_spaces(str,maxlength)
+#
+# Create a string of length `maxlength`. When `str` is shorter than `maxlength`,
+# blank spaces are prepended. When `str` is longer than `maxlength`, it is
+# truncated to fit within the `maxlength`. This function is used to right-justify
+# `str` in output.
+#
+# # Example
+# ```jldoctest
+# julia> prepend_spaces("test",8)
+# "    test"
+#
+# julia> prepend_spaces("test result",8)
+# "test res"
+# ```
+# """
+# function prepend_spaces(str,maxlength)
+#     len = length(str)
+#     if maxlength < len
+#         return str[1:maxlength]
+#     end
+#     return string(repeat(" ",maxlength-len),str)
+# end
+#
+#
+# """
+#     append_spaces(str,maxlength)
+#
+# Create a string of length `maxlength`. When `str` is shorter than `maxlength`,
+# blank spaces are appended at the end. When `str` is longer than `maxlength`, it is
+# truncated to fit within the `maxlength`. This function is used to left-justify
+# `str` in output.
+#
+# # Example
+# ```
+# julia> append_spaces("test",8)
+# "test    "
+#
+# julia> append_spaces("test result",8)
+# "test res"
+# ```
+# """
+# function append_spaces(str,maxlength)
+#     len = length(str)
+#     if maxlength < len
+#         return str[1:maxlength]
+#     end
+#     return string(str,repeat(" ",maxlength-len))
+# end
+#
 
 """
     smallest(da::AbstractArray, n::Int) or smallest(df::DataFrame, varname::Symbol, n::Int)
@@ -196,7 +196,7 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
     namevec = [Symbol(replace(string(x),"Stella.","")) for x in s]
 
 
-    gvnum = length(levels(indf[groupvar]))
+    gvnum = length(DataFrames.levels(indf[groupvar]))
 
     outdf = DataFrame()
     outdf[groupvar] = Vector{Union{Missing,eltype(groupvar)}}(gvnum)
@@ -210,7 +210,7 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
 
     i = 1
     for subdf in groupby(indf, groupvar)
-        da = dropmissing(subdf[var1])
+        da = dropna(subdf[var1])
         if length(da) == 0
             continue
         end
@@ -322,11 +322,11 @@ function substat(df::DataFrame, varname::Symbol, groupvars::Vector{Symbol}, func
     end
 
     df2 = by(df,groupvars) do subdf
-        df3 = dropna(subdf[varname])
-        if size(df3,1) == 0
+        da = Vector(dropna(subdf[varname]))
+        if length(da) == 0
             DataFrame(x1 = NA)
         else
-            DataFrame(x1 = func(df3[varname]))
+            DataFrame(x1 = func(da))
         end
     end
 
@@ -491,65 +491,6 @@ function eform(coeftbl::StatsBase.CoefTable, label_dict::Dict)
 	return coeftable2
 end
 
-
-#---------------------------------------------------------------------------
-
-#---------------------------------------------------------------------------
-# Sum of squares
-#---------------------------------------------------------------------------
-function ss(da)
-	tmean = mean(da)
-	return mapreduce(x->(x-tmean)^2,+,da)
-end
-
-#--------------------------------------------------------------------------
-# anovap - return p value only after an one-way ANOVA
-#--------------------------------------------------------------------------
-function anovap(df::DataFrame,dep::Symbol,cat::Symbol)
-	sstotal = ss(df[dep])
-	ssbetween_dataframe = by(df,cat, df2 -> ss(df2[dep]))
-	ssbetween = sum(ssbetween_dataframe[:x1])
-	sswithin = sstotal - ssbetween
-	dfwithin = size(ssbetween_dataframe,1) - 1
-	dftotal = size(df[dep],1) - 1
-	dfbetween = dftotal - dfwithin
-	mswithin = sswithin / dfwithin
-	msbetween = ssbetween / dfbetween
-	fstat = mswithin / msbetween
-
-	return ccdf(FDist(dfwithin,dfbetween),fstat)
-end
-
-#--------------------------------------------------------------------------
-# anova - return an one-way ANOVA table in a DataFrame
-#--------------------------------------------------------------------------
-function anova(df::DataFrame,dep::Symbol,cat::Symbol)
-	sstotal = ss(df[dep])
-	ssbetween_dataframe = by(df,cat, df2 -> ss(df2[dep]))
-	ssbetween = sum(ssbetween_dataframe[:x1])
-	sswithin = sstotal - ssbetween
-	dfwithin = size(ssbetween_dataframe,1) - 1
-	dftotal = size(df[dep],1) - 1
-	dfbetween = dftotal - dfwithin
-	mswithin = sswithin / dfwithin
-	msbetween = ssbetween / dfbetween
-	fstat = mswithin / msbetween
-
-	df2 = DataFrame(
-		Source = ["Between","Within","Total"],
-		SS = [sswithin,ssbetween,sstotal],
-		df = [dfwithin,dfbetween,dftotal],
-		MS = [mswithin,msbetween,0.],
-		F = [fstat,0.,0.],
-		P = [ccdf(FDist(dfwithin,dfbetween),fstat),0.,0.])
-
-	# assign NA's to empty cells
-	df2[3,:MS] = missing
-	df2[2:3,:F] = missing
-	df2[2:3,:P] = missing
-
-	return df2
-end
 
 #--------------------------------------------------------------------------
 # pairwise correlations

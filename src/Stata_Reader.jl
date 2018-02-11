@@ -1,4 +1,4 @@
-using DataFrames, DataStructures, CategoricalArrays
+using DataFrames, DataStructures, CategoricalArrays, Missings
 
 function get_numbytes(typelist,nvar)
     nb = Array{UInt16,1}(nvar)
@@ -39,7 +39,7 @@ function strtonull(str)
     return str
 end
 
-function alloc_array(vtype,vfmt,nobs::Int64)
+function alloc_dataarray(vtype,vfmt,nobs::Int64)
 
     # create a DataArray for the relevant type
     if 0 <= vtype < 2045 || vtype == 32768 # string variable
@@ -81,8 +81,50 @@ function alloc_array(vtype,vfmt,nobs::Int64)
     error(vtype, " is not a valid variable type in Stata.")
 end
 
+function alloc_unionvec(vtype,vfmt,nobs::Int64)
+
+    # create a DataArray for the relevant type
+    if 0 <= vtype < 2045 || vtype == 32768 # string variable
+        return Vector{Union{Missing,String}}(nobs)
+    elseif vtype == 65526
+        if vfmt == "%d" || vfmt[1:3] == "%td"
+            return Vector{Union{Missing,Date}}(nobs)
+        elseif vfmt[1:3] == "%tc" || vfmt[1:3] == "%tC"
+            return Vector{Union{Missing,DateTime}}(nobs)
+        else
+            return Vector{Union{Missing,Float64}}(nobs)
+        end
+    elseif vtype == 65527
+        if vfmt == "%d" || vfmt[1:3] == "%td"
+            return Vector{Union{Missing,Date}}(nobs)
+        elseif vfmt[1:3] == "%tc" || vfmt[1:3] == "%tC"
+            return Vector{Union{Missing,DateTime}}(nobs)
+        else
+            return Vector{Union{Missing,Float32}}(nobs)
+        end
+    elseif vtype == 65528
+        if vfmt == "%d" || vfmt[1:3] == "%td"
+            return Vector{Union{Missing,Date}}(nobs)
+        elseif vfmt[1:3] == "%tc" || vfmt[1:3] == "%tC"
+            return Vector{Union{Missing,DateTime}}(nobs)
+        else
+            return Vector{Union{Missing,Int32}}(nobs)
+        end
+    elseif vtype == 65529
+        if vfmt == "%d" || vfmt[1:3] == "%td"
+            return Vector{Union{Missing,Date}}(nobs)
+        else
+            return Vector{Union{Missing,Int16}}(nobs)
+        end
+    elseif vtype == 65530
+        return Vector{Union{Missing,Int8}}(nobs)
+    end
+
+    error(vtype, " is not a valid variable type in Stata.")
+end
+
 function memory_saved(da::DataArray)
-    if sum(s.na) == length(da)
+    if sum(da.na) == length(da)
         return false
     end
 
@@ -101,6 +143,10 @@ function memory_saved(da::DataArray)
     end
 
     return false
+end
+
+function da2ca(da::DataArray)
+    return CategoricalArray([isna(x) ? missing : x for x in da])
 end
 
 function read_stata(fn; categorize=true,verbose=false,exclude=[])
@@ -210,13 +256,13 @@ function read_stata!(fn::String,df::DataFrame,label::Dict; categorize=true, verb
 
     # value label names
     skip(fh,29) # </formats><value_label_names>
-    valuelabels = Array{String,1}(nvar)
+    labelnames = Array{String,1}(nvar)
     numvlabels = 0
     for i in 1:nvar
-        valuelabels[i] = strtonull(String(read(fh,UInt8,len_labelname)))
+        labelnames[i] = strtonull(String(read(fh,UInt8,len_labelname)))
 
         # count the number of value labels
-        if length(valuelabels[i]) > 0
+        if length(labelnames[i]) > 0
             numvlabels += 1
         end
     end
@@ -283,119 +329,7 @@ function read_stata!(fn::String,df::DataFrame,label::Dict; categorize=true, verb
         end
     end
 
-    dataitemf32::Float32 = 0.
-    dataitemf64::Float64 = 0.
-    dataitemi8::Int8 = 0
-    dataitemi16::Int16 = 0
-    dataitemi32::Int32 = 0
-    v::Int32 = 0
-    o::Int64 = 0
-    z = zeros(UInt8,8)
-
-    # interate over the number of variables
-    for j in 1:nvar
-
-        if verbose == true
-            println("Processing variable ",j," ", varlist[j])
-        end
-
-        df[varlist[j]] = alloc_array(typelist[j],fmtlist[j],nobs)
-
-		for i in 1:nobs
-
-            seek(io,numskip[j] + (i-1)*rlen)
-
-            if 0 <= typelist[j] < 2045
-                df[i,j] = strtonull(String(read(io,UInt8,typelist[j])))
-                # if empty string, return missing
-                if df[i,j] == ""
-                    df[i,j] = NA #missing
-                end
-            elseif typelist[j] == 32768 # long string
-                if release == 117
-                    v = read(io,Int32)
-                    o = read(io,Int32)
-                elseif release == 118
-                    z = read(io,UInt8,8)
-                    v = reinterpret(Int16,z[1:2])[1]
-                    o = (reinterpret(Int64,z)[1] >> 16)
-                end
-                if (v,o) == (0,0)
-                    df[i,j] = NA #missing
-                else
-                    df[i,j] = strls[(v,o)]
-                end
-            elseif typelist[j] == 65526
-                dataitemf64 = read(io,Float64)
-                if dataitemf64 > 8.9884656743e307
-                    df[i,j] = NA #missing
-                elseif fmtlist[j] == "%d" || fmtlist[j][1:3] == "%td"
-                    # convert it to Julia date
-                    df[i,j] = Date(1960,1,1) + Dates.Day(round(Int,dataitemf64))
-                elseif fmtlist[j][1:3] == "%tc" || fmtlist[j][1:3] == "%tC"
-                    df[i,j] = DateTime(1960,1,1,0,0,0) + Dates.Millisecond(round(Int,dataitemf64))
-                else
-                    df[i,j] = dataitemf64
-                end
-            elseif typelist[j] == 65527
-                dataitemf32 = read(io,Float32)
-                if dataitemf32 > 1.70141173319e38
-                    df[i,j] = NA #missing
-                elseif fmtlist[j] == "%d" || fmtlist[j][1:3] == "%td"
-                    # convert it to Julia date
-                    df[i,j] = Date(1960,1,1) + Dates.Day(round(Int,dataitemf32))
-                elseif fmtlist[j][1:3] == "%tc" || fmtlist[j][1:3] == "%tC"
-                    df[i,j] = DateTime(1960,1,1,0,0,0) + Dates.Millisecond(round(Int,dataitemf32))
-                else
-                    df[i,j] = dataitemf32
-                end
-            elseif typelist[j] == 65528
-                dataitemi32 = read(io,Int32)
-                if dataitemi32 > 2147483620
-                    df[i,j] = NA #missing
-                elseif fmtlist[j] == "%d" || fmtlist[j][1:3] == "%td"
-                    # convert it to Julia date
-                    df[i,j] = Date(1960,1,1) + Dates.Day(dataitemi32)
-                elseif fmtlist[j][1:3] == "%tc" || fmtlist[j][1:3] == "%tC"
-                    df[i,j] = DateTime(1960,1,1,0,0,0) + Dates.Millisecond(dataitemi32)
-                else
-                    df[i,j] = dataitemi32
-                end
-            elseif typelist[j] == 65529
-                dataitemi16 = read(io,Int16)
-                if dataitemi16 > 32740
-                    df[i,j] = NA #missing
-                elseif fmtlist[j] == "%d" || fmtlist[j][1:3] == "%td"
-                    # convert it to Julia date
-                    df[i,j] = Date(1960,1,1) + Dates.Day(dataitemi16)
-                else
-                    df[i,j] = dataitemi16
-                end
-            elseif typelist[j] == 65530
-                dataitemi8 = read(io,Int8)
-                if dataitemi8 > 100
-                    df[i,j] = NA #missing
-                else
-                    df[i,j] = dataitemi8
-                end
-            end
-        end
-        # strls will be converted to categorical regardless of `categorize` option
-        if typelist[j] == 32768
-            #categorical!(df,varlist[j])
-            pool!(df,varlist[j])
-            gc()
-        end
-
-        # string variables can optionally be converted to categorical with the categorize option
-        if categorize && 0 < typelist[j] < 2045 && in(varlist[j],exclude) && memory_saved(df[j])
-            #categorical!(df,varlist[j])
-            pool!(df,varlist[j])
-            gc()
-        end
-    end
-
-	# read value labels
+    # read value labels
 	#println(bytestring(readbytes(fh,41))) # </data><strls></strls><value_labels><lbl> ... </lbl>
     tst = String(read(fh,UInt8,5))
     if tst == "trls>"
@@ -417,11 +351,11 @@ function read_stata!(fn::String,df::DataFrame,label::Dict; categorize=true, verb
 		end
         len = read(fh,Int32)
         labname = strtonull(String(read(fh,UInt8,len_labelname)))
-        # println(i," ",labname)
+
         skip(fh,3) # padding
         numvalues = read(fh,Int32) # number of entries
         txtlen = read(fh,Int32) # length of value label text
-        value_labels[labname] = Dict()
+        value_labels[labname] = OrderedDict()
 
         #
         offset = read(fh,Int32,numvalues) # offset
@@ -440,6 +374,127 @@ function read_stata!(fn::String,df::DataFrame,label::Dict; categorize=true, verb
         skip(fh,6) # </lbl>
     end
 
+    dataitemf32::Float32 = 0.
+    dataitemf64::Float64 = 0.
+    dataitemi8::Int8 = 0
+    dataitemi16::Int16 = 0
+    dataitemi32::Int32 = 0
+    v::Int32 = 0
+    o::Int64 = 0
+    z = zeros(UInt8,8)
+
+    # interate over the number of variables
+    for j in 1:nvar
+
+        if verbose == true
+            println("Processing variable ",j," ", varlist[j])
+        end
+
+        #df[varlist[j]] = alloc_dataarray(typelist[j],fmtlist[j],nobs)
+        #df[varlist[j]] = alloc_unionvec(typelist[j],fmtlist[j],nobs)
+        #da = alloc_dataarray(typelist[j],fmtlist[j],nobs)
+        da = alloc_unionvec(typelist[j],fmtlist[j],nobs)
+
+		for i in 1:nobs
+
+            seek(io,numskip[j] + (i-1)*rlen)
+
+            if 0 <= typelist[j] < 2045
+                da[i] = strtonull(String(read(io,UInt8,typelist[j])))
+                # if empty string, return NA
+                if da[i] == ""
+                    da[i] = missing
+                end
+            elseif typelist[j] == 32768 # long string
+                if release == 117
+                    v = read(io,Int32)
+                    o = read(io,Int32)
+                elseif release == 118
+                    z = read(io,UInt8,8)
+                    v = reinterpret(Int16,z[1:2])[1]
+                    o = (reinterpret(Int64,z)[1] >> 16)
+                end
+                if (v,o) == (0,0)
+                    da[i] = missing
+                else
+                    da[i] = strls[(v,o)]
+                end
+            elseif typelist[j] == 65526
+                dataitemf64 = read(io,Float64)
+                if dataitemf64 > 8.9884656743e307
+                    da[i] = missing
+                elseif fmtlist[j] == "%d" || fmtlist[j][1:3] == "%td"
+                    # convert it to Julia date
+                    da[i] = Date(1960,1,1) + Dates.Day(round(Int,dataitemf64))
+                elseif fmtlist[j][1:3] == "%tc" || fmtlist[j][1:3] == "%tC"
+                    da[i] = DateTime(1960,1,1,0,0,0) + Dates.Millisecond(round(Int,dataitemf64))
+                else
+                    da[i] = dataitemf64
+                end
+            elseif typelist[j] == 65527
+                dataitemf32 = read(io,Float32)
+                if dataitemf32 > 1.70141173319e38
+                    da[i] = missing
+                elseif fmtlist[j] == "%d" || fmtlist[j][1:3] == "%td"
+                    # convert it to Julia date
+                    da[i] = Date(1960,1,1) + Dates.Day(round(Int,dataitemf32))
+                elseif fmtlist[j][1:3] == "%tc" || fmtlist[j][1:3] == "%tC"
+                    da[i] = DateTime(1960,1,1,0,0,0) + Dates.Millisecond(round(Int,dataitemf32))
+                else
+                    da[i] = dataitemf32
+                end
+            elseif typelist[j] == 65528
+                dataitemi32 = read(io,Int32)
+                if dataitemi32 > 2147483620
+                    da[i] = missing
+                elseif fmtlist[j] == "%d" || fmtlist[j][1:3] == "%td"
+                    # convert it to Julia date
+                    da[i] = Date(1960,1,1) + Dates.Day(dataitemi32)
+                elseif fmtlist[j][1:3] == "%tc" || fmtlist[j][1:3] == "%tC"
+                    da[i] = DateTime(1960,1,1,0,0,0) + Dates.Millisecond(dataitemi32)
+                else
+                    da[i] = dataitemi32
+                end
+            elseif typelist[j] == 65529
+                dataitemi16 = read(io,Int16)
+                if dataitemi16 > 32740
+                    da[i] = missing
+                elseif fmtlist[j] == "%d" || fmtlist[j][1:3] == "%td"
+                    # convert it to Julia date
+                    da[i] = Date(1960,1,1) + Dates.Day(dataitemi16)
+                else
+                    da[i] = dataitemi16
+                end
+            elseif typelist[j] == 65530
+                dataitemi8 = read(io,Int8)
+                if dataitemi8 > 100
+                    da[i] = missing
+                else
+                    da[i] = dataitemi8
+                end
+            end
+        end
+
+        # strls will be converted to categorical regardless of `categorize` option
+        if typelist[j] == 32768
+            #categorical!(df,varlist[j])
+            df[varlist[j]] = categorial(da)
+        # string variables
+        # elseif 0 < typelist[j] < 2045
+        #     # string variables can optionally be converted to categorical with the "categorize" option
+        #     if categorize && in(varlist[j],exclude) && memory_saved(da)
+        #         df[varlist[j]] = categorical(da)
+        #     end
+        # if an integer type and value labels exist, convert it to a categorical array and attach value labels
+        elseif labelnames[j] != "" && in(typelist[j],[65528,65529,65530])
+            value_labels[labelnames[j]][Missings.missing] = ""
+            # df[varlist[j]] = CategoricalArrays.recode(da2ca(da),value_labels[labelnames[j]]...)
+            df[varlist[j]] = CategoricalArrays.recode(categorical(da),value_labels[labelnames[j]]...)
+        else
+            df[varlist[j]] = da
+        end
+    end
+
     # variable labels
 	variable_dict = Dict()
 
@@ -451,10 +506,9 @@ function read_stata!(fn::String,df::DataFrame,label::Dict; categorize=true, verb
     for i in 1:nvar
         variable_dict[varlist[i]] = varlabels[i]
         format_dict[varlist[i]] = fmtlist[i]
-        labname_dict[varlist[i]] = valuelabels[i]
+        labname_dict[varlist[i]] = labelnames[i]
     end
 
-    # label = Dict()
     label["variable"] = variable_dict
     label["format"] = format_dict
     label["label"] = labname_dict
@@ -464,8 +518,8 @@ function read_stata!(fn::String,df::DataFrame,label::Dict; categorize=true, verb
 	close(fh)
 
     # release memory
-    io = IOBuffer()
-    strls = Dict()
-    gc()
+    # io = IOBuffer()
+    # strls = Dict()
+    # gc()
 
 end

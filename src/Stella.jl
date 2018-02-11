@@ -50,7 +50,7 @@ export  read_stata,  # read stata 13 and 14 files into DF
         renvars!,    # change variable names to either lower or upper case
         recode,      # recode values in a variable
         eform,       # coeftable output to eform
-        anova, anovap, # ANOVA table and p-value from ANOVA
+        anova, oneway, # oneway and twoway ANOVA
         pwcorr,      # pairwise correlations
         ranksum,     # ranksum test
         signrank,    # signed rank test
@@ -69,6 +69,7 @@ include("DataFrame_tools.jl")
 include("Stata_Reader.jl")
 include("tab.jl")
 include("t-test.jl")
+include("anova.jl")
 include("show.jl")
 
 end

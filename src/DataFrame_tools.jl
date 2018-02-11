@@ -121,9 +121,9 @@ end
 #     #headers
 #     for i = 1:nvars
 #         if vtypes[i] <: Number || vtypes[i] == Date || vtypes[i] == DateTime
-#             print(prepend_spaces(string(vars[i]),lenvec[i]))
+#             print(lpad(string(vars[i]),lenvec[i]))
 #         else
-#             print(append_spaces(string(vars[i]),lenvec[i]))
+#             print(rpad(string(vars[i]),lenvec[i]))
 #         end
 #
 #         if i < nvars
@@ -140,9 +140,9 @@ end
 #         for i = 1:nvars
 #             if isna(df[ln,i])
 #                 if vtypes[i] <: AbstractString
-#                     print(append_spaces("NA",lenvec[i]))
+#                     print(rpad("NA",lenvec[i]))
 #                 else
-#                     print(prepend_spaces("NA",lenvec[i]))
+#                     print(lpad("NA",lenvec[i]))
 #                 end
 #                 if ln < nvars
 #                     print("  ")
@@ -154,9 +154,9 @@ end
 #             elseif vtypes[i] == Date
 #                 print(Dates.format(df[ln,i],"mm/dd/yyyy"))
 #             elseif vtypes[i] <: AbstractString
-#                 print(append_spaces(df[ln,i],lenvec[i]))
+#                 print(rpad(df[ln,i],lenvec[i]))
 #             elseif vtypes[i] <: Integer
-#                 print(prepend_spaces(string(df[ln,i]),lenvec[i]))
+#                 print(lpad(string(df[ln,i]),lenvec[i]))
 #             elseif vtypes[i] <: AbstractFloat
 #                 if precision == 0
 #                     nstr = @sprintf("%.0f",df[ln,i])
@@ -179,7 +179,7 @@ end
 #                 else
 #                     error("Can't display that much precision.")
 #                 end
-#                 print(prepend_spaces(nstr,lenvec[i]))
+#                 print(lpad(nstr,lenvec[i]))
 #             end
 #             if i < nvars
 #                 print("  ")
@@ -220,7 +220,7 @@ label["label"] = Dict(
     )
 ```
 """
-function desc(df::DataFrame,varnames::Vector=[];label_dict::Union{Void,Dict}=nothing)
+function desc(df::DataFrame,varnames::Union{Vector{Symbol},Symbol}=[];label_dict::Union{Void,Dict}=nothing)
 
     if length(varnames) == 0
         varnames = names(df)
@@ -253,7 +253,9 @@ function desc(df::DataFrame,varnames::Vector=[];label_dict::Union{Void,Dict}=not
     maxval = maxval < 8 ? 8 : maxval
 
     # width for variable types
-    maxtype = 7
+    maxatype = 5
+    maxeltype = 7
+    maxmiss = 7
 
     # width for value label names
     maxlab = maximum(lablen)
@@ -269,20 +271,26 @@ function desc(df::DataFrame,varnames::Vector=[];label_dict::Union{Void,Dict}=not
     # width for the variable index - minimum 3 spaces
     maxobs = length(string(numvar))
     maxobs = maxobs < 3 ? 3 : maxobs
-    print(prepend_spaces("Num",maxobs),"  ")
+    print(lpad("Num",maxobs),"  ")
 
     # variable name
-    print(append_spaces("Variable",maxval),"  ")
+    print(rpad("Variable",maxval),"  ")
+
+    # type of array
+    print(rpad("Atype",maxatype),"  ")
 
     # type (eltype)
-    print(append_spaces("Type",maxtype),"  ")
+    print(rpad("Eltype",maxeltype),"  ")
+
+    # percent missing
+    print(rpad("Missing",maxmiss),"  ")
 
     if label_dict != nothing
-        # value label
-        print(append_spaces("Value Label",maxlab),"  ")
-
-        # format
-        print(append_spaces("Format",maxformat),"  ")
+        # # value label
+        # print(rpad("Value Label",maxlab),"  ")
+        #
+        # # format
+        # print(rpad("Format",maxformat),"  ")
 
         # label
         print("Label")
@@ -290,37 +298,56 @@ function desc(df::DataFrame,varnames::Vector=[];label_dict::Union{Void,Dict}=not
 
     print("\n")
 
-    # dashes for a line by itself -- assume 20 characters for "label"
+    # dashes for a line by itself -- assume 30 characters for "label"
+    numdashes = maxobs+maxval+maxatype+maxmiss+maxeltype+4
     if label_dict == nothing
-        println(repeat("-",maxobs+maxval+maxtype+4))
+        println(repeat("-",numdashes+4))
     else
-        println(repeat("-",maxobs+maxval+maxtype+maxlab+maxformat+30))
+        println(repeat("-",numdashes+30))
     end
 
+    nrows = size(df,1)
     for (i,v) in enumerate(varnames)
 
-        eltyp = string(eltype(df[v]))
+        # variable name
+        varstr = string(v)
+
+        # Array type = DA for DataArray, CA for Categorical Array, and UV for Union Vector
+        typ = typeof(df[v])
+        if typ <: DataArray
+            atyp = "DA"
+        elseif typ <: CategoricalArray
+            atyp = "CA"
+        else
+            atyp = "UV"
+        end
+
+        # Eltype
+        eltyp = string(Missings.T(eltype(df[v])))
 
         if in(eltyp,["String","AbstractString"])
             eltyp = string("Str",getmaxlength(df[v]))
         end
 
-        varstr = string(v)
-        print(prepend_spaces(string(i),maxobs),"  ",append_spaces(varstr,maxval),"  ",append_spaces(eltyp,maxtype),"  ")
+        # percent missing
+        nmiss = typeof(df[v]) <: DataArray ? sum(isna.(df[v])) : sum(Missings.ismissing.(df[v]))
+        pmiss = string(round(100 * nmiss/nrows,1),"%")
+
+        print(lpad(string(i),maxobs),"  ",rpad(varstr,maxval),"  ",lpad(atyp,maxatype),"  ",rpad(eltyp,maxeltype),"  ",lpad(pmiss,maxmiss),"  ")
 
         if label_dict != nothing
-            if haskey(lablab,v)
-                print(append_spaces(lablab[v],maxlab),"  ")
-            else
-                print(repeat(" ",maxlab+2))
-            end
-
-            if haskey(forlab,v)
-                print(append_spaces(forlab[v],maxformat),"  ")
-            else
-                print(repeat(" ",maxformat+2))
-            end
-
+            # if haskey(lablab,v)
+            #     print(rpad(lablab[v],maxlab),"  ")
+            # else
+            #     print(repeat(" ",maxlab+2))
+            # end
+            #
+            # if haskey(forlab,v)
+            #     print(rpad(forlab[v],maxformat),"  ")
+            # else
+            #     print(repeat(" ",maxformat+2))
+            # end
+            #
             if haskey(varlab,v)
                 print(varlab[v])
             end
