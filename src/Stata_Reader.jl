@@ -1,4 +1,4 @@
-using DataFrames, DataStructures, CategoricalArrays, Missings
+using DataFrames, DataStructures, DataArrays, CategoricalArrays, Missings
 
 function get_numbytes(typelist,nvar)
     nb = Array{UInt16,1}(nvar)
