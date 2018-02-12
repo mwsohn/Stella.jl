@@ -486,10 +486,10 @@ function read_stata!(fn::String,df::DataFrame,label::Dict; categorize=true, verb
         #         df[varlist[j]] = categorical(da)
         #     end
         # if an integer type and value labels exist, convert it to a categorical array and attach value labels
-        elseif labelnames[j] != "" && in(typelist[j],[65528,65529,65530])
-            value_labels[labelnames[j]][Missings.missing] = ""
-            # df[varlist[j]] = CategoricalArrays.recode(da2ca(da),value_labels[labelnames[j]]...)
-            df[varlist[j]] = CategoricalArrays.recode(categorical(da),value_labels[labelnames[j]]...)
+        # elseif labelnames[j] != "" && in(typelist[j],[65528,65529,65530])
+        #     value_labels[labelnames[j]][Missings.missing] = ""
+        #     # df[varlist[j]] = CategoricalArrays.recode(da2ca(da),value_labels[labelnames[j]]...)
+        #     df[varlist[j]] = CategoricalArrays.recode(categorical(da),value_labels[labelnames[j]]...)
         else
             df[varlist[j]] = da
         end

@@ -220,7 +220,7 @@ label["label"] = Dict(
     )
 ```
 """
-function desc(df::DataFrame,varnames::Union{Vector{Symbol},Symbol}=[];label_dict::Union{Void,Dict}=nothing)
+function desc(df::DataFrame,varnames::Symbol...;label_dict::Union{Void,Dict}=nothing)
 
     if length(varnames) == 0
         varnames = names(df)
@@ -357,9 +357,14 @@ function desc(df::DataFrame,varnames::Union{Vector{Symbol},Symbol}=[];label_dict
     end
 end
 
-function getmaxlength(s::DataArray)
-    # .function does not work on empty arrays
-    return sum(s.na) < size(s,1) ? maximum(length.(dropna(s))) : 0
+function getmaxlength(s::AbstractArray)
+
+    if length(collect(skipmissing(s))) == 0
+        return 0
+    end
+
+    # function does not work on empty arrays
+    return  maximum(length.(collect(skipmissing(s))))
 end
 
 """
