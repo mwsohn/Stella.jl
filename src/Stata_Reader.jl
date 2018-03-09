@@ -123,16 +123,21 @@ function alloc_unionvec(vtype,vfmt,nobs::Int64)
     error(vtype, " is not a valid variable type in Stata.")
 end
 
-function memory_saved(da::DataArray)
-    if sum(da.na) == length(da)
+function memory_saved(da::AbstractArray)
+    nmiss = da <: DataArray ? sum(isna.(da)) : sum(ismissing.(da))
+    if nmiss == length(da)
         return false
     end
 
     # total bytes
-    tsize = sum(length.(dropna(s)))
+    if da <: DataArray
+        tsize = sum(length.(dropna(s)))
+    else
+        tsize = sum(length.(collect(skipmissing(s))))
+    end
 
     # reduced size
-    lev = levels(dropna(s))
+    lev = levels(s)
     if length(lev) > typmax(Int16)
         return false
     end
@@ -144,10 +149,10 @@ function memory_saved(da::DataArray)
 
     return false
 end
-
-function da2ca(da::DataArray)
-    return CategoricalArray([isna(x) ? missing : x for x in da])
-end
+#
+# function da2ca(da::DataArray)
+#     return CategoricalArray([isna(x) ? missing : x for x in da])
+# end
 
 function read_stata(fn; categorize=true,verbose=false,exclude=[])
     df = DataFrame()
@@ -164,8 +169,9 @@ function read_stata!(fn::String,df::DataFrame,label::Dict; categorize=true, verb
 
     # dta file (<stata_dta><header><release>)
     header = String(read(fh,UInt8,67))
+    #println(header)
     if header[2:10] != "stata_dta"
-        error("Not a version 13 or 14 data file")
+        error("Not a version 13, 14, or 15 data file")
     end
 
     # data format version
@@ -175,7 +181,7 @@ function read_stata!(fn::String,df::DataFrame,label::Dict; categorize=true, verb
 		len_format = 49
 		len_labelname = 33
 		len_varlabel = 81
-	elseif release == 118 # version 14
+	elseif release == 118 # version 14 or 15
 		len_varname = 129
 		len_format = 57
 		len_labelname = 129
@@ -480,16 +486,17 @@ function read_stata!(fn::String,df::DataFrame,label::Dict; categorize=true, verb
             #categorical!(df,varlist[j])
             df[varlist[j]] = categorial(da)
         # string variables
-        # elseif 0 < typelist[j] < 2045
+        # elseif 0 < typelist[j] < 2045 && categorize && in(varlist[j],exclude) && memory_saved(da)
         #     # string variables can optionally be converted to categorical with the "categorize" option
-        #     if categorize && in(varlist[j],exclude) && memory_saved(da)
-        #         df[varlist[j]] = categorical(da)
-        #     end
-        # if an integer type and value labels exist, convert it to a categorical array and attach value labels
-        # elseif labelnames[j] != "" && in(typelist[j],[65528,65529,65530])
-        #     value_labels[labelnames[j]][Missings.missing] = ""
-        #     # df[varlist[j]] = CategoricalArrays.recode(da2ca(da),value_labels[labelnames[j]]...)
-        #     df[varlist[j]] = CategoricalArrays.recode(categorical(da),value_labels[labelnames[j]]...)
+        #     df[varlist[j]] = categorical(da)
+        # # if an integer type and value labels exist, convert it to a categorical array and attach value labels
+        elseif labelnames[j] != "" && in(typelist[j],[65528,65529,65530])
+            df[varlist[j]] = categorical(da) #,true)
+            # if ca.pool.index != sort(collect(keys(value_labels[labelnames[j]])))
+            #     df[varlist[j]] = ca
+            # else
+            #     df[varlist[j]] = CategoricalArrays.recode(ca,value_labels[labelnames[j]]...)
+            # end
         else
             df[varlist[j]] = da
         end

@@ -323,7 +323,12 @@ function desc(df::DataFrame,varnames::Symbol...;label_dict::Union{Void,Dict}=not
         end
 
         # Eltype
-        eltyp = string(Missings.T(eltype(df[v])))
+        if typ <: CategoricalArray
+            eltyp = UInt32
+        else
+            eltyp = string(Missings.T(eltype(df[v])))
+        end
+        # eltyp = string(Missings.T(eltype(df[v])))
 
         if in(eltyp,["String","AbstractString"])
             eltyp = string("Str",getmaxlength(df[v]))
