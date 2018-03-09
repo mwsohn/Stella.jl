@@ -1,3 +1,61 @@
+function readstat2dataframe(dt::ReadStat.ReadStatDataFrame)
+
+    df = DataFrame()
+
+    # dateoffset = Date(1960,1,1)
+    # datetimeoffset = DateTime(1960,1,1,0,0,0)
+    #
+    for i = 1:dt.columns
+
+        # Date or DateTime values
+        # if dt.types[i] <: Integer && dt.formats[i] in ("%d","%td")
+        #     df[dt.headers[i]] = Union{Missing,Int32}[x.hasvalue ? dateoffset + Dates.Day(x.value) : missing for x in dt.data[i]]
+        # elseif dt.types[i] <: Integer && dt.formats[i] in ("%tc","%tC")
+        #     df[dt.headers[i]] = Union{Missing,Int64}[x.hasvalue ? datetimeoffset + Dates.Millisecond(x.value) : missing for x in dt.data[i]]
+        if dt.types[i] <: AbstractString
+            df[dt.headers[i]] = String[x.hasvalue ? x.value : "" for x in dt.data[i]]
+        else
+            df[dt.headers[i]] = Union{Missing,dt.types[i]}[x.hasvalue ? x.value : missing for x in dt.data[i]]
+        end
+    end
+    return df
+end
+import DataFrames.DataFrame
+DataFrame(x::ReadStat.ReadStatDataFrame) = readstat2dataframe(x)
+
+function read_stata2(fn::String)
+
+    dt = read_dta(fn)
+    df = DataFrame(dt)
+
+    # labels
+    varlab = Dict()
+    lblname = Dict()
+    formatlab = Dict()
+
+    for i=1:dt.columns
+
+        varlab[dt.headers[i]] = dt.labels[i]
+        lblname[dt.headers[i]] = dt.val_label_keys[i]
+        formatlab[dt.headers[i]] = dt.formats[i]
+    end
+
+    vallab = Dict()
+    for k in collect(keys(dt.val_label_dict))
+        vallab[k] = dt.val_label_dict[k]
+    end
+
+    label = Dict()
+    label["variable"] = varlab
+    label["label"] = lblname
+    label["formats"] = formatlab
+    label["values"] = vallab
+
+    return df,label
+end
+
+
+
 #############################################################################
 #
 # DataFrame tools
@@ -515,7 +573,7 @@ function duplicates(df::DataFrame, args::Symbol... ; cmd::Symbol = :report) #; e
 end
 
 """
-    dfsample(df::DataFrame,num::Union{Int64,Float64})
+    dfsample(df::AbstractDataFrame,num::Union{Int64,Float64})
 
 Creates a dataframe with a randomly selected sample from the input dataframe. `num`
 specifies the sample size. If `num` is an integer, it indicates the number of rows to be selected.
@@ -542,7 +600,7 @@ julia> df2 = dfsample(df,.2)
 ```
 
 """
-function dfsample(df::DataFrame,num::Union{Int64,Float64})
+function dfsample(df::AbstractDataFrame,num::Union{Int64,Float64})
 
     df2 = DataFrame()
     df2[:___ran_num___] = rand(Uniform(),size(df,1))

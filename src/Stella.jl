@@ -1,4 +1,6 @@
-VERSION >= v"0.6.0" && __precompile__()
+VERSION >= v"0.6.0"
+
+#&& __precompile__()
 
 module Stella
 
@@ -8,8 +10,8 @@ module Stella
 ##
 ################################################################################
 
-using DataFrames, Distributions, GLM, StatsBase, Glob,
-        DataStructures, HypothesisTests, NamedArrays, FreqTables, Formatting
+using DataFrames, Distributions, GLM, StatsBase, Glob,Formatting,
+        DataStructures, HypothesisTests, NamedArrays, FreqTables, ReadStat
 
 ##############################################################################
 ##

@@ -491,7 +491,7 @@ function read_stata!(fn::String,df::DataFrame,label::Dict; categorize=true, verb
         #     df[varlist[j]] = categorical(da)
         # # if an integer type and value labels exist, convert it to a categorical array and attach value labels
         elseif labelnames[j] != "" && in(typelist[j],[65528,65529,65530])
-            df[varlist[j]] = categorical(da) #,true)
+            df[varlist[j]] = categorical(da,true)
             # if ca.pool.index != sort(collect(keys(value_labels[labelnames[j]])))
             #     df[varlist[j]] = ca
             # else

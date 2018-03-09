@@ -50,6 +50,8 @@
 # end
 #
 
+dropmissing(x) = collect(skipmissing(x))
+
 """
     smallest(da::AbstractArray, n::Int) or smallest(df::DataFrame, varname::Symbol, n::Int)
 
