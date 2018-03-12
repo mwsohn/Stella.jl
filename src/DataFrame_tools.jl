@@ -1,19 +1,47 @@
-function readstat2dataframe(dt::ReadStat.ReadStatDataFrame)
+function saved_memory(dt,n)
 
+    # total size and levels
+    tsize = 0
+    s = Set()
+    for i=1:dt.rows
+        tsize += length(dt.data[n][i]).value
+        if dt.data[n][i].hasvalue
+            push!(s, dt.data[n][i].value)
+        end
+    end
+
+    # for refs size, assume UInt32
+    refsize = 4
+
+    rsize = sum([length(x) for x in s]) + refsize*dt.rows
+
+    return tsize*.8 > rsize ? true : false
+end
+
+function readstat2dataframe(dt::ReadStat.ReadStatDataFrame,verbose=false)
     df = DataFrame()
 
-    # dateoffset = Date(1960,1,1)
-    # datetimeoffset = DateTime(1960,1,1,0,0,0)
-    #
-    for i = 1:dt.columns
+    dateoffset = Date(1960,1,1)
+    datetimeoffset = DateTime(1960,1,1,0,0,0)
 
+    for i = 1:dt.columns
+        if verbose
+            println("Processing ",i," ",dt.headers[i])
+        end
         # Date or DateTime values
-        # if dt.types[i] <: Integer && dt.formats[i] in ("%d","%td")
-        #     df[dt.headers[i]] = Union{Missing,Int32}[x.hasvalue ? dateoffset + Dates.Day(x.value) : missing for x in dt.data[i]]
-        # elseif dt.types[i] <: Integer && dt.formats[i] in ("%tc","%tC")
-        #     df[dt.headers[i]] = Union{Missing,Int64}[x.hasvalue ? datetimeoffset + Dates.Millisecond(x.value) : missing for x in dt.data[i]]
-        if dt.types[i] <: AbstractString
-            df[dt.headers[i]] = String[x.hasvalue ? x.value : "" for x in dt.data[i]]
+        if dt.types[i] <: Integer && dt.formats[i] in ("%d","%td")
+            df[dt.headers[i]] = Union{Missing,Int32}[x.hasvalue ? dateoffset + Dates.Day(x.value) : missing for x in dt.data[i]]
+        elseif dt.types[i] <: Integer && dt.formats[i] in ("%tc","%tC")
+            df[dt.headers[i]] = Union{Missing,Int64}[x.hasvalue ? datetimeoffset + Dates.Millisecond(x.value) : missing for x in dt.data[i]]
+        elseif dt.types[i] <: AbstractString
+            if saved_memory(dt,i)
+                df[dt.headers[i]] = categorical(String[x.hasvalue ? x.value : "" for x in dt.data[i]],true)
+            else
+                df[dt.headers[i]] = String[x.hasvalue ? x.value : "" for x in dt.data[i]]
+            end
+        elseif dt.types[i] == Int8 && dt.val_label_keys[i] != ""
+            # variable is Int8 type and has label name, convert it to categorical array
+            df[dt.headers[i]] = categorical(Union{Missing,dt.types[i]}[x.hasvalue ? x.value : missing for x in dt.data[i]],true)
         else
             df[dt.headers[i]] = Union{Missing,dt.types[i]}[x.hasvalue ? x.value : missing for x in dt.data[i]]
         end
@@ -23,10 +51,10 @@ end
 import DataFrames.DataFrame
 DataFrame(x::ReadStat.ReadStatDataFrame) = readstat2dataframe(x)
 
-function read_stata2(fn::String)
+function read_stata(fn::String,verbose=false)
 
-    dt = read_dta(fn)
-    df = DataFrame(dt)
+    dt = ReadStat.read_dta(fn)
+    df = readstat2dataframe(dt,verbose)
 
     # labels
     varlab = Dict()
@@ -34,7 +62,6 @@ function read_stata2(fn::String)
     formatlab = Dict()
 
     for i=1:dt.columns
-
         varlab[dt.headers[i]] = dt.labels[i]
         lblname[dt.headers[i]] = dt.val_label_keys[i]
         formatlab[dt.headers[i]] = dt.formats[i]
@@ -131,125 +158,8 @@ function acompress(da::AbstractVector)
     end
 end
 
-# function get_disp_length(dat::AbstractVector; precision = 2)
-#
-#     vtype = eltype(dat)
-#     if vtype == Date
-#         return 10 # 10/10/2017
-#     end
-#
-#     if vtype == DateTime # 10/10/2017 14:20
-#         return 16
-#     end
-#
-#     if vtype <: Number
-#         da = skipmissing(dat)
-#         _max = size(da,1) == 0 ? 0 : maximum(da)
-#         for k = 1:30
-#             if _max < 10^k
-#                 if vtype <: Integer || precision == 0
-#                     return k
-#                 else
-#                     return k + precision + 1
-#                 end
-#             end
-#         end
-#         error("Cannot display numbers that are 10³¹ long.")
-#     end
-#
-#     if vtype <: AbstractString
-#         return Stella.getmaxlength(dat)
-#     end
-#
-#     error(eltype(dat)," is not recognized.")
-# end
-#
-#
-# function dflist(df::DataFrame; precision = 2, n = 10)
-#
-#     nvars = size(df,2)
-#     vars = names(df)
-#
-#     lenvec = [ get_disp_length(df[y], precision = precision) for y in vars ]
-#     # println(lenvec)
-#
-#     # change lenvec to account for column names up to 8 characters
-#     vtypes =eltypes(df)
-#
-#     #headers
-#     for i = 1:nvars
-#         if vtypes[i] <: Number || vtypes[i] == Date || vtypes[i] == DateTime
-#             print(lpad(string(vars[i]),lenvec[i]))
-#         else
-#             print(rpad(string(vars[i]),lenvec[i]))
-#         end
-#
-#         if i < nvars
-#             print("  ")
-#         end
-#     end
-#     print("\n")
-#
-#     if n==0
-#         n = size(df,1)
-#     end
-#
-#     for ln = 1:n
-#         for i = 1:nvars
-#             if isna(df[ln,i])
-#                 if vtypes[i] <: AbstractString
-#                     print(rpad("NA",lenvec[i]))
-#                 else
-#                     print(lpad("NA",lenvec[i]))
-#                 end
-#                 if ln < nvars
-#                     print("  ")
-#                 end
-#                 continue
-#             end
-#             if vtypes[i] == DateTime
-#                 print(Dates.format(df[ln,i],"mm/dd/yyyy HH:MM"))
-#             elseif vtypes[i] == Date
-#                 print(Dates.format(df[ln,i],"mm/dd/yyyy"))
-#             elseif vtypes[i] <: AbstractString
-#                 print(rpad(df[ln,i],lenvec[i]))
-#             elseif vtypes[i] <: Integer
-#                 print(lpad(string(df[ln,i]),lenvec[i]))
-#             elseif vtypes[i] <: AbstractFloat
-#                 if precision == 0
-#                     nstr = @sprintf("%.0f",df[ln,i])
-#                 elseif precision == 1
-#                     nstr = @sprintf("%.1f",df[ln,i])
-#                 elseif precision == 2
-#                     nstr = @sprintf("%.2f",df[ln,i])
-#                 elseif precision == 3
-#                     nstr = @sprintf("%.3f",df[ln,i])
-#                 elseif precision == 4
-#                     nstr = @sprintf("%.4f",df[ln,i])
-#                 elseif precision == 5
-#                     nstr = @sprintf("%.5f",df[ln,i])
-#                 elseif precision == 6
-#                     nstr = @sprintf("%.6f",df[ln,i])
-#                 elseif precision == 7
-#                     nstr = @sprintf("%.7f",df[ln,i])
-#                 elseif precision == 8
-#                     nstr = @sprintf("%.8f",df[ln,i])
-#                 else
-#                     error("Can't display that much precision.")
-#                 end
-#                 print(lpad(nstr,lenvec[i]))
-#             end
-#             if i < nvars
-#                 print("  ")
-#             end
-#         end
-#         print("\n")
-#     end
-# end
-
-
 """
-    desc(df::DataFrame; label_dict::Union{Void,Dict}=nothing)
+    desc(df::DataFrame,varnames::Symbol...; label_dict::Union{Void,Dict}=nothing)
 
 Displays variables in a dataframe much like `showcols`. It can display additional
 attributes such as variable labels, value labels and display formats (not used in Julia)
@@ -371,13 +281,12 @@ function desc(df::DataFrame,varnames::Symbol...;label_dict::Union{Void,Dict}=not
         varstr = string(v)
 
         # Array type = DA for DataArray, CA for Categorical Array, and UV for Union Vector
-        typ = typeof(df[v])
-        if typ <: DataArray
-            atyp = "DA"
-        elseif typ <: CategoricalArray
+        if isa(eltype(df[v]),Union)
+            atyp = "UV" # Union Vector
+        elseif typeof(df[v]) <: CategoricalArray
             atyp = "CA"
         else
-            atyp = "UV"
+            atyp = "VC"
         end
 
         # Eltype

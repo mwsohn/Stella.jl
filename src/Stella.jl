@@ -68,7 +68,7 @@ export  read_stata,  # read stata 13 and 14 files into DF
 ##############################################################################
 include("stella_tools.jl")
 include("DataFrame_tools.jl")
-include("Stata_Reader.jl")
+#include("Stata_Reader.jl")
 include("tab.jl")
 include("t-test.jl")
 include("anova.jl")
