@@ -1,19 +1,19 @@
-function saved_memory(dt,n)
+function memory_saved(dt,n)
 
     # total size and levels
-    tsize = 0
-    s = Set()
-    for i=1:dt.rows
-        tsize += length(dt.data[n][i]).value
-        if dt.data[n][i].hasvalue
-            push!(s, dt.data[n][i].value)
-        end
+    tsize = sum([isnull(x) ? 0 : length(x.value) for x in dt.data[n]])
+    s = Set(dt.data[n][:].values)
+
+    # for refs size
+    if length(s) < typemax(UInt8)
+        refsize = 1
+    elseif length(s) < typemax(UInt16)
+        refsize = 2
+    else
+        refsize = 4
     end
 
-    # for refs size, assume UInt32
-    refsize = 4
-
-    rsize = sum([length(x) for x in s]) + refsize*dt.rows
+    rsize = sum(length.(collect(s))) + refsize*dt.rows
 
     return tsize*.8 > rsize ? true : false
 end
@@ -34,10 +34,10 @@ function readstat2dataframe(dt::ReadStat.ReadStatDataFrame,verbose=false)
         elseif dt.types[i] <: Integer && dt.formats[i] in ("%tc","%tC")
             df[dt.headers[i]] = Union{Missing,Int64}[x.hasvalue ? datetimeoffset + Dates.Millisecond(x.value) : missing for x in dt.data[i]]
         elseif dt.types[i] <: AbstractString
-            if saved_memory(dt,i)
+            if memory_saved(dt,i)
                 df[dt.headers[i]] = categorical(String[x.hasvalue ? x.value : "" for x in dt.data[i]],true)
             else
-                df[dt.headers[i]] = String[x.hasvalue ? x.value : "" for x in dt.data[i]]
+                df[dt.headers[i]] = Union{Missing,String}[x.hasvalue || x.value != "" ? x.value : missing for x in dt.data[i]]
             end
         elseif dt.types[i] == Int8 && dt.val_label_keys[i] != ""
             # variable is Int8 type and has label name, convert it to categorical array
@@ -48,6 +48,13 @@ function readstat2dataframe(dt::ReadStat.ReadStatDataFrame,verbose=false)
     end
     return df
 end
+function readstat2dataframe(dt::ReadStat.ReadStatDataFrame)
+    df=DataFrame()
+    for i=1:dt.columns
+        df[dt.headers[i]] = Union{Missing,dt.types[i]}[x.hasvalue ? x.value : missing for x in dt.data[i]]
+    end
+end
+
 import DataFrames.DataFrame
 DataFrame(x::ReadStat.ReadStatDataFrame) = readstat2dataframe(x)
 
@@ -80,7 +87,6 @@ function read_stata(fn::String,verbose=false)
 
     return df,label
 end
-
 
 
 #############################################################################
@@ -281,17 +287,17 @@ function desc(df::DataFrame,varnames::Symbol...;label_dict::Union{Void,Dict}=not
         varstr = string(v)
 
         # Array type = DA for DataArray, CA for Categorical Array, and UV for Union Vector
-        if isa(eltype(df[v]),Union)
-            atyp = "UV" # Union Vector
-        elseif typeof(df[v]) <: CategoricalArray
+        if typeof(df[v]) <: CategoricalArray
             atyp = "CA"
+        elseif isa(eltype(df[v]),Union)
+            atyp = "UV" # Union Vector
         else
             atyp = "VC"
         end
 
         # Eltype
-        if typ <: CategoricalArray
-            eltyp = UInt32
+        if typeof(df[v]) <: CategoricalArray
+            eltyp = eltype(df[v].refs)
         else
             eltyp = string(Missings.T(eltype(df[v])))
         end
@@ -302,7 +308,7 @@ function desc(df::DataFrame,varnames::Symbol...;label_dict::Union{Void,Dict}=not
         end
 
         # percent missing
-        nmiss = typeof(df[v]) <: DataArray ? sum(isna.(df[v])) : sum(Missings.ismissing.(df[v]))
+        nmiss = sum(Missings.ismissing.(df[v])) # typeof(df[v]) <: DataArray ? sum(isna.(df[v])) : sum(Missings.ismissing.(df[v]))
         pmiss = string(round(100 * nmiss/nrows,1),"%")
 
         print(lpad(string(i),maxobs),"  ",rpad(varstr,maxval),"  ",lpad(atyp,maxatype),"  ",rpad(eltyp,maxeltype),"  ",lpad(pmiss,maxmiss),"  ")
