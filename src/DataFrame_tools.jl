@@ -5,14 +5,9 @@ function memory_saved(dt,n)
     s = Set(dt.data[n][:].values)
 
     # for refs size
-    if length(s) < typemax(UInt8)
-        refsize = 1
-    elseif length(s) < typemax(UInt16)
-        refsize = 2
-    else
-        refsize = 4
-    end
+    refsize = length(s) < typemax(UInt8) ? 1 : length(s) < typemax(UInt16) ? 2 : 4
 
+    # approximate size in categorical arrays
     rsize = sum(length.(collect(s))) + refsize*dt.rows
 
     return tsize*.8 > rsize ? true : false
@@ -28,6 +23,7 @@ function readstat2dataframe(dt::ReadStat.ReadStatDataFrame,verbose=false)
         if verbose
             println("Processing ",i," ",dt.headers[i])
         end
+
         # Date or DateTime values
         if dt.types[i] <: Integer && dt.formats[i] in ("%d","%td")
             df[dt.headers[i]] = Union{Missing,Int32}[x.hasvalue ? dateoffset + Dates.Day(x.value) : missing for x in dt.data[i]]
@@ -48,7 +44,7 @@ function readstat2dataframe(dt::ReadStat.ReadStatDataFrame,verbose=false)
     end
     return df
 end
-function readstat2dataframe(dt::ReadStat.ReadStatDataFrame)
+function rs2df(dt::ReadStat.ReadStatDataFrame)
     df=DataFrame()
     for i=1:dt.columns
         df[dt.headers[i]] = Union{Missing,dt.types[i]}[x.hasvalue ? x.value : missing for x in dt.data[i]]
@@ -56,7 +52,32 @@ function readstat2dataframe(dt::ReadStat.ReadStatDataFrame)
 end
 
 import DataFrames.DataFrame
-DataFrame(x::ReadStat.ReadStatDataFrame) = readstat2dataframe(x)
+DataFrame(x::ReadStat.ReadStatDataFrame) = rs2df(x)
+
+function get_labels(dt::ReadStat.ReadStatDataFrame)
+    # labels
+    varlab = Dict()
+    lblname = Dict()
+    formatlab = Dict()
+
+    for i=1:dt.columns
+        varlab[dt.headers[i]] = dt.labels[i]
+        lblname[dt.headers[i]] = dt.val_label_keys[i]
+        formatlab[dt.headers[i]] = dt.formats[i]
+    end
+
+    vallab = Dict()
+    for k in collect(keys(dt.val_label_dict))
+        vallab[k] = dt.val_label_dict[k]
+    end
+
+    label = Dict()
+    label["variable"] = varlab
+    label["label"] = lblname
+    label["format"] = formatlab
+    label["value"] = vallab
+    return label
+end
 
 function read_stata(fn::String,verbose=false)
 
@@ -82,8 +103,8 @@ function read_stata(fn::String,verbose=false)
     label = Dict()
     label["variable"] = varlab
     label["label"] = lblname
-    label["formats"] = formatlab
-    label["values"] = vallab
+    label["format"] = formatlab
+    label["value"] = vallab
 
     return df,label
 end
@@ -288,7 +309,7 @@ function desc(df::DataFrame,varnames::Symbol...;label_dict::Union{Void,Dict}=not
 
         # Array type = DA for DataArray, CA for Categorical Array, and UV for Union Vector
         if typeof(df[v]) <: CategoricalArray
-            atyp = "CA"
+            atyp = string("C",Int(sizeof(eltype(df[v].refs))))
         elseif isa(eltype(df[v]),Union)
             atyp = "UV" # Union Vector
         else
@@ -297,7 +318,7 @@ function desc(df::DataFrame,varnames::Symbol...;label_dict::Union{Void,Dict}=not
 
         # Eltype
         if typeof(df[v]) <: CategoricalArray
-            eltyp = eltype(df[v].refs)
+            eltyp = eltype(df[v].pool.index)
         else
             eltyp = string(Missings.T(eltype(df[v])))
         end
@@ -646,7 +667,7 @@ function classify(da::AbstractVector,thresholds::Vector; lower::Bool = false)
 end
 
 """
-    addvars(fm::Formula,v::Vector{Symbol})
+    addterms(fm::Formula,v::Vector{Symbol})
 
 Adds covariates to an existing formula. `fm` is an object of `Formula` type
 created by `@formula` macro. `v` is a vector of Symbols. This function is useful to
@@ -660,32 +681,39 @@ julia> using DataFrames
 julia> fm = @formula(income ~ age + male)
 Formula: income ~ age + male
 
-julia> fm2 = addvars(fm,[:race, :educ])
+julia> fm2 = addterms(fm,[:race, :educ])
 Formula: income ~ age + male + race + educ
 ```
 
 """
-function addvars(fmm::Formula,v::Vector{Symbol})
+function addterms(fmm::Formula,v::Vector{Symbol})
 
     # create a new Formula object
     fm = deepcopy(fmm)
 
-    # if fm.rhs is a Symbol, convert it to an Expr first
-    if typeof(fm.rhs) == Symbol
-        tmpvar = fm.rhs
-        fm.rhs = :()
-        push!(fm.rhs.args,:+)
-        push!(fm.rhs.args,tmpvar)
-        fm.rhs.head = :call
-    end
-
-    for i=1:length(v)
-        push!(fm.rhs.args,v[i])
+    # if fm.rhs is a null modle with rhs == 1 or
+    # a unadjusted model with only one rhs variable,
+    # convert it to an Expr first
+    if fm.rhs == 1
+        fm.rhs = Expr(:call,:+,Tuple(v)...)
+    elseif typeof(fm.rhs) == Symbol
+        fm.rhs = Expr(:call,:+,fm.rhs,Tuple(v)...)
+    else
+        push!(fm.rhs.args,Tuple(v))
     end
 
     return fm
 end
 
+function formula(o::Symbol,v::NTuple)
+
+    # create a new Formula object
+    fm = StatsModels.@formula(o ~ 1)
+
+    fm.rhs = Expr(:call,:+, v...)
+
+    return fm
+end
 
 """
     renvars!(df::DataFrame; vars::Array{Symbol,1}, case = "lower")
@@ -871,7 +899,7 @@ function rowstat(df::DataFrame,func::Function)
 end
 
 """
-    xtile(da::DataArray;nq::Int = 4, cutoffs::Union{Void,AbstractVector} = nothing)
+    xtile(da::AbstractArray;nq::Int = 4, cutoffs::Union{Void,AbstractVector} = nothing)
     xtile(df::DataFrame,varname::Symbol;nq::Int = 4, cutoffs::Union{Void,AbstractVector} = nothing)
 
 Create a DataArray{Int8,1} that identifies `nq` categories based on values in `da`.
