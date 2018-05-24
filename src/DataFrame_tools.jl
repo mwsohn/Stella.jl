@@ -100,12 +100,6 @@ function read_stata(fn::String,verbose=false)
         vallab[k] = dt.val_label_dict[k]
     end
 
-    # label = Dict()
-    # label["variable"] = varlab
-    # label["label"] = lblname
-    # label["format"] = formatlab
-    # label["value"] = vallab
-
     return df,Label(varlab,vallab,lblname)
 end
 
@@ -148,16 +142,6 @@ function acompress(da::AbstractVector)
     # get the original eltype
     eltype_old = eltype(da)
 
-    # if the original eltype is a Boolean or a String
-    # then do not perform any compression
-    # if eltype_old == Bool
-    #     warn(da," is a Boolean. No need to compress.")
-    # elseif eltype_old <: AbstractString
-    #     warn(da," is a String. No need to compress.")
-    # elseif length(dropna(da)) == 0
-    #     warn(da," is an empty column. No need to compress")
-    # end
-
     if  eltype_old <: Integer
         # get minimum and maximum values
         varmin = minimum(dropna(da))
@@ -185,62 +169,59 @@ function acompress(da::AbstractVector)
     end
 end
 
+
+function atype(df::DataFrame,v::Symbol)
+    # Array type = DA for DataArray, CA for Categorical Array, and UV for Union Vector
+    if isdefined(:CategoricalArrays) && typeof(df[v]) <: CategoricalArray
+        return string("Categorical (",replace(string(eltype(df[v].refs)),"UInt",""),")")
+    elseif isdefined(:DataArrays) && typeof(df[v]) <: DataArray
+         return "DataArray"
+    elseif isdefined(:PooledArrays) && typeof(df[v]) <: PooledArray
+         return "PooledArray"
+    elseif isa(eltype(df[v]),Union)
+        return "Union Vector" # Union Vector
+    else
+        return "Vector"
+    end
+end
+
+function etype(df::DataFrame,v::Symbol)
+    # Eltype
+    if typeof(df[v]) <: CategoricalArray
+        eltyp = string(eltype(df[v].pool.index))
+        if in(eltyp,["String","AbstractString"])
+            eltyp = string("Str",getmaxwidth(df[v].pool.index))
+        end
+    else
+        eltyp = string(Missings.T(eltype(df[v])))
+        if in(eltyp,["String","AbstractString"])
+            eltyp = string("Str",getmaxwidth(df[v]))
+        end
+    end
+
+    return eltyp
+end
+
 """
-    desc(df::DataFrame,varnames::Symbol...; label_dict::Union{Void,Dict}=nothing)
+    desc(df::DataFrame,varnames::Symbol...; labels::Union{Void,Dict}=nothing)
 
 Displays variables in a dataframe much like `showcols`. It can display additional
 attributes such as variable labels, value labels and display formats (not used in Julia)
 if an optional `label_dict` is specified. It mimics Stata's `describe` command.
-`label_dict` is automatically converted from a stata file by `read_stata` function. Or one can
-be easily created as follows:
-
-## Label Dictionary Format
-
-```jldoctest
-label = Dict()
-label["variable"] = Dict(
-    "id" => "Identification Number",
-    "age" => "Age in year at time of interview"),
-    "sex" => "Respondent sex"
-    )
-
-label["value"] = Dict()
-label["value"]["sexlabel"] = Dict(
-    1 => "Female",
-    2 => "Male"
-    )
-
-label["label"] = Dict(
-    "sex" => "sexlabel"
-    )
-```
+`labels` is automatically converted from a stata file by `read_stata` function. Or one can
+be easily created as described in [Labels](https://github.com/mwsohn/Labels.jl).
 """
-function desc(df::DataFrame,varnames::Symbol...;label_dict::Union{Void,Dict}=nothing)
+function desc(df::DataFrame,varnames::Symbol...; labels::Union{Void,Label}=nothing)
 
     if length(varnames) == 0
         varnames = names(df)
     end
 
-    varlab = label_dict != nothing && haskey(label_dict,"variable") ? label_dict["variable"] : Dict()
-    lablab = label_dict != nothing && haskey(label_dict,"label") ? label_dict["label"] : Dict()
-    forlab = label_dict != nothing && haskey(label_dict,"format") ? label_dict["format"] : Dict()
-
     varlen = zeros(Int,size(df,2)) # length of variable names
     lablen = zeros(Int,size(df,2)) # length of value labels
-    forlen = zeros(Int,size(df,2)) # length of display formats
     for (i,v) in enumerate(varnames)
-        varstr = string(v)
-        varlen[i] = length(varstr)
-        if label_dict != nothing
-            if haskey(lablab,varstr)
-                tmplen = length(lablab[varstr])
-                lablen[i] = length(lablab[varstr])
-            end
-            if haskey(forlab,v)
-                tmplen = length(forlab[v])
-                forlen[i] = length(forlab[v])
-            end
-        end
+        varlen[i] = length(string(v))
+        lablen[i] = haskey(labels.lblname, varnames[i]) ? length(string(labels.lblname[varnames[i]])) : 0
     end
 
     # width for variable names
@@ -248,7 +229,7 @@ function desc(df::DataFrame,varnames::Symbol...;label_dict::Union{Void,Dict}=not
     maxval = maxval < 8 ? 8 : maxval
 
     # width for variable types
-    maxatype = 5
+    maxatype = 16
     maxeltype = 7
     maxmiss = 7
 
@@ -257,8 +238,8 @@ function desc(df::DataFrame,varnames::Symbol...;label_dict::Union{Void,Dict}=not
     maxlab = maxlab < 11 ? 11 : maxlab
 
     # width for display formats
-    maxformat = maximum(forlen)
-    maxformat = maxformat < 6 ? 6 : maxformat
+    # maxformat = maximum(forlen)
+    # maxformat = maxformat < 6 ? 6 : maxformat
 
     # number of variables
     numvar = length(varnames)
@@ -280,13 +261,7 @@ function desc(df::DataFrame,varnames::Symbol...;label_dict::Union{Void,Dict}=not
     # percent missing
     print(rpad("Missing",maxmiss),"  ")
 
-    if label_dict != nothing
-        # # value label
-        # print(rpad("Value Label",maxlab),"  ")
-        #
-        # # format
-        # print(rpad("Format",maxformat),"  ")
-
+    if labels != nothing
         # label
         print("Label")
     end
@@ -295,7 +270,7 @@ function desc(df::DataFrame,varnames::Symbol...;label_dict::Union{Void,Dict}=not
 
     # dashes for a line by itself -- assume 30 characters for "label"
     numdashes = maxobs+maxval+maxatype+maxmiss+maxeltype+4
-    if label_dict == nothing
+    if labels == nothing
         println(repeat("-",numdashes+4))
     else
         println(repeat("-",numdashes+30))
@@ -307,62 +282,27 @@ function desc(df::DataFrame,varnames::Symbol...;label_dict::Union{Void,Dict}=not
         # variable name
         varstr = string(v)
 
-        # Array type = DA for DataArray, CA for Categorical Array, and UV for Union Vector
-        if typeof(df[v]) <: CategoricalArray
-            atyp = string("C",Int(sizeof(eltype(df[v].refs))))
-        elseif isa(eltype(df[v]),Union)
-            atyp = "UV" # Union Vector
-        else
-            atyp = "VC"
-        end
+        # Array Type
+        atyp = atype(df,v)
 
         # Eltype
-        if typeof(df[v]) <: CategoricalArray
-            eltyp = eltype(df[v].pool.index)
-        else
-            eltyp = string(Missings.T(eltype(df[v])))
-        end
-        # eltyp = string(Missings.T(eltype(df[v])))
-
-        if in(eltyp,["String","AbstractString"])
-            eltyp = string("Str",getmaxlength(df[v]))
-        end
+        eltyp = etype(df,v)
 
         # percent missing
-        nmiss = sum(Missings.ismissing.(df[v])) # typeof(df[v]) <: DataArray ? sum(isna.(df[v])) : sum(Missings.ismissing.(df[v]))
+        nmiss = sum(Missings.ismissing.(df[v]))
         pmiss = string(round(100 * nmiss/nrows,1),"%")
 
-        print(lpad(string(i),maxobs),"  ",rpad(varstr,maxval),"  ",lpad(atyp,maxatype),"  ",rpad(eltyp,maxeltype),"  ",lpad(pmiss,maxmiss),"  ")
+        print(lpad(string(i),maxobs),"  ",rpad(varstr,maxval),"  ",rpad(atyp,maxatype),"  ",rpad(eltyp,maxeltype),"  ",lpad(pmiss,maxmiss),"  ")
 
-        if label_dict != nothing
-            # if haskey(lablab,v)
-            #     print(rpad(lablab[v],maxlab),"  ")
-            # else
-            #     print(repeat(" ",maxlab+2))
-            # end
-            #
-            # if haskey(forlab,v)
-            #     print(rpad(forlab[v],maxformat),"  ")
-            # else
-            #     print(repeat(" ",maxformat+2))
-            # end
-            #
-            if haskey(varlab,v)
-                print(varlab[v])
-            end
+        if labels != nothing
+            print(varlab(labels,v))
         end
 
         print("\n")
     end
 end
 
-function getmaxlength(s::AbstractArray)
-
-    if length(collect(skipmissing(s))) == 0
-        return 0
-    end
-
-    # function does not work on empty arrays
+function getmaxwidth(s::AbstractArray)
     return  maximum(length.(collect(skipmissing(s))))
 end
 
@@ -435,7 +375,7 @@ function ds(df::DataFrame, typ::Type, args...)
                 continue
             end
 
-            maxlen = getmaxlength(df[v])
+            maxlen = getmaxwidth(df[v])
             if length(args) == 1
                 if args[1] <= maxlen
                     push!(dslist,v)
