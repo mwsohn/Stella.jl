@@ -1,55 +1,3 @@
-# """
-#     prepend_spaces(str,maxlength)
-#
-# Create a string of length `maxlength`. When `str` is shorter than `maxlength`,
-# blank spaces are prepended. When `str` is longer than `maxlength`, it is
-# truncated to fit within the `maxlength`. This function is used to right-justify
-# `str` in output.
-#
-# # Example
-# ```jldoctest
-# julia> prepend_spaces("test",8)
-# "    test"
-#
-# julia> prepend_spaces("test result",8)
-# "test res"
-# ```
-# """
-# function prepend_spaces(str,maxlength)
-#     len = length(str)
-#     if maxlength < len
-#         return str[1:maxlength]
-#     end
-#     return string(repeat(" ",maxlength-len),str)
-# end
-#
-#
-# """
-#     append_spaces(str,maxlength)
-#
-# Create a string of length `maxlength`. When `str` is shorter than `maxlength`,
-# blank spaces are appended at the end. When `str` is longer than `maxlength`, it is
-# truncated to fit within the `maxlength`. This function is used to left-justify
-# `str` in output.
-#
-# # Example
-# ```
-# julia> append_spaces("test",8)
-# "test    "
-#
-# julia> append_spaces("test result",8)
-# "test res"
-# ```
-# """
-# function append_spaces(str,maxlength)
-#     len = length(str)
-#     if maxlength < len
-#         return str[1:maxlength]
-#     end
-#     return string(str,repeat(" ",maxlength-len))
-# end
-#
-
 dropmissing(x) = collect(skipmissing(x))
 
 """
@@ -437,12 +385,7 @@ function eform(coeftbl::StatsBase.CoefTable)
 	return coeftable2
 end
 
-
-function _getval(dt::Dict,val)
-    return haskey(dt,val) ? dt[val] : val
-end
-
-function eform(coeftbl::StatsBase.CoefTable, label_dict::Dict)
+function eform(coeftbl::StatsBase.CoefTable, labels::Union{Labels,Void} = nothing)
 	coeftable2 = coeftbl
 
 	# estimates
@@ -464,9 +407,9 @@ function eform(coeftbl::StatsBase.CoefTable, label_dict::Dict)
 		end
 
         # get variable label from the label dictionary
-		varlabel = _getval(label_dict["variable"],varname)
+		varlabel = varlab(labels,varname)
         if varlabel == ""
-            varlabel = varname
+            varlabel = string(varname)
         end
 
         # get value labels
@@ -475,11 +418,10 @@ function eform(coeftbl::StatsBase.CoefTable, label_dict::Dict)
 			continue
 		end
 
-		lblname = haskey(label_dict["label"], varname) ? label_dict["label"][varname] : nothing
+		lblname = haskey(labels.lblname, varname) ? labels.lblname[varname] : ""
 
 		value2 = parse(Int,value)
-		vlabel = (lblname != nothing && haskey(label_dict["value"],lblname) && haskey(label_dict["value"][lblname],value2)) ?
-			_getval(label_dict["value"][lblname],value2) : value2
+		vlabel = vallab(labels,varname,value2)
 
 		# If value is 1 and value label is Yes, it is a binary variable
 		# do not print " - 1"

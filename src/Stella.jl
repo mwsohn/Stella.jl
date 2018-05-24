@@ -59,7 +59,8 @@ export  read_stata,  # read stata 13 and 14 files into DF
         ttest,       # t-test
         dir,        # directory listing
         ds,         # filenames according to type, length, or regex
-        getmaxlength # maximum length of a string variable
+        getmaxwidth, # maximum length of a string variable
+        eltype2
 
 ##############################################################################
 ##

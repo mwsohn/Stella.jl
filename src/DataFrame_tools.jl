@@ -202,6 +202,13 @@ function etype(df::DataFrame,v::Symbol)
     return eltyp
 end
 
+function eltype2(df::DataFrame,v::Symbol)
+    if typeof(df[v]) <: CategoricalArray
+        return eltype(df[v].pool.index)
+    end
+    return Missings.T(eltype(df[v]))
+end
+
 """
     desc(df::DataFrame,varnames::Symbol...; labels::Union{Void,Dict}=nothing)
 
