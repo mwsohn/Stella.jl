@@ -58,12 +58,12 @@ function get_labels(dt::ReadStat.ReadStatDataFrame)
     # labels
     varlab = Dict()
     lblname = Dict()
-    formatlab = Dict()
+    #formatlab = Dict()
 
     for i=1:dt.columns
         varlab[dt.headers[i]] = dt.labels[i]
         lblname[dt.headers[i]] = dt.val_label_keys[i]
-        formatlab[dt.headers[i]] = dt.formats[i]
+        #formatlab[dt.headers[i]] = dt.formats[i]
     end
 
     vallab = Dict()
@@ -74,9 +74,9 @@ function get_labels(dt::ReadStat.ReadStatDataFrame)
     label = Dict()
     label["variable"] = varlab
     label["label"] = lblname
-    label["format"] = formatlab
+    #label["format"] = formatlab
     label["value"] = vallab
-    return label
+    return Label(varlab,vallab,lblname)
 end
 
 function read_stata(fn::String,verbose=false)
@@ -87,12 +87,12 @@ function read_stata(fn::String,verbose=false)
     # labels
     varlab = Dict()
     lblname = Dict()
-    formatlab = Dict()
+    #formatlab = Dict()
 
     for i=1:dt.columns
         varlab[dt.headers[i]] = dt.labels[i]
         lblname[dt.headers[i]] = dt.val_label_keys[i]
-        formatlab[dt.headers[i]] = dt.formats[i]
+        #formatlab[dt.headers[i]] = dt.formats[i]
     end
 
     vallab = Dict()
@@ -100,13 +100,13 @@ function read_stata(fn::String,verbose=false)
         vallab[k] = dt.val_label_dict[k]
     end
 
-    label = Dict()
-    label["variable"] = varlab
-    label["label"] = lblname
-    label["format"] = formatlab
-    label["value"] = vallab
+    # label = Dict()
+    # label["variable"] = varlab
+    # label["label"] = lblname
+    # label["format"] = formatlab
+    # label["value"] = vallab
 
-    return df,label
+    return df,Label(varlab,vallab,lblname)
 end
 
 
@@ -705,12 +705,12 @@ function addterms(fmm::Formula,v::Vector{Symbol})
     return fm
 end
 
-function formula(o::Symbol,v::NTuple)
+function formula(o::Symbol,v::Vector{Symbol})
 
     # create a new Formula object
-    fm = StatsModels.@formula(o ~ 1)
+    fm = StatsModels.@formula($o ~ 1)
 
-    fm.rhs = Expr(:call,:+, v...)
+    fm.rhs = Expr(:call,:+, Tuple(v)...)
 
     return fm
 end
