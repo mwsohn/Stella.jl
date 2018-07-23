@@ -353,11 +353,15 @@ function eform(coeftbl::StatsBase.CoefTable)
 	return coeftable2
 end
 
+<<<<<<< HEAD
 function eform(coeftbl::StatsBase.CoefTable, labels::Union{Label,Void} = nothing)
+=======
+function eform(coeftbl::StatsBase.CoefTable, labels::Union{Label,Void})
+>>>>>>> 0a373af22850587bea1a3b0764d2b79f4b410d1d
 	coeftable2 = coeftbl
 
 	# estimates
-	coeftable2.cols[1] = exp(coeftable2.cols[1])
+	coeftable2.cols[1] = exp.(coeftable2.cols[1])
 
 	# standard errors
 	coeftable2.cols[2] = coeftable2.cols[1] .* coeftable2.cols[2]
@@ -375,25 +379,12 @@ function eform(coeftbl::StatsBase.CoefTable, labels::Union{Label,Void} = nothing
 		end
 
         # get variable label from the label dictionary
-		varlabel = varlab(labels,varname)
-        if varlabel == ""
-            varlabel = string(varname)
-        end
-
-        # get value labels
-		if value == nothing
-			coeftable2.rownms[i] = varlabel
-			continue
-		end
-
-		lblname = haskey(labels.lblname, varname) ? labels.lblname[varname] : ""
-
-		value2 = parse(Int,value)
-		vlabel = vallab(labels,varname,value2)
+		varlabel = varlab(labels,Symbol(varname))
+		vlabel = vallab(labels,Symbol(varname),parse(Int,value))
 
 		# If value is 1 and value label is Yes, it is a binary variable
-		# do not print " - 1"
-		if value2 == 1 && ismatch(r"^ *yes *$"i,vlabel)
+		# do not print
+		if value == 1 && ismatch(r"^ *yes *$"i,vlabel)
 			coeftable2.rownms[i] = varlabel
 		else
 			coeftable2.rownms[i] = string(varlabel, ": ", vlabel)

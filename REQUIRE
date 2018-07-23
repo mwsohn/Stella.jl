@@ -1,11 +1,2 @@
 julia 0.6-
 Compat
-ReadStat
-Labels
-Distributions
-GLM
-StatsBase
-DataStructures
-HypothesisTests
-NamedArrays
-FreqTables

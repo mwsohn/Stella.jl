@@ -646,20 +646,20 @@ function addterms(fmm::Formula,v::Vector{Symbol})
     elseif typeof(fm.rhs) == Symbol
         fm.rhs = Expr(:call,:+,fm.rhs,Tuple(v)...)
     else
-        push!(fm.rhs.args,Tuple(v))
+        push!(fm.rhs.args,Tuple(v)...)
     end
 
     return fm
 end
 
-function formula(o::Symbol,v::Vector{Symbol})
-
-    # create a new Formula object
-    fm = StatsModels.@formula($o ~ 1)
-
-    fm.rhs = Expr(:call,:+, Tuple(v)...)
-
-    return fm
+function formula(o::Symbol,v::Vector)
+    if length(v) == 1
+        rhs = v[1]
+    else
+        rhs = Expr(:call,:+,Tuple(v)...)
+    end
+    e = :($o ~ $rhs)
+    return Formula(e,e,o,rhs)
 end
 
 """
