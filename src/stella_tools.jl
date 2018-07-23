@@ -67,39 +67,7 @@ function univariate(da::AbstractVector)
 end
 univariate(df::DataFrame,var::Symbol) = univariate(df[var])
 
-struct XsqReturn
-    chisq::Float64
-    dof::Int
-    p::Float64
-end
 
-function chisq2(t::AbstractArray)
-
-  if ndims(t) != 2
-      error("Only two dimensional arrays are supported")
-  end
-
-  rowsum = Array(sum(t,2))
-  colsum = Array(sum(t,1))
-  total = sum(t)
-
-  ncol = length(colsum)
-  nrow = length(rowsum)
-
-  chisq = 0.
-  for i = 1:nrow
-    for j = 1:ncol
-      expected = rowsum[i]*colsum[j]/total
-      chisq += ((t[i,j] - expected)^2)/expected
-    end
-  end
-
-  # degress of freedom
-  df = (ncol-1)*(nrow-1)
-
-  # return a tuple of chisq, df, p-value
-  return XsqReturn(chisq,df,Distributions.ccdf(Distributions.Chisq(df),chisq))
-end
 
 function strval(val::AbstractFloat)
   return @sprintf("%.2f",val)
@@ -385,7 +353,7 @@ function eform(coeftbl::StatsBase.CoefTable)
 	return coeftable2
 end
 
-function eform(coeftbl::StatsBase.CoefTable, labels::Union{Labels,Void} = nothing)
+function eform(coeftbl::StatsBase.CoefTable, labels::Union{Label,Void} = nothing)
 	coeftable2 = coeftbl
 
 	# estimates

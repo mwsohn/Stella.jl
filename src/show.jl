@@ -148,8 +148,8 @@ function show(io::IO,t::TTReturn)
     print(io,"\n\n")
 end
 
-Base.show(io::IO,::MIME"text/plain",x::XsqReturn) = show(io,x)
-function show(io::IO,x::XsqReturn)
+Base.show(io::IO,::MIME"text/plain",x::XsqResult) = show(io,x)
+function show(io::IO,x::XsqResult)
     println(io,"Pearson χ-square (",x.dof,") = ",@sprintf("%.5f",x.chisq),"   P-value = ",@sprintf("%.5f",x.p))
 end
 
