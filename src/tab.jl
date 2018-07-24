@@ -177,6 +177,46 @@ function chi2test(a::Array{Float,2})
     # return a tuple of chisq, df, p-value
     return XsqResult(chisq,df,Distributions.ccdf(Distributions.Chisq(df),chisq))
 end
+
+function rowpercent(tab::NamedArray)
+
+    totrow = sum(tab,2)
+
+    array = 100 * tab.array ./ totrow
+
+    return NamedArray(array,tuple(names(tab)...),tuple(dimnames(tab)...))
+
+end
+
+function colpercent(tab::NamedArray)
+
+    totcol = sum(tab,1)
+
+    array = 100 * tab.array ./ tocol
+
+    return NamedArray(array,tuple(names(tab)...),tuple(dimnames(tab)...))
+end
+
+function cellpercent(tab::NamedArray)
+
+    total = sum(tab.array)
+
+    array = 100 * tab.array ./ total
+
+    return NamedArray(array,tuple(names(tab)...),tuple(dimnames(tab)...))
+end
+
+function allpercent(tab::NamedArray)
+
+    totrow = sum(tab,2)
+    totcol = sum(tab,1)
+    total  = sum(tab)
+
+    return (NamedArray(100 * tab ./ totrow,tuple(names(tab)...),tuple(dimnames(tab)...)),
+        NamedArray(100 * tab ./ totcol,tuple(names(tab)...),tuple(dimnames(tab)...)),
+        NamedArray(100 * tab ./ total,tuple(names(tab)...),tuple(dimnames(tab)...)))
+end
+
 # function tab(x::AbstractVector...; allowmissing=false,weights::AbstractWeights = fweights(ones(Int8,length(x[1]))))
 #
 #     ncols = length(x)
