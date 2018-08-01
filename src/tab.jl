@@ -150,7 +150,7 @@ struct XsqResult
     dof::Int
     p::Float64
 end
-function chi2test(a::Array{Float,2})
+function chi2test(a::Array{Float64,2})
 
     if ndims(t) != 2
         error("Only two dimensional arrays are supported")
@@ -206,16 +206,366 @@ function cellpercent(tab::NamedArray)
     return NamedArray(array,tuple(names(tab)...),tuple(dimnames(tab)...))
 end
 
-function allpercent(tab::NamedArray)
 
-    totrow = sum(tab,2)
-    totcol = sum(tab,1)
-    total  = sum(tab)
+function tabprint(na::NamedArray; precision=2, chisq=true, row=true, col=true, cell=false, all=false, pagewidth=78)
 
-    return (NamedArray(100 * tab ./ totrow,tuple(names(tab)...),tuple(dimnames(tab)...)),
-        NamedArray(100 * tab ./ totcol,tuple(names(tab)...),tuple(dimnames(tab)...)),
-        NamedArray(100 * tab ./ total,tuple(names(tab)...),tuple(dimnames(tab)...)))
+    if ndims(na) == 2 && length(names(na,2)) == 1 && names(na,2)[1] == "Frequency"
+        tabprint1(io,na, total = total, precision = precision)
+        exit()
+    elseif ndims(na) > 2
+        error("Only up to two dimensional arrays are currently supported")
+    end
+
+    print(dimnames(na,1), " \\ ", dimnames(na,2),"\n")
+
+    # all is true when row, col, or cell is true
+    if all
+        row = col = cell = true
+    end
+
+    # row names
+    rownames = string.(names(na,1))
+    maxrowname = maximum(vcat(5,length.(rownames))) # minimum width is 5
+
+    # column names and their widths
+    colnames = string.(names(na,2))
+    maxcolname = maximum(vcat(3,length.(colnames))) # minimum width is 3
+
+    # width of data columns - the same as the greater of the length of the grand total
+    # and 4 + precision
+    tot = sum(na.array) # grand total
+    colwidth = max(length(digits(Int(floor(tot)))),4+precision)
+
+    # number of columns
+    ncols = length(colnames)
+
+    # number of rows
+    nrows = length(rownames)
+
+    # floating point numbers with three digits after decimal point
+    if eltype(na.array) <: AbstractFloat
+        colwidth += 3
+    end
+
+    # determine column widths
+    colwidth = max(maxcolname,colwidth)
+
+    #---------------------------------------------------
+    # column totals
+    colsum = sum(na.array,1)
+
+    # row totals
+    rowsum = sum(na.array,2)
+
+    #---------------------------------------------------
+    # determine how many columns can be printed within
+    # the pagewidth
+    maxcol = Int(floor((pagewidth - maxrowname) / colwidth))
+    niter = Int(ceil(ncols / maxcol))
+    nlastrow = ncols % maxcol
+
+    for i in 1:niter
+
+        #---------------------------------------------------
+        # print header
+        print(repeat(" ",maxrowname)," |")
+
+        for j = 1:maxcol
+            c = Int(maxcol*(i-1))+j
+            if c > ncols
+                break
+            end
+            print(" ",lpad(string(colnames[c]),colwidth))
+        end
+
+        print(" | ",lpad("Total",colwidth),"\n")
+
+        print(repeat("-",maxrowname),"-+-",repeat("-",(colwidth+1)*(i == niter ? nlastrow : maxcol)),"+-",repeat("-",colwidth),"\n")
+
+        #----------------------------------------------------
+        # print values
+        for r = 1:nrows
+
+            # row name
+            print(rpad(string(rownames[r]),maxrowname)," |")
+
+            for j = 1:maxcol
+                c = Int(maxcol*(i-1))+j
+                if c > ncols
+                    break
+                end
+                val = na.array[r,c]
+                print(" ",lpad(val,colwidth))
+            end
+
+            # row total
+            print(" |")
+
+            val = rowsum[r]
+            print(" ",lpad(val,colwidth),"\n")
+
+            # row percentages
+            if row
+                print(repeat(" ",maxrowname)," |")
+                for j = 1:maxcol
+                    c = Int(maxcol*(i-1)) + j
+                    if c > ncols
+                        break
+                    end
+                    val = strval(100 * na.array[r,c] / rowsum[r],precision)
+                    print(" ",lpad(val,colwidth," "))
+                end
+
+                # row percentage
+                print(" |")
+
+                val = strval(100.0,precision)
+                print(" ",lpad(val,colwidth),"\n")
+            end
+
+            # column percentages
+            if col
+                print(repeat(" ",maxrowname)," |")
+                for j = 1:maxcol
+                    c = Int(maxcol*(i-1)) + j
+                    if c > ncols
+                        break
+                    end
+                    val = strval(100 * na.array[r,c] / colsum[c],precision)
+                    print(" ",lpad(val,colwidth))
+                end
+
+                # column percent
+                print(" |")
+
+                val = strval(100 * rowsum[r] / tot,precision)
+                print(" ",lpad(val,colwidth),"\n")
+            end
+
+            # cell percentages
+            if cell
+                print(repeat(" ",maxrowname)," |")
+                for j = 1:maxcol
+                    c = Int(maxcol*(i-1)) + j
+                    if c > ncols
+                        break
+                    end
+                    val = strval(100 * na.array[r,c] / tot,precision)
+                    print(" ",lpad(val,colwidth))
+                end
+
+                # column percent
+                print(" |")
+
+                val = strval(100 * rowsum[r] / tot,precision)
+                print(" ",lpad(val,colwidth),"\n")
+            end
+
+            if row || col || cell
+                print(repeat("-",maxrowname),"-+-",repeat("-",(colwidth+1)*(i == niter ? nlastrow : maxcol)),"+-",repeat("-",colwidth),"\n")
+            end
+
+        end
+
+        #----------------------------------------------------
+        # Total
+        if !(row || col || cell)
+            print(repeat("-",maxrowname+1),"+",repeat("-",(colwidth+1)*(i == niter ? nlastrow : maxcol)),"-+-",repeat("-",colwidth),"\n")
+        end
+        print(rpad("Total",maxrowname," ")," |")
+
+        for j = 1:maxcol
+            c = Int(maxcol*(i-1)) + j
+            if c > ncols
+                break
+            end
+            val=colsum[c]
+            print(" ",lpad(val,colwidth," "))
+        end
+
+        # Grand total
+        val = strval(tot)
+        print(" | ",lpad(val,colwidth," "),"\n")
+
+        #----------------------------------------------------
+        # row percentages
+        if row
+            print(repeat(" ",maxrowname)," |")
+            for j = 1:maxcol
+                c = Int(maxcol*(i-1)) + j
+                if c > ncols
+                    break
+                end
+                val = strval(100 * colsum[c] / tot,precision)
+                print(" ",lpad(val,colwidth," "))
+            end
+
+            # column percent for the total column
+            val = strval(100.0,precision)
+            print(" | ",lpad(val,colwidth," "),"\n")
+        end
+
+        # column percentages
+        if col
+            print(repeat(" ",maxrowname)," |")
+            for j = 1:maxcol
+                c = Int(maxcol*(i-1)) + j
+                if c > ncols
+                    break
+                end
+                val = strval(100.0,precision)
+                print(" ",lpad(val,colwidth," "))
+            end
+
+            # column percent for the total column
+            val = strval(100.0,precision)
+            print(" | ",lpad(val,colwidth," "),"\n")
+
+        end
+
+        # cell percentages
+        if cell
+            print(repeat(" ",maxrowname)," |")
+            for j = 1:maxcol
+                c = Int(maxcol*(i-1)) + j
+                if c > ncols
+                    break
+                end
+                val = strval(100.0 * colsum[c] / tot,precision)
+                print(" ",lpad(val,colwidth," "))
+            end
+
+            # column percent
+            val = strval(100.0,precision)
+            print(" | ",lpad(val,colwidth," "),"\n")
+        end
+
+        # separator
+        print("\n\n")
+    end
+
+    if chisq
+        # chisq test
+        dof = (nrows-1)*(ncols-1)
+        chisqval = 0.
+        for i = 1:nrows
+            for j = 1:ncols
+                expected = rowsum[i]*colsum[j]/tot
+                chisqval += ((na.array[i,j] - expected)^2)/expected
+            end
+        end
+
+        # degress of freedom
+        dof = (ncols-1)*(nrows-1)
+
+        # return a tuple of chisq, df, p-value
+        pval = Distributions.ccdf(Distributions.Chisq(dof),chisqval)
+
+        # chisquare output
+        println("Pearson χ² (",dof,") = ",@sprintf("%.5f",chisqval)," Pr = ",@sprintf("%.5f",pval))
+    end
 end
+
+function tabprint1(na::NamedArray; skipmissing = false, precision=2, labels::Union{Label,Void} = nothing)
+
+    if ndims(na) == 2 && names(na,2)[1] != "Frequency"
+        error("Cannot print 2 or higher dimensions")
+    end
+
+    # variable name
+    dname = dimnames(na,1)
+
+    # value names
+    if labels == nothing
+        rownames = string.(names(na,1))
+    else
+        rownames = [ ismissing(x) ? "missing" : vallab(labels,dname,x) for x in names(na,1) ]
+    end
+
+    # maximum width for row labels
+    if skipmissing == true && rownames[end] == "missing"
+        maxrowname = maximum(vcat(5,length(string(dname)),length.(rownames[1:end-1]))) # minimum width is 5
+    else
+        maxrowname = maximum(vcat(5,length(string(dname)),length.(rownames))) # minimum width is 5
+    end
+
+    # number of rows
+    nrows = length(rownames)
+
+    # column names
+    colnames = ["Frequency","Percent","Cum Percent"]
+
+    # grand total
+    if skipmissing == true && rownames[end] == "missing"
+        tot = sum(na.array[1:end-1])
+    else
+        tot = sum(na)
+    end
+
+    # maximum column width
+    maxcolwidth = maximum(vcat(length(string(tot)),length.(colnames)))
+
+    # header
+    print("\n")
+    print(lpad(dname,maxrowname)," |")
+    for i = 1:length(colnames)
+        print(lpad(colnames[i],maxcolwidth+1))
+    end
+    print("\n")
+
+    # separator
+    print(repeat("-",maxrowname),"-+")
+    for i = 1:length(colnames)
+        print(repeat("-",maxcolwidth + 1))
+    end
+    print("\n")
+
+    # rows
+    cumpct = 0.
+    for i = 1:nrows
+
+        if skipmissing == true && rownames[i] == "missing"
+            continue
+        end
+
+        print(lpad(rownames[i],maxrowname)," |")
+
+        # frequency
+        print(lpad(na.array[i],maxcolwidth + 1))
+
+        # percent
+        pct = na.array[i] / tot
+        print(lpad(strval(100*pct,precision),maxcolwidth + 1))
+
+        # cumulative percent
+        cumpct += pct
+        println(lpad(strval(100*cumpct,precision),maxcolwidth + 1))
+    end
+
+    # separator
+    print(repeat("-",maxrowname),"-+")
+    for i = 1:length(colnames)
+        print(repeat("-",maxcolwidth + 1))
+    end
+    print("\n")
+
+    # total
+    print(lpad("Total",maxrowname)," |")
+
+    # total frequency
+    print(lpad(tot,maxcolwidth + 1))
+
+    # percent
+    print(lpad(strval(100.0,precision),maxcolwidth + 1))
+
+    # cumulative percent
+    println(lpad(strval(100.0,precision),maxcolwidth + 1))
+
+    print("\n")
+end
+
+
+
 
 # function tab(x::AbstractVector...; allowmissing=false,weights::AbstractWeights = fweights(ones(Int8,length(x[1]))))
 #

@@ -67,8 +67,6 @@ function univariate(da::AbstractVector)
 end
 univariate(df::DataFrame,var::Symbol) = univariate(df[var])
 
-
-
 function strval(val::AbstractFloat)
   return @sprintf("%.2f",val)
 end
@@ -353,11 +351,7 @@ function eform(coeftbl::StatsBase.CoefTable)
 	return coeftable2
 end
 
-<<<<<<< HEAD
 function eform(coeftbl::StatsBase.CoefTable, labels::Union{Label,Void} = nothing)
-=======
-function eform(coeftbl::StatsBase.CoefTable, labels::Union{Label,Void})
->>>>>>> 0a373af22850587bea1a3b0764d2b79f4b410d1d
 	coeftable2 = coeftbl
 
 	# estimates
