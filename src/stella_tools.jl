@@ -106,36 +106,42 @@ of the `varname` column in the `df`. The following are computed: `n` (total non-
 function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Function} = [N,mean,sd,minimum,p25,median,p75,maximum ],wt::Union{Void,Symbol}=nothing)
 
     if length(s) == 0
-        error("No statistic function was specified.")
+        error("No statistic functions were specified.")
     end
 
+    # prepend Stella to the functions
     namevec = [Symbol(replace(string(x),"Stella.","")) for x in s]
 
-
+    # number of levels in the groupvar
     gvnum = length(DataFrames.levels(indf[groupvar]))
 
     outdf = DataFrame()
     outdf[groupvar] = Vector{Union{Missing,eltype(groupvar)}}(gvnum)
     for j = 1:length(namevec)
+
+        # for N, create a vector of integers
         if namevec[j] == :N
             outdf[namevec[j]] = Vector{Union{Missing,Int}}(gvnum)
+        # for all other stats, create float64 vectors
         else
             outdf[namevec[j]] = Vector{Union{Missing,Float64}}(gvnum)
         end
     end
 
-    i = 1
     for subdf in groupby(indf, groupvar)
+        gidx = findfirst(lev,subdf[1,groupvar])
         da = collect(skipmissing(subdf[var1]))
         if length(da) == 0
             continue
         end
-        outdf[i,groupvar] = subdf[1,groupvar]
+        outdf[gidx,groupvar] = subdf[1,groupvar]
         for j = 1:length(namevec)
-            outdf[i,namevec[j]] = s[j](da)
+            outdf[gidx,namevec[j]] = s[j](da)
         end
-        i += 1
     end
+
+    sort!(outdf,groupvar)
+
     return outdf
 end
 

@@ -1,2 +1,14 @@
 julia 0.6-
 Compat
+Distributions
+FreqTables
+DataFrames
+GLM
+StatsBase
+Glob
+Formatting
+DataStructures
+HypothesisTests
+NamedArrays
+ReadStat
+Labels

@@ -210,7 +210,7 @@ end
 function tabprint(na::NamedArray; precision=2, chisq=true, row=true, col=true, cell=false, all=false, pagewidth=78)
 
     if ndims(na) == 2 && length(names(na,2)) == 1 && names(na,2)[1] == "Frequency"
-        tabprint1(io,na, total = total, precision = precision)
+        tabprint1(io,na, all = all, precision = precision)
         exit()
     elseif ndims(na) > 2
         error("Only up to two dimensional arrays are currently supported")
