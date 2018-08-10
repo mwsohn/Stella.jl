@@ -465,7 +465,7 @@ function tabprint(na::NamedArray; precision=2, chisq=true, row=true, col=true, c
     end
 end
 
-function tabprint1(na::NamedArray; skipmissing = false, precision=2, labels::Union{Label,Void} = nothing)
+function tabprint1(na::NamedArray; skipmissing = false, precision=2, labels::Union{Label,Nothing} = nothing)
 
     if ndims(na) == 2 && names(na,2)[1] != "Frequency"
         error("Cannot print 2 or higher dimensions")
