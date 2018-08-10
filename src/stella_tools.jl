@@ -357,7 +357,7 @@ function eform(coeftbl::StatsBase.CoefTable)
 	return coeftable2
 end
 
-function eform(coeftbl::StatsBase.CoefTable, labels::Union{Labels,Nothing} = nothing)
+function eform(coeftbl::StatsBase.CoefTable, labels::Union{Label,Nothing} = nothing)
 	coeftable2 = coeftbl
 
 	# estimates
