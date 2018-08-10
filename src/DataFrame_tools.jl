@@ -210,7 +210,7 @@ function eltype2(df::DataFrame,v::Symbol)
 end
 
 """
-    desc(df::DataFrame,varnames::Symbol...; labels::Union{Void,Dict}=nothing)
+    desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Dict}=nothing)
 
 Displays variables in a dataframe much like `showcols`. It can display additional
 attributes such as variable labels, value labels and display formats (not used in Julia)
@@ -218,7 +218,7 @@ if an optional `label_dict` is specified. It mimics Stata's `describe` command.
 `labels` is automatically converted from a stata file by `read_stata` function. Or one can
 be easily created as described in [Labels](https://github.com/mwsohn/Labels.jl).
 """
-function desc(df::DataFrame,varnames::Symbol...; labels::Union{Void,Label}=nothing)
+function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=nothing)
 
     if length(varnames) == 0
         varnames = names(df)
@@ -846,8 +846,8 @@ function rowstat(df::DataFrame,func::Function)
 end
 
 """
-    xtile(da::AbstractArray;nq::Int = 4, cutoffs::Union{Void,AbstractVector} = nothing)
-    xtile(df::DataFrame,varname::Symbol;nq::Int = 4, cutoffs::Union{Void,AbstractVector} = nothing)
+    xtile(da::AbstractArray;nq::Int = 4, cutoffs::Union{Nothing,AbstractVector} = nothing)
+    xtile(df::DataFrame,varname::Symbol;nq::Int = 4, cutoffs::Union{Nothing,AbstractVector} = nothing)
 
 Create a DataArray{Int8,1} that identifies `nq` categories based on values in `da`.
 The default `nq` is 4. `cutoffs` vector can be provided to make custom categories.
@@ -858,7 +858,7 @@ will be computed.
 julia> df[:agecat] = xtile(df[:age], nq = 3)
 ```
 """
-function xtile(da::AbstractArray ; nq::Int = 4, cutoffs::Union{Void,AbstractVector} = nothing)
+function xtile(da::AbstractArray ; nq::Int = 4, cutoffs::Union{Nothing,AbstractVector} = nothing)
 
 	function qval(val::Real,cut::Vector)
         cl = length(cut)
@@ -883,4 +883,4 @@ function xtile(da::AbstractArray ; nq::Int = 4, cutoffs::Union{Void,AbstractVect
 
 	return [ismissing(x) ? missing : qval(x,cutoffs) for x in da]
 end
-xtile(df::DataFrame,arg::Symbol; nq::Int = 4, cutoffs::Union{Void,AbstractVector} = nothing) = xtile(df[arg], nq = nq, cutoffs = cutoffs)
+xtile(df::DataFrame,arg::Symbol; nq::Int = 4, cutoffs::Union{Nothing,AbstractVector} = nothing) = xtile(df[arg], nq = nq, cutoffs = cutoffs)

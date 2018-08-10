@@ -1,5 +1,5 @@
 """
-    tab(df::DataFrame,vars::Symbol...; label_dict::Union{Void,Dict} = nothing, rmna::Bool = true, weights::AbstractVector = UnitWeights())
+    tab(df::DataFrame,vars::Symbol...; label_dict::Union{Nothing,Dict} = nothing, rmna::Bool = true, weights::AbstractVector = UnitWeights())
 
 Produce n-way frequency table from a DataFrame or any type of arrays. Weights can be used to obtain
 weighted frequencies. `tab` is mainly a wrapper for the excellent `FreqTables` package for all

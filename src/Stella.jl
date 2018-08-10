@@ -11,7 +11,8 @@ module Stella
 ################################################################################
 
 using DataFrames, Distributions, GLM, StatsBase, Glob,Formatting,
-        DataStructures, HypothesisTests, NamedArrays, FreqTables, ReadStat, Labels
+        DataStructures, HypothesisTests, NamedArrays, FreqTables, 
+        ReadStat, Labels, LinearAlgebra, Printf
 
 ##############################################################################
 ##

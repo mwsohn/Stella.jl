@@ -18,7 +18,7 @@ end
 #pvalue(x::TTReturn; tail=:both) = pvalue(TDist(x.dof), x.t; tail=tail)
 
 """
-    ttest(df::DataFrame,varname::Symbol;byvar::Union{Void,Symbol}=nothing,sig=95,welch=false)
+    ttest(df::DataFrame,varname::Symbol;byvar::Union{Nothing,Symbol}=nothing,sig=95,welch=false)
     ttest(df::DataFrame,varname1::Symbol,varname2::Symbol;paired::Bool=false,welch=false,sig=95)
     ttest(df::DataFrame,varname::Symbol,μ0::Real;sig=95)
     ttest(var1::AbstractVector,var2::AbstractVector;paired::Bood=false,welch::Bool=false,sig=95)
@@ -130,7 +130,7 @@ Pr(T < t) = 0.0837         Pr(|T| > |t|) = 0.1673         Pr(T > t) = 0.9163
 ```
 
 """
-function ttest(df::DataFrame,varname::Symbol; by::Union{Void,Symbol} = nothing, sig = 95, welch = false)
+function ttest(df::DataFrame,varname::Symbol; by::Union{Nothing,Symbol} = nothing, sig = 95, welch = false)
     if by == nothing
         error("`by` is required.")
     end
@@ -204,14 +204,14 @@ function ttest(x::AbstractVector,y::AbstractVector; paired::Bool=false,welch::Bo
     MEAN[3] = mean(vcat(val[1],val[2]))
     SD[3] = std(vcat(val[1],val[2]))
     SE[3] = SD[3] / sqrt(N[3])
-    LB[3],UB[3] = StatsBase.confint(OneSampleTTest(vcat(val[1],val[2]),0),1.-sig/100)
+    LB[3],UB[3] = StatsBase.confint(OneSampleTTest(vcat(val[1],val[2]),0),1 .- sig/100)
 
     # diff
     N[4] = paired ? N[1] : 0 # not to be used
     MEAN[4] = tt.xbar
     SD[4] = paired ? tt.stderr*sqrt(N[4]) : 0.0 # not to be used
     SE[4] = tt.stderr
-    LB[4],UB[4] = StatsBase.confint(tt,1.-sig/100)
+    LB[4],UB[4] = StatsBase.confint(tt,1 .- sig/100)
 
     return TTReturn(title,
         ["Variable", "N", "Mean", "SD", "SE", string(sig,"% LB"), string(sig,"% UB")],

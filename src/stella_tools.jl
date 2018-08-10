@@ -130,14 +130,14 @@ function getdictval(dt::Dict,val)
 end
 
 """
-    tabstat(df::DataFrame,varname::Symbol,groupvar::Symbol;s::Vector{Function} = [N,mean,sd,minimum,p25,median,p75,maximum ],wt::Union{Void,Symbol}=nothing)
+    tabstat(df::DataFrame,varname::Symbol,groupvar::Symbol;s::Vector{Function} = [N,mean,sd,minimum,p25,median,p75,maximum ],wt::Union{Nothing,Symbol}=nothing)
 
 Produce a DataFrame that contains summary statistics for each `groupvar` subgroup
 of the `varname` column in the `df`. The following are computed: `n` (total non-missing rows),
 `mean` (mean), `sd` (standard deviation), `min` (minimum), `p25` (25th percentile),
 `median` (median), `p75` (75th percentile), and `max` (maximum).
 """
-function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Function} = [N,mean,sd,minimum,p25,median,p75,maximum ],wt::Union{Void,Symbol}=nothing)
+function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Function} = [N,mean,sd,minimum,p25,median,p75,maximum ],wt::Union{Nothing,Symbol}=nothing)
 
     if length(s) == 0
         error("No statistic function was specified.")
@@ -385,7 +385,7 @@ function eform(coeftbl::StatsBase.CoefTable)
 	return coeftable2
 end
 
-function eform(coeftbl::StatsBase.CoefTable, labels::Union{Labels,Void} = nothing)
+function eform(coeftbl::StatsBase.CoefTable, labels::Union{Labels,Nothing} = nothing)
 	coeftable2 = coeftbl
 
 	# estimates
@@ -439,7 +439,7 @@ end
 #--------------------------------------------------------------------------
 # pairwise correlations
 #--------------------------------------------------------------------------
-immutable pwcorr_return
+struct pwcorr_return
     r::AbstractArray
     pval::AbstractArray
     N::AbstractArray
@@ -505,7 +505,7 @@ pwcorr(a::DataFrame, args::Vector{Symbol}; out=true) = pwcorr(df[args], out = ou
 # ranksum(), signrank(), signtest()
 #--------------------------------------------------------------------------
 #
-# immutable ranksum_return
+# struct ranksum_return
 #     df::DataFrame
 #     varname::Symbol
 #     t::Float64
@@ -563,7 +563,7 @@ pwcorr(a::DataFrame, args::Vector{Symbol}; out=true) = pwcorr(df[args], out = ou
 # #         )
 # # end
 #
-# immutable signrank_return
+# struct signrank_return
 #     df::DataFrame
 #     t::Float64
 #     var_t::Float64
@@ -629,7 +629,7 @@ pwcorr(a::DataFrame, args::Vector{Symbol}; out=true) = pwcorr(df[args], out = ou
 # # end
 #
 #
-# immutable signtest_return
+# struct signtest_return
 #     df::DataFrame
 #     p_left::Float64
 #     p_right::Float64
