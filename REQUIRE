@@ -1,11 +1,14 @@
 julia 0.6-
 Compat
-ReadStat
-Labels
 Distributions
+FreqTables
+DataFrames
 GLM
 StatsBase
+Glob
+Formatting
 DataStructures
 HypothesisTests
 NamedArrays
-FreqTables
+ReadStat
+Labels

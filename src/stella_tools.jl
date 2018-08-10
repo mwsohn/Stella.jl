@@ -67,40 +67,6 @@ function univariate(da::AbstractVector)
 end
 univariate(df::DataFrame,var::Symbol) = univariate(df[var])
 
-struct XsqReturn
-    chisq::Float64
-    dof::Int
-    p::Float64
-end
-
-function chisq2(t::AbstractArray)
-
-  if ndims(t) != 2
-      error("Only two dimensional arrays are supported")
-  end
-
-  rowsum = Array(sum(t,2))
-  colsum = Array(sum(t,1))
-  total = sum(t)
-
-  ncol = length(colsum)
-  nrow = length(rowsum)
-
-  chisq = 0.
-  for i = 1:nrow
-    for j = 1:ncol
-      expected = rowsum[i]*colsum[j]/total
-      chisq += ((t[i,j] - expected)^2)/expected
-    end
-  end
-
-  # degress of freedom
-  df = (ncol-1)*(nrow-1)
-
-  # return a tuple of chisq, df, p-value
-  return XsqReturn(chisq,df,Distributions.ccdf(Distributions.Chisq(df),chisq))
-end
-
 function strval(val::AbstractFloat)
   return @sprintf("%.2f",val)
 end
@@ -140,36 +106,42 @@ of the `varname` column in the `df`. The following are computed: `n` (total non-
 function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Function} = [N,mean,sd,minimum,p25,median,p75,maximum ],wt::Union{Nothing,Symbol}=nothing)
 
     if length(s) == 0
-        error("No statistic function was specified.")
+        error("No statistic functions were specified.")
     end
 
+    # prepend Stella to the functions
     namevec = [Symbol(replace(string(x),"Stella.","")) for x in s]
 
-
+    # number of levels in the groupvar
     gvnum = length(DataFrames.levels(indf[groupvar]))
 
     outdf = DataFrame()
     outdf[groupvar] = Vector{Union{Missing,eltype(groupvar)}}(gvnum)
     for j = 1:length(namevec)
+
+        # for N, create a vector of integers
         if namevec[j] == :N
             outdf[namevec[j]] = Vector{Union{Missing,Int}}(gvnum)
+        # for all other stats, create float64 vectors
         else
             outdf[namevec[j]] = Vector{Union{Missing,Float64}}(gvnum)
         end
     end
 
-    i = 1
     for subdf in groupby(indf, groupvar)
+        gidx = findfirst(lev,subdf[1,groupvar])
         da = collect(skipmissing(subdf[var1]))
         if length(da) == 0
             continue
         end
-        outdf[i,groupvar] = subdf[1,groupvar]
+        outdf[gidx,groupvar] = subdf[1,groupvar]
         for j = 1:length(namevec)
-            outdf[i,namevec[j]] = s[j](da)
+            outdf[gidx,namevec[j]] = s[j](da)
         end
-        i += 1
     end
+
+    sort!(outdf,groupvar)
+
     return outdf
 end
 
@@ -389,7 +361,7 @@ function eform(coeftbl::StatsBase.CoefTable, labels::Union{Labels,Nothing} = not
 	coeftable2 = coeftbl
 
 	# estimates
-	coeftable2.cols[1] = exp(coeftable2.cols[1])
+	coeftable2.cols[1] = exp.(coeftable2.cols[1])
 
 	# standard errors
 	coeftable2.cols[2] = coeftable2.cols[1] .* coeftable2.cols[2]
@@ -407,25 +379,12 @@ function eform(coeftbl::StatsBase.CoefTable, labels::Union{Labels,Nothing} = not
 		end
 
         # get variable label from the label dictionary
-		varlabel = varlab(labels,varname)
-        if varlabel == ""
-            varlabel = string(varname)
-        end
-
-        # get value labels
-		if value == nothing
-			coeftable2.rownms[i] = varlabel
-			continue
-		end
-
-		lblname = haskey(labels.lblname, varname) ? labels.lblname[varname] : ""
-
-		value2 = parse(Int,value)
-		vlabel = vallab(labels,varname,value2)
+		varlabel = varlab(labels,Symbol(varname))
+		vlabel = vallab(labels,Symbol(varname),parse(Int,value))
 
 		# If value is 1 and value label is Yes, it is a binary variable
-		# do not print " - 1"
-		if value2 == 1 && ismatch(r"^ *yes *$"i,vlabel)
+		# do not print
+		if value == 1 && ismatch(r"^ *yes *$"i,vlabel)
 			coeftable2.rownms[i] = varlabel
 		else
 			coeftable2.rownms[i] = string(varlabel, ": ", vlabel)
