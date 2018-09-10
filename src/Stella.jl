@@ -1,6 +1,4 @@
-VERSION >= v"0.6.0"
-
-#&& __precompile__()
+VERSION >= v"0.7.0"
 
 module Stella
 
@@ -10,9 +8,9 @@ module Stella
 ##
 ################################################################################
 
-using DataFrames, Distributions, GLM, StatsBase, Glob,Formatting,
-        DataStructures, HypothesisTests, NamedArrays, FreqTables, 
-        ReadStat, Labels, LinearAlgebra, Printf
+using DataFrames, Distributions, StatsBase, GLM, NamedArrays,
+        DataStructures, HypothesisTests, FreqTables,
+        ReadStat, Labels, LinearAlgebra, Printf, Glob, Dates
 
 ##############################################################################
 ##
@@ -39,10 +37,11 @@ export  read_stata,  # read stata 13 and 14 files into DF
         prepend_spaces, append_spaces, # create fixed length strings
         smallest, largest, # list smallest and largest values in a DA
         pickone,     # create a binary variable that identifies one records in a subgroup
-        p5, p10, p25, p50, p75, p90, p95, # percentiles
-        cv,          # coefficient of variation, alias of variation()
-        se,          # standard error, alias of sem()
+        #p5, p10, p25, p50, p75, p90, p95, # percentiles
+        #cv,          # coefficient of variation, alias of variation()
+        #se,          # standard error, alias of sem()
         tab,         # n-way freq table based on FreqTables, NAs are allowed now
+        tabprint,    # print a named array output from tab or freqtable
         tabstat,     # compute univariate statistics by subgroups
         substat,     # create a dataarray of univariate statistics of one variable by subgroups
         rowsum,      # compute

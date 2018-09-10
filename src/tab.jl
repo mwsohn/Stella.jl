@@ -80,7 +80,7 @@ function tab(A::AbstractArray; skipmissing::Bool=true,weights::AbstractWeights=f
 
     # from FreqTables.jl/src/freqtable.jl
     d = Dict{eltype(A),Int64}()
-    @inbounds @simd for i in 1:alen
+    @simd for i in 1:alen
         index = Base.ht_keyindex(d, A[i])
 
         if index > 0
@@ -93,7 +93,7 @@ function tab(A::AbstractArray; skipmissing::Bool=true,weights::AbstractWeights=f
     # construct labels
     alev = sort(collect(keys(d)))
 
-    cnt = Vector{Int64}(length(alev))
+    cnt = Vector{Int64}(undef,length(alev))
     @inbounds @simd for i=1:length(alev)
         cnt[i] = d[alev[i]]
     end
@@ -112,33 +112,15 @@ function tab(df::DataFrame,vars::Symbol...;  skipmissing::Bool=false,weights::Ab
         error("More than two variables are not supported")
     end
 
+    # oneway table
     if nvec == 1
         na = tab(df[vars[1]], skipmissing = skipmissing, weights = weights)
         setdimnames!(na,(vars[1],"Stat"))
         return na
     end
-    na = tab(df[vars[1]],df[vars[2]], skipmissing = skipmissing, weights = weights)
-    # if labels != nothing # && Labels.defined(labels,v)
-    #     # value labels
-    #     labval = Vector{String}(length(vec))
-    #     for (i,val) in enumerate(lev)
-    #         labval[i] = vallab(labels,v,val)
-    #     end
-    #
-    #     # allowmissing
-    #     if allowmissing == true
-    #         push!(labval,"missing")
-    #     end
-    #
-    #     # variable label
-    #     labvar = varlab(labels,v)
-    #
-    #     # return a NamedArray
-    #     setnames!(na,labval,1)
-    #     setnames!(na,["Frequency"],2)
-    #     setdimnames!(na,[labvar,"count"])
-    #     return na
-    # end
+
+    # two-way table
+    na = tab(df[vars[1]], df[vars[2]], skipmissing = skipmissing, weights = weights)
 
     setdimnames!(na,(vars[1],vars[2]))
     return na
@@ -209,7 +191,7 @@ end
 function tabprint(na::NamedArray; precision=2, chisq=true, row=true, col=true, cell=false, all=false, pagewidth=78)
 
     if ndims(na) == 2 && length(names(na,2)) == 1 && names(na,2)[1] == "Frequency"
-        tabprint1(io,na, all = all, precision = precision)
+        tabprint1(na, all = all, precision = precision)
         exit()
     elseif ndims(na) > 2
         error("Only up to two dimensional arrays are currently supported")

@@ -1,7 +1,7 @@
 function memory_saved(dt,n)
 
     # total size and levels
-    tsize = sum([isnull(x) ? 0 : length(x.value) for x in dt.data[n]])
+    tsize = sum([ismissing(x) ? 0 : length(x.value) for x in dt.data[n]])
     s = Set(dt.data[n][:].values)
 
     # for refs size
@@ -26,18 +26,18 @@ function readstat2dataframe(dt::ReadStat.ReadStatDataFrame,verbose=false)
 
         # Date or DateTime values
         if dt.types[i] <: Integer && dt.formats[i] in ("%d","%td")
-            df[dt.headers[i]] = Union{Missing,Int32}[x.hasvalue ? dateoffset + Dates.Day(x.value) : missing for x in dt.data[i]]
+            df[dt.headers[i]] = [x.hasvalue ? dateoffset + Dates.Day(x.value) : missing for x in dt.data[i]]
         elseif dt.types[i] <: Integer && dt.formats[i] in ("%tc","%tC")
-            df[dt.headers[i]] = Union{Missing,Int64}[x.hasvalue ? datetimeoffset + Dates.Millisecond(x.value) : missing for x in dt.data[i]]
+            df[dt.headers[i]] = [x.hasvalue ? datetimeoffset + Dates.Millisecond(x.value) : missing for x in dt.data[i]]
         elseif dt.types[i] <: AbstractString
             if memory_saved(dt,i)
                 df[dt.headers[i]] = categorical(String[x.hasvalue ? x.value : "" for x in dt.data[i]],true)
             else
-                df[dt.headers[i]] = Union{Missing,String}[x.hasvalue || x.value != "" ? x.value : missing for x in dt.data[i]]
+                df[dt.headers[i]] = [x.hasvalue || x.value != "" ? x.value : missing for x in dt.data[i]]
             end
-        elseif dt.types[i] == Int8 && dt.val_label_keys[i] != ""
-            # variable is Int8 type and has label name, convert it to categorical array
-            df[dt.headers[i]] = categorical(Union{Missing,dt.types[i]}[x.hasvalue ? x.value : missing for x in dt.data[i]],true)
+        # elseif dt.types[i] == Int8 && dt.val_label_keys[i] != ""
+        #     # variable is Int8 type and has label name, convert it to categorical array
+        #     df[dt.headers[i]] = categorical(Union{Missing,dt.types[i]}[x.hasvalue ? x.value : missing for x in dt.data[i]],true)
         else
             df[dt.headers[i]] = Union{Missing,dt.types[i]}[x.hasvalue ? x.value : missing for x in dt.data[i]]
         end
@@ -56,27 +56,17 @@ DataFrame(x::ReadStat.ReadStatDataFrame) = rs2df(x)
 
 function get_labels(dt::ReadStat.ReadStatDataFrame)
     # labels
-    varlab = Dict()
-    lblname = Dict()
-    #formatlab = Dict()
+    label = Label()
 
     for i=1:dt.columns
-        varlab[dt.headers[i]] = dt.labels[i]
-        lblname[dt.headers[i]] = dt.val_label_keys[i]
-        #formatlab[dt.headers[i]] = dt.formats[i]
+        label.var[dt.headers[i]] = dt.labels[i]
+        if dt.val_label_keys[i] != ""
+            label.lblname[dt.headers[i]] = Symbol(dt.val_label_keys[i])
+            label.val[Symbol(dt.val_label_keys[i])] = dt.val_label_dict[dt.val_label_keys[i]]
+        end
     end
 
-    vallab = Dict()
-    for k in collect(keys(dt.val_label_dict))
-        vallab[k] = dt.val_label_dict[k]
-    end
-
-    label = Dict()
-    label["variable"] = varlab
-    label["label"] = lblname
-    #label["format"] = formatlab
-    label["value"] = vallab
-    return Label(varlab,vallab,lblname)
+    return label
 end
 
 function read_stata(fn::String,verbose=false)
@@ -84,23 +74,7 @@ function read_stata(fn::String,verbose=false)
     dt = ReadStat.read_dta(fn)
     df = readstat2dataframe(dt,verbose)
 
-    # labels
-    varlab = Dict()
-    lblname = Dict()
-    #formatlab = Dict()
-
-    for i=1:dt.columns
-        varlab[dt.headers[i]] = dt.labels[i]
-        lblname[dt.headers[i]] = dt.val_label_keys[i]
-        #formatlab[dt.headers[i]] = dt.formats[i]
-    end
-
-    vallab = Dict()
-    for k in collect(keys(dt.val_label_dict))
-        vallab[k] = dt.val_label_dict[k]
-    end
-
-    return df,Label(varlab,vallab,lblname)
+    return df,get_labels(dt)
 end
 
 
@@ -169,14 +143,13 @@ function acompress(da::AbstractVector)
     end
 end
 
-
 function atype(df::DataFrame,v::Symbol)
     # Array type = DA for DataArray, CA for Categorical Array, and UV for Union Vector
-    if isdefined(:CategoricalArrays) && typeof(df[v]) <: CategoricalArray
-        return string("Categorical (",replace(string(eltype(df[v].refs)),"UInt",""),")")
-    elseif isdefined(:DataArrays) && typeof(df[v]) <: DataArray
+    if isdefined(Main,:CategoricalArrays) && typeof(df[v]) <: CategoricalArray
+        return string("Categorical (", replace(string(eltype(df[v].refs)),"UInt" => ""), ")")
+    elseif isdefined(Main,:DataArrays) && typeof(df[v]) <: DataArray
          return "DataArray"
-    elseif isdefined(:PooledArrays) && typeof(df[v]) <: PooledArray
+    elseif isdefined(Main,:PooledArrays) && typeof(df[v]) <: PooledArray
          return "PooledArray"
     elseif isa(eltype(df[v]),Union)
         return "Union Vector" # Union Vector
@@ -196,6 +169,8 @@ function etype(df::DataFrame,v::Symbol)
         eltyp = string(Missings.T(eltype(df[v])))
         if in(eltyp,["String","AbstractString"])
             eltyp = string("Str",getmaxwidth(df[v]))
+        elseif eltyp == "Dates.Date"
+            eltyp = "Date"
         end
     end
 
@@ -210,11 +185,11 @@ function eltype2(df::DataFrame,v::Symbol)
 end
 
 """
-    desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Dict}=nothing)
+    desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=nothing)
 
 Displays variables in a dataframe much like `showcols`. It can display additional
 attributes such as variable labels, value labels and display formats (not used in Julia)
-if an optional `label_dict` is specified. It mimics Stata's `describe` command.
+if an optional `labels` is specified. It mimics Stata's `describe` command.
 `labels` is automatically converted from a stata file by `read_stata` function. Or one can
 be easily created as described in [Labels](https://github.com/mwsohn/Labels.jl).
 """
@@ -283,30 +258,47 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
         println(repeat("-",numdashes+30))
     end
 
-    nrows = size(df,1)
+    nrows,ncols = size(df)
+
+    # output dataframe
+    dfv = DataFrame(Variable = varnames)
+    dfv[:ArrayType] = Vector{String}(undef,ncols)
+    dfv[:Eltype] = Vector{String}(undef,ncols)
+    dfv[:Missing] = Vector{String}(undef,ncols)
+    dfv[:Lblname] = Vector{String}(undef,ncols)
+    dfv[:Description] = Vector{String}(undef,ncols)
+
+
     for (i,v) in enumerate(varnames)
 
         # variable name
         varstr = string(v)
 
         # Array Type
-        atyp = atype(df,v)
+        dfv[i,:ArrayType] = atype(df,v)
 
         # Eltype
-        eltyp = etype(df,v)
+        dfv[i,:Eltype] = etype(df,v)
 
         # percent missing
         nmiss = sum(Missings.ismissing.(df[v]))
-        pmiss = string(round(100 * nmiss/nrows,1),"%")
+        dfv[i,:Missing] = string(round(100 * nmiss/nrows,digits=1),"%")
 
-        print(lpad(string(i),maxobs),"  ",rpad(varstr,maxval),"  ",rpad(atyp,maxatype),"  ",rpad(eltyp,maxeltype),"  ",lpad(pmiss,maxmiss),"  ")
+        print(lpad(string(i),maxobs),"  ",rpad(varstr,maxval),"  ",
+            rpad(dfv[i,:ArrayType],maxatype),"  ",
+            rpad(dfv[i,:Eltype],maxeltype),"  ",
+            lpad(dfv[i,:Missing],maxmiss),"  ")
 
         if labels != nothing
-            print(varlab(labels,v))
+            dfv[i,:Lblname] = lblname(labels,v) == nothing ? "" : string(lblname(labels,v))
+            dfv[i,:Description] = varlab(labels,v)
+            print(dfv[i,:Description])
         end
 
         print("\n")
     end
+
+    return dfv
 end
 
 function getmaxwidth(s::AbstractArray)
@@ -497,7 +489,7 @@ function dfsample(df::AbstractDataFrame,num::Union{Int64,Float64})
             error("A percentage value in floating point number (e.g., 10.0 or .1) is required.")
         end
 
-        num2 = round(Int,num*size(df,1))
+        num2 = Int64(round(num*size(df,1)))
     else
         # number of obserations
         if num > size(df,1)
