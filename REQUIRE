@@ -8,7 +8,6 @@ StatsBase
 Glob
 Formatting
 DataStructures
-HypothesisTests
 NamedArrays
 ReadStat
 Labels
