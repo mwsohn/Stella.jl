@@ -334,9 +334,69 @@ function coeflab(d::UnivariateDistribution,l::Link)
     end
 end
 
+import GLM.coeftable
+function GLM.coeftable(r::StatsModels.RegressionModel,labels::Label)
+    coeftable2 = coeftable(r)
+
+    # parse the row names and change variable names and values
+	for i in 2:length(coeftable2.rownms)
+		# parse row name and split into a tuple (varname, value)
+		if occursin(": ",coeftable2.rownms[i])
+			(varname,value) = split(coeftable2.rownms[i],": ")
+		else
+			(varname,value) = (coeftable2.rownms[i],"")
+		end
+
+        # get variable label from the label dictionary
+		varlabel = varlab(labels,Symbol(varname))
+        if varlabel == ""
+            varlabel = varname
+        end
+        if value != ""
+		    vlabel = vallab(labels,Symbol(varname),parse(Int,value))
+        end
+
+        # If value is 1 and value label is Yes, it is a binary variable
+		# do not print
+		if value == 1 && ismatch(r"^ *yes *$"i,vlabel)
+			coeftable2.rownms[i] = varlabel
+		elseif value != ""
+			coeftable2.rownms[i] = string(varlabel, ": ", vlabel)
+        else
+            coeftable2.rownms[i] = varlabel
+		end
+	end
+
+	return coeftable2
+end
+
 import StatsBase.nulldeviance
-function StatsBase.nulldeviance(obj::GeneralizedLinearModel)
-    return deviance( glm(@formula(y ~ 1),DataFrame(y = obj.rr.y),obj.rr.d,Link(obj.rr)))
+function StatsBase.nulldeviance(m::GeneralizedLinearModel)
+    y = m.rr.y
+    d = m.rr.d
+    mu = sum(y) / length(y)
+    wts = m.rr.wts
+    dv = sum([GLM.devresid(d,x,mu) for x in y])
+
+    ll  = zero(eltype(mu))
+    if length(wts) == length(y)
+        ϕ = dv/sum(wts)
+        @inbounds for i in eachindex(y, wts)
+            ll += GLM.loglik_obs(d, y[i], mu, wts[i], ϕ)
+        end
+    else
+        ϕ = dv/length(y)
+        @inbounds for i in eachindex(y)
+            ll += GLM.loglik_obs(d, y[i], mu, 1, ϕ)
+        end
+    end
+    -2*ll
+
+end
+
+import StatsBase.response
+function StatsBase.response(obj::GeneralizedLinearModel)
+    return obj.rr.y
 end
 
 
