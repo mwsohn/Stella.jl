@@ -250,7 +250,8 @@ function eform(glmout::StatsModels.RegressionModel)
 
     # family and link function
     if isa(glmout.model,GeneralizedLinearModel)
-        distrib,linkfun = split(replace(string(typeof(glmout.model.rr)),r"GlmResp{Array{Float64,1},(.*){Float64},(.*))}" => s"\1,\2"),",")
+        distrib = glmout.model.rr.d
+        linkfun = Link(glmout.model.rr)
     else
         error("GLM model is required as the argument")
     end
@@ -272,7 +273,8 @@ function eform(glmout::StatsModels.RegressionModel, labels::Label)
 
     # family and link function
     if isa(glmout.model,GeneralizedLinearModel)
-        distrib,linkfun = split(replace(string(typeof(glmout.model.rr)),r"GlmResp{Array{Float64,1},(.*){Float64},(.*))}" => s"\1,\2"),",")
+        distrib = glmout.model.rr.d
+        linkfun = Link(glmout.model.rr)
     else
         error("GLM model is required as the argument")
     end
@@ -315,18 +317,17 @@ function eform(glmout::StatsModels.RegressionModel, labels::Label)
         else
             coeftable2.rownms[i] = varlabel
 		end
-
 	end
 
 	return coeftable2
 end
 
-function coeflab(d::String,l::String)
-    if d in ("Bernoulli","Binomial") && l == "LogitLink"
+function coeflab(d::UnivariateDistribution,l::Link)
+    if (isa(d,Bernoulli) || isa(d,Binomial)) && isa(l,LogitLink)
         return "OR"
-    elseif d == "Binomial" && l == "LogLink"
+    elseif (isa(d,Binomial) || isa(d,NegativeBinomial)) && isa(l,LogLink)
         return "RR"
-    elseif d "Poisson" && l == "LogLink"
+    elseif isa(d,Poisson) && isa(l,LogLink)
         return "IRR"
     else
         return "exp(Est)"

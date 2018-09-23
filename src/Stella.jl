@@ -32,7 +32,7 @@ export  read_stata,  # read stata 13 and 14 files into DF
         xtile,       # create variable that classify a column into percentiles
         rowsum,      # create variable that sums rows
         strval,      # convert floats or ints to strings
-        chi2test,  # compute chisquare statistics from na.array
+        chi2test,    # compute chisquare statistics from na.array
         prepend_spaces, append_spaces, # create fixed length strings
         smallest, largest, # list smallest and largest values in a DA
         pickone,     # create a binary variable that identifies one records in a subgroup
@@ -49,17 +49,17 @@ export  read_stata,  # read stata 13 and 14 files into DF
         destring,    # convert strings to numeric values in a DataArray
         destring!,   # in-place versionof destring
         renvars!,    # change variable names to either lower or upper case
-        recode,      # recode values in a variable
         eform,       # coeftable output to eform
-        anova, oneway, # oneway and twoway ANOVA
+        anova, oneway, # oneway ANOVA
         pwcorr,      # pairwise correlations
-        ranksum,     # ranksum test
-        signrank,    # signed rank test
+        # ranksum,     # ranksum test
+        # signrank,    # signed rank test
         ttest,       # t-test
         dir,        # directory listing
         ds,         # filenames according to type, length, or regex
-        getmaxwidth, # maximum length of a string variable
-        eltype2
+        # getmaxwidth, # maximum length of a string variable
+        eltype2,
+        nulldeviance  # nulldeviance for GLM models
 
 ##############################################################################
 ##
