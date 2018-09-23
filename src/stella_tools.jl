@@ -333,6 +333,12 @@ function coeflab(d::String,l::String)
     end
 end
 
+import StatsBase.nulldeviance
+function StatsBase.nulldeviance(obj::GeneralizedLinearModel)
+    return deviance( glm(@formula(y ~ 1),DataFrame(y = obj.rr.y),obj.rr.d,Link(obj.rr)))
+end
+
+
 #--------------------------------------------------------------------------
 # pairwise correlations
 #--------------------------------------------------------------------------
