@@ -1,37 +1,38 @@
-## Welcome to GitHub Pages
+# Stella
 
-You can use the [editor on GitHub](https://github.com/mwsohn/Stella/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+A package to provide functions that mimic some basic Stata functionality.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+## Installation
 
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+```
+  ] add https://github.com/mwsohn/Stella.jl
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+## List of Functions
 
-### Jekyll Themes
+Here's the list of functions. Documentation for individual functions can be accessed using the Julia help (e.g., ?read_stata at the Julia REPL prompt).
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/mwsohn/Stella/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+### DataFrame tools
 
-### Support or Contact
+- read_stata - This is a wrapper for `read_dta` function in ReadStat package that produces a dataframe as output.
+- desc - Prints the list of variables, similar to `showcols`. It prints variable and value labels with `labels` option.
+- dfcompress! - Compress all numeric variables in a dataframe by converting them to the type that will occupy the least memory.
+- acompress - Compress one abstract array
+- duplicates - Identifies, deletes, or tag duplicates in a dataframe
+- pickone - Identifies only one record in repeated data similar to `egen tag` function in stata
+- dfsample - Creates a dataframe with a randomly selected sample from the input dataframe
+- dfmerge - Merges two dataframes and creates a `:_merge` variable that indicates data sources, similar to Stata `merge` command
+- classify - Creates a classification variable with the specified cutoff values
+- xtile - Creates a ntile classification variable, similar to Stata's `xtile` command
+- destring - Converts a string vector to a numeric vector
+- rowstat - Creates a vector of statistics from multiple rows in a dataframe, analogous to Stata's `egen` row commands
+- substat - Creates a vector of statistics for a subgroup of rows, analogous to Stata's `egen, by` commands
 
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+### Statitical utilities
+
+- pwcorr - Produces pairwise correlations
+- anova - One-way analysis of variance
+- univariate - Univariate statistics, output to a DataFrame
+- ttest - T-test statistics
+- tabstat - Creates statistics by categories using functions provided, similar to Stata's tabstat command
+- eform - Produces exponentiated GLM regression output such as coefficients and standard errors

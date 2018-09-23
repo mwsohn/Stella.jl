@@ -150,25 +150,6 @@ end
 #----------------------------------------------------------------------------
 
 """
-    pickone(df::DataFrame,groupvars::Array{Symbol,1})
-
-Create a DataArray that identifies one record in a `groupvar` in the `df` DataFrame.
-This function creates a variable similar to the Stata command
-`egen byte pickone = tag(groupvar)`. `groupvars` can be an array of Symbols or a single
-Symbol.
-"""
-function pickone(df::DataFrame,groupvars::Array{Symbol,1})
-    df[:___obs___] = collect(1:size(df,1))
-    done = zeros(Int8,size(df,1))
-    for subdf in groupby(df, groupvars)
-        done[subdf[1,:___obs___]]=1
-    end
-    delete!(df,:___obs___)
-    return convert(Vector{Union{Missing,Int8}},done)
-end
-pickone(df::DataFrame,groupvar::Symbol) = pickone(df, [groupvar])
-
-"""
     p5(x::AbstractVector)
     p10(x::AbstractVector)
     p25(x::AbstractVector)
@@ -225,13 +206,13 @@ N(x) = size(x,1)
 """
     substat(df::DataFrame, varname::Symbol, groupvars::Array{Symbol,1}, func::Function)
 
-Produces a DataArray of the same length as the `df` that contains summary statistics of
-the `varname` column computed by `func` for each subgroup stratified by `groupvar`.
+Produces a vector of the same length as the `df` that contains summary statistics of
+the `varname` column computed by `func` for each subgroup stratified by `groupvars`.
 Multiple columns can be used as `groupvar`'s if provided in an array of Symbols.
 Any function that can take one numeric vector as input can be used. Percentile functions
 such as those that take two arguments (e.g., `quantile(x,.25)` for a 25th percentile of x)
 should first be converted to a function that takes one argument (e.g, `p25(x) = quantile(x,.25)`).
-The following percentile functions are available: `p5`, `p10`, `p25`, 'p50', `p75`, and `p90`.
+The following percentile functions are already defined: `p5`, `p10`, `p25`, 'p50', `p75`, and `p90`.
 This function emulates the Stata's `egen functions` such as `egen testmean = mean(test), by(groupvar)`.
 
 ```
@@ -262,88 +243,19 @@ function substat(df::DataFrame, varname::Symbol, groupvars::Vector{Symbol}, func
 end
 substat(df::DataFrame, varname::Symbol, groupvar::Symbol, func::Function) = substat(df,varname,[groupvar],func)
 
-#
-# #----------------------------------------------------------------------------
-# # stats by subdataframe - end
-# #----------------------------------------------------------------------------
-# """
-#     recode(da::DataArray,dict::Dict; restna=false)
-#     recode(df::DataFrame,v::Symbol,dict::Dict; restna=false)
-#
-# Recode values in `da` or `df[v]` to values specified in `dict` dictionary.
-# An option `restna = true` will convert all values in the original data array that are
-# not a key in `dict` to NAs. Values in `dict` must be the same type as the original
-# value or integer.
-#
-# ## Example
-#
-# ```
-# julia> df = DataFrame(race = ["White","White","Black","Other","Hispanic"], sex = ["M","F","M","M","F"])
-# 5×2 DataFrames.DataFrame
-# │ Row │ race       │ sex │
-# ├─────┼────────────┼─────┤
-# │ 1   │ "White"    │ "M" │
-# │ 2   │ "White"    │ "F" │
-# │ 3   │ "Black"    │ "M" │
-# │ 4   │ "Other"    │ "M" │
-# │ 5   │ "Hispanic" │ "F" │
-#
-# julia> df[:race2] = recode(df,:race,Dict("White" => 1,"Black" => 2, "Hispanic" => 3, "Other" => 4))
-# 5-element DataArrays.DataArray{Int8,1}:
-#  1
-#  1
-#  2
-#  4
-#  3
-#
-#  julia> df
-# 5×3 DataFrames.DataFrame
-# │ Row │ race       │ sex │ race2 │
-# ├─────┼────────────┼─────┼───────┤
-# │ 1   │ "White"    │ "M" │ 1     │
-# │ 2   │ "White"    │ "F" │ 1     │
-# │ 3   │ "Black"    │ "M" │ 2     │
-# │ 4   │ "Other"    │ "M" │ 4     │
-# │ 5   │ "Hispanic" │ "F" │ 3     │
-#
-# ```
-#
-# """
-# function recode(da::AbstractArray, coding::Dict; restna = false)
-#     val = values(coding)
-#
-#     # if the da is not integer type
-#     # check to see if all values in the coding dictionary are integers or NAs
-#     # if so, construct a return data array whose elements are integers
-#     # otherwise, keep the original data type
-#     if !(eltype(da) <: Integer) && sum([typeof(v) <: Integer || isna(v) for v in val]) == length(val)
-#         ra = DataArray(Int64,length(da))
-#     else
-#         ra = DataArray(eltype(da),length(da))
-#     end
-#
-#     for i in 1:length(da)
-#         if isna(da[i])
-#             continue
-#         end
-#         if restna
-#             ra[i] = haskey(coding,da[i]) ? coding[da[i]] : NA
-#         else
-#             ra[i] = haskey(coding,da[i]) ? coding[da[i]] : da[i]
-#         end
-#     end
-#     if eltype(ra) <: Integer
-#         return compress(ra)
-#     end
-#     return ra
-# end
-# recode(df::DataFrame,varname::Symbol,coding::Dict; restna = false) = recode(df[varname],coding,restna=restna)
-
 #----------------------------------------------------------------------------
 # eform
 #----------------------------------------------------------------------------
-function eform(coeftbl::StatsBase.CoefTable)
-	coeftable2 = coeftbl
+function eform(glmout::StatsModels.RegressionModel)
+
+    # family and link function
+    if isa(glmout.model,GeneralizedLinearModel)
+        distrib,linkfun = split(replace(string(typeof(glmout.model.rr)),r"GlmResp{Array{Float64,1},(.*){Float64},(.*))}" => s"\1,\2"),",")
+    else
+        error("GLM model is required as the argument")
+    end
+
+	coeftable2 = coeftable(glmout)
 
 	# estimates
 	coeftable2.cols[1] = exp.(coeftable2.cols[1])
@@ -352,13 +264,20 @@ function eform(coeftbl::StatsBase.CoefTable)
 	coeftable2.cols[2] = coeftable2.cols[1] .* coeftable2.cols[2]
 
 	# rename column1 to OR
-	coeftable2.colnms[1] = "OR"
+    coeftable2.colnms[1] = coeflab(distrib,linkfun)
 
 	return coeftable2
 end
+function eform(glmout::StatsModels.RegressionModel, labels::Label)
 
-function eform(coeftbl::StatsBase.CoefTable, labels::Union{Label,Nothing} = nothing)
-	coeftable2 = coeftbl
+    # family and link function
+    if isa(glmout.model,GeneralizedLinearModel)
+        distrib,linkfun = split(replace(string(typeof(glmout.model.rr)),r"GlmResp{Array{Float64,1},(.*){Float64},(.*))}" => s"\1,\2"),",")
+    else
+        error("GLM model is required as the argument")
+    end
+
+	coeftable2 = coeftable(glmout)
 
 	# estimates
 	coeftable2.cols[1] = exp.(coeftable2.cols[1])
@@ -367,7 +286,7 @@ function eform(coeftbl::StatsBase.CoefTable, labels::Union{Label,Nothing} = noth
 	coeftable2.cols[2] = coeftable2.cols[1] .* coeftable2.cols[2]
 
 	# rename column1 to OR
-	coeftable2.colnms[1] = "OR"
+	coeftable2.colnms[1] = coeflab(distrib,linkfun)
 
 	# parse the row names and change variable names and values
 	for i in 2:length(coeftable2.rownms)
@@ -379,31 +298,40 @@ function eform(coeftbl::StatsBase.CoefTable, labels::Union{Label,Nothing} = noth
 		end
 
         # get variable label from the label dictionary
-        if labels != nothing
-    		varlabel = varlab(labels,Symbol(varname))
-            if varlabel == ""
-                varlabel = varname
-            end
-            if value != ""
-    		    vlabel = vallab(labels,Symbol(varname),parse(Int,value))
-            end
-
-            # If value is 1 and value label is Yes, it is a binary variable
-    		# do not print
-    		if value == 1 && ismatch(r"^ *yes *$"i,vlabel)
-    			coeftable2.rownms[i] = varlabel
-    		elseif value != ""
-    			coeftable2.rownms[i] = string(varlabel, ": ", vlabel)
-            else
-                coeftable2.rownms[i] = varlabel
-    		end
+		varlabel = varlab(labels,Symbol(varname))
+        if varlabel == ""
+            varlabel = varname
         end
+        if value != ""
+		    vlabel = vallab(labels,Symbol(varname),parse(Int,value))
+        end
+
+        # If value is 1 and value label is Yes, it is a binary variable
+		# do not print
+		if value == 1 && ismatch(r"^ *yes *$"i,vlabel)
+			coeftable2.rownms[i] = varlabel
+		elseif value != ""
+			coeftable2.rownms[i] = string(varlabel, ": ", vlabel)
+        else
+            coeftable2.rownms[i] = varlabel
+		end
 
 	end
 
 	return coeftable2
 end
 
+function coeflab(d::String,l::String)
+    if d in ("Bernoulli","Binomial") && l == "LogitLink"
+        return "OR"
+    elseif d == "Binomial" && l == "LogLink"
+        return "RR"
+    elseif d "Poisson" && l == "LogLink"
+        return "IRR"
+    else
+        return "exp(Est)"
+    end
+end
 
 #--------------------------------------------------------------------------
 # pairwise correlations
@@ -428,15 +356,6 @@ in addition to returning them in arrays.
 """
 function pwcorr(a::AbstractArray)
 
-    # if typeof(a) == DataFrame
-    #     a = a[completecases(a),:]
-    #     r = cor(Array(a))
-    #     colnames = string.(names(a))
-    # else
-    #     r = cor(a)
-    #     colnames = string.(1:size(a,2))
-    # end
-    #
     cols = size(a,2)
     N = zeros(Int64,cols,cols)
     r = zeros(Float64,cols,cols)
@@ -466,9 +385,6 @@ function pwcorr(a::AbstractArray)
 end
 pwcorr(a::AbstractArray...) = pwcorr(hcat(a...))
 pwcorr(a::DataFrame, args::Vector{Symbol}; out=true) = pwcorr(df[args], out = out)
-
-
-
 
 #--------------------------------------------------------------------------
 # ranksum(), signrank(), signtest()

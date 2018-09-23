@@ -69,7 +69,14 @@ function get_labels(dt::ReadStat.ReadStatDataFrame)
     return label
 end
 
-function read_stata(fn::String,verbose=false)
+"""
+    df, label = read_stata(fn::String)
+
+Converts a Stata datafile into a Julia DataFrame. It produces two memory objects (`df` and `label`).
+The first is the dataframe. The second is a [Lables](https://github.com/mwsohn/Labels.jl) object
+that provide functionality to attach variable and value labels.
+"""
+function read_stata(fn::String)
 
     dt = ReadStat.read_dta(fn)
     df = readstat2dataframe(dt,verbose)
@@ -95,7 +102,7 @@ function dfcompress!(df::DataFrame)
 
         # if Array is empty after all missings are dropped
         # drop it from the df
-        if length(df[v]) == sum(df[v].na)
+        if length(df[v]) == sum(ismissing.(df[v]))
             delete!(df,v)
             println(v, " was empty, now deleted")
             continue
@@ -104,6 +111,12 @@ function dfcompress!(df::DataFrame)
         # get the original eltype
         eltype_old = eltype(df[v])
 
+        # if string, continue
+        if eltype_old == String
+            continue
+        end
+
+        # compress
         df[v] = acompress(df[v])
 
         if eltype_old != eltype(df[v])
@@ -112,36 +125,51 @@ function dfcompress!(df::DataFrame)
     end
 end
 
+"""
+    acompress(da::AbstractVector)
+
+Compresses a vector to a smallest numeric type that can hold without loss of information.
+"""
 function acompress(da::AbstractVector)
+
     # get the original eltype
     eltype_old = eltype(da)
 
+    # string variable - do not compress
+    if eltype_old == String
+        return da
+    end
+
+    # copy the vector
+    da2 = copy(da)
+
     if  eltype_old <: Integer
         # get minimum and maximum values
-        varmin = minimum(dropna(da))
-        varmax = maximum(dropna(da))
+        varmin = minimum(collect(skipmissing(da2)))
+        varmax = maximum(collect(skipmissing(da2)))
         # test if Int8
         if eltype_old != Int8 && varmin >= typemin(Int8) && varmax <= typemax(Int8)
-            return convert(Vector{Union{Missing,Int8}},da)
+            return convert(Vector{Union{Missing,Int8}},da2)
         elseif eltype_old != Int16 && varmin >= typemin(Int16) && varmax <= typemax(Int16)
-            return convert(Vector{Union{Missing,Int16}},da)
+            return convert(Vector{Union{Missing,Int16}},da2)
         else
-            return da
+            return da2
         end
     elseif eltype_old <: AbstractFloat
         # first test if the floats are integer numbers
-        if sum(isinteger.(dropna(da)).==false) == 0
-            return compress(convert(Vector{Union{Missing,Int64}},da))
+        if sum(isinteger.(collect(skipmissing(da2))) .== false) == 0
+            return acompress(convert(Vector{Union{Missing,Int64}},da2))
         end
 
         # get minimum and maximum values
-        if eltype_old != Float32 && minimum(dropna(da)) >= typemin(Float32) && maximum(dropna(da)) <= typemin(Float32)
-            return convert(Vector{Union{Missing,Float32}},da)
+        if eltype_old == Float64 && minimum(collect(skipmissing(da2))) >= floatmin(Float32) && maximum(collect(skipmissing(da2))) <= floatmax(Float32)
+            return convert(Vector{Union{Missing,Float32}},da2)
         else
-            return da
+            return da2
         end
     end
 end
+
 
 function atype(df::DataFrame,v::Symbol)
     # Array type = DA for DataArray, CA for Categorical Array, and UV for Union Vector
@@ -318,7 +346,7 @@ all floating point numbers, use `AbstractFloat`. This function is useful to subs
 eltypes or column names. This function emulates the Stata `ds` command.
 
 # Example
-```jldoctest
+```
 julia> showcols(aapl)
 6081×7 DataFrames.DataFrame
 │ Col # │ Name      │ Eltype  │ Missing │
@@ -406,15 +434,38 @@ function ds(df::DataFrame,re::Regex)
     return dslist
 end
 
+
+"""
+    pickone(df::DataFrame,groupvars::Vector{Symbol})
+
+Create a vector that identifies one record in a `groupvars` in the `df` DataFrame.
+This function creates a variable similar to the Stata command
+`egen byte pickone = tag(groupvar)`. `groupvars` can be an array of Symbols or a single
+Symbol.
+"""
+function pickone(df::DataFrame,groupvars::Vector{Symbol})
+    df[:___obs___] = collect(1:size(df,1))
+    done = zeros(Int8,size(df,1))
+    for subdf in groupby(df, groupvars)
+        done[subdf[1,:___obs___]]=1
+    end
+    delete!(df,:___obs___)
+    return convert(Vector{Union{Missing,Int8}},done)
+end
+pickone(df::DataFrame,groupvar::Symbol) = pickone(df, [groupvar])
+
+
 """
     duplicates(df::DataFrame, args::Symbol...; cmd::Symbol = :report)
 
 Reports, tags, or deletes duplicates in a DataFrame for one or more columns. Use `cmd` to
-request one of the actions: `:report` for getting a frequency table for the number of duplicates;
-`:tag` for identifying rows with duplicate values; and `:drop` for dropping all rows with duplicate values
-except for the first row.
+request one of the actions:
+
+- :report - for getting a frequency table for the number of duplicates
+- :tag - for identifying rows with duplicate values
+- :drop - for dropping all rows with duplicate values except for the first row.
 """
-function duplicates(df::DataFrame, args::Symbol... ; cmd::Symbol = :report) #; exclude::Array{Union{Symbol,Int},1} = [], include::Array{Union{Symbol,Int},1} = [] )
+function duplicates(df::DataFrame, args::Symbol... ; cmd::Symbol = :report)
 
     if in(cmd,[:report,:drop,:tag]) == false
         error("`cmd = `", cmd, "` is not supported.")
@@ -458,19 +509,19 @@ Use `srand()` to set a seed before running `dfsample()`.
 ##Example
 To select 100 rows, use
 
-```jldoctest
+```
 julia> df2 = dfsample(df,100)
 ```
 
 To select 20% of the original dataframe, use
 
-```jldoctest
+```
 julia> df2 = dfsample(df,20.)
 ```
 
 or
 
-```jldoctest
+```
 julia> df2 = dfsample(df,.2)
 ```
 
@@ -584,7 +635,7 @@ function get_class(val::Real,thresholds::Vector,lower::Bool)
 end
 
 """
-    classify(da::DataArray,thresholds::Vector; lower::Bool = false)
+    classify(da::AbstractVector,thresholds::Vector; lower::Bool = false)
 
 Produces a categorical variable based on a data array and a vector of thresholds.
 Use `lower = true` to classify the threshold value to the lower class.
@@ -644,7 +695,20 @@ function addterms(fmm::Formula,v::Vector{Symbol})
     return fm
 end
 
-function formula(o::Symbol,v::Vector)
+"""
+    Stella.formula(o::Symbol,v::Vector{Symbol})
+
+Creates a Formula from a vector of covariates. This function is not exported for potential conflict with other packages.
+
+- o - A symbol for the dependent variable
+- v - A vector of symbols for covariates
+
+## Usage
+
+julia> fm = Stella.formula(:readmit, [:age,:male,:race,:chd,:exercise])
+Formula: readmit ~ age + male + race + chd + exercise
+"""
+function formula(o::Symbol,v::Vector{Symbol})
     if length(v) == 1
         rhs = v[1]
     else
@@ -688,13 +752,13 @@ end
 vidx(df::DataFrame,varname::Symbol) = findfirst(varname, names(df))
 
 """
-    destring(da::DataArray;force=true)
+    destring(da::AbstractArray;force=true)
     destring(df::DataFrmae,strvar::Symbol;force=true)
     destring!(df::DataFrame,strvars; newvars::Vector{Symbol} = [], force=true, replace=false)
 
-Convert a string DataArray to a numeric DataArray. Use `force = true` to coerce conversion of alphanumeric strings to
-`NA` values. If `force = false`, any DataArray containing non-numeric values are not converted.
-Use `replace = true` in `destring!` to replace the original string DataArray with a new converted numeric DataArray.
+Convert a string vector to a numeric vector. Use `force = true` to coerce conversion of alphanumeric strings to
+missing values. If `force = false`, any vector containing non-numeric characters are not converted.
+Use `replace = true` in `destring!` to replace the original string vector with a new converted numeric vector.
 If `replace` option is specified, `newvars` array is ignored.
 """
 function destring(da::AbstractArray; force=true)
@@ -702,13 +766,13 @@ function destring(da::AbstractArray; force=true)
         error(da,"Input data array is empty!")
     end
     if eltype(da) <: Number
-        error(da," is a numeric DataArray.")
+        error(da," is a numeric vector.")
     end
 
     # check if the values include any alphabetic characters or decimals
     isfloat = false
     alpha = false
-    da_safe = dropna(da)
+    da_safe = collect(skipmissing(da))
     for i in length(da_safe)
         if sum([isalpha(x) for x in da_safe[i]]) > 0
             alpha = true
@@ -749,85 +813,88 @@ function destring!(df::DataFrame,strvars; newvars::Vector{Symbol} = [], force=tr
     end
 end
 
-
-"""
-    rowsum(df::DataFrame)
-
-Creates a DataArray that contains the row total of all values on the same row of `df`.
-If one of the columns contain an NA value on a row, an NA value will be returned for that
-row. This function emulates Stata's `egen rowsum = rowtotal(var1 - var3)`.
-
-```
-julia>df[:rowsum] = df[[:var1,:var2,:var3]]
-```
-
-If the position numbers for `:var1` (e.g., 4), `:var2` (5), `:var3` (6) are known and consecutive,
-you can specify them as follows:
-
-```
-julia>df[:rowsum] = df[collect(4:6)]
-```
-"""
-function rowsum(df::DataFrame)
-
-    isfloat = false
-    for i in 1:size(df,2)
-        if eltype(df[i]) <: AbstractFloat
-            isfloat = true
-        end
-    end
-
-    if isfloat
-        da = zeros(Union{Missing,Float64},size(df,1))
-    else
-        da = zeros(Union{Missing,Int64},size(df,1))
-    end
-
-    ba = completecases(df)
-    for i = 1:size(df,1)
-        if ba[i] == false
-            da[i] = missing
-        else
-            for j = 1:size(df,2)
-                da[i] += df[i,j]
-            end
-        end
-    end
-    return da
-end
+# """
+#     rowsum(df::DataFrame)
+#
+# Creates a DataArray that contains the row total of all values on the same row of `df`.
+# If one of the columns contain an NA value on a row, an NA value will be returned for that
+# row. This function emulates Stata's `egen rowsum = rowtotal(var1 - var3)`.
+#
+# ```
+# julia>df[:rowsum] = df[[:var1,:var2,:var3]]
+# ```
+#
+# If the position numbers for `:var1` (e.g., 4), `:var2` (5), `:var3` (6) are known and consecutive,
+# you can specify them as follows:
+#
+# ```
+# julia>df[:rowsum] = df[collect(4:6)]
+# ```
+# """
+# function rowsum(df::DataFrame)
+#
+#     isfloat = false
+#     for i in 1:size(df,2)
+#         if eltype(df[i]) <: AbstractFloat
+#             isfloat = true
+#         end
+#     end
+#
+#     if isfloat
+#         da = zeros(Union{Missing,Float64},size(df,1))
+#     else
+#         da = zeros(Union{Missing,Int64},size(df,1))
+#     end
+#
+#     ba = completecases(df)
+#     for i = 1:size(df,1)
+#         if ba[i] == false
+#             da[i] = missing
+#         else
+#             for j = 1:size(df,2)
+#                 da[i] += df[i,j]
+#             end
+#         end
+#     end
+#     return da
+# end
 
 """
     rowstat(df::DataFrame,func::Function)
 
-Creates a DataArray that contains the row statistic of all values on the same row of `df`
-produced by the `func` function. If one of the columns contain an NA value on a row, an NA value will be returned for that
+Creates a vector that contains the row statistic of all values on the same row of `df`
+produced by the `func` function. If one of the columns contain a missing value on a row, the returned value will be mssing for that
 row. This function emulates Stata's `egen` row functions such as `rowtotal`, `rowmean`, etc.
 
 ```
 julia>df[:rowmean] = rowstat(df[[:var1,:var2,:var3]],mean)
 ```
-
-If the position numbers for `:var1` (e.g., 4), `:var2` (5), `:var3` (6) are known and consecutive,
-you can specify them as follows:
-
-```
-julia>df[:rowstd] = rowstat(df[collect(4:6)],std)
-```
 """
 function rowstat(df::DataFrame,func::Function)
 
-    da = zeros(Float64,size(df,1))
-    ta = Array{Float64,1}(size(df,2))
+    # df size
+    nrow, ncol = size(df)
 
-    for i = 1:size(df,1)
+    # array to be returned
+    da = zeros(Union{Missing,Float64},size(df,1))
+
+    # temporary array of row values
+    ta = Vector{Union{Missing,Float64}}(undef,size(df,2))
+
+    # iterate over all rows
+    for i = 1:nrow
+
+        # counter for non-missing values in each row
         k=0
-        for j = 1:size(df,2)
-            if isna(df[i,j]) == false
+        for j = 1:ncol
+            if ismissing(df[i,j]) == false
                 k += 1
                 ta[k] = df[i,j]
             end
         end
-        if k == 0
+
+        # if any of the columns has a missing value, return missing
+        if k < ncol
             da[i] = missing
         else
             tmpfloat = func(ta[1:k])
@@ -838,41 +905,67 @@ function rowstat(df::DataFrame,func::Function)
 end
 
 """
-    xtile(da::AbstractArray;nq::Int = 4, cutoffs::Union{Nothing,AbstractVector} = nothing)
-    xtile(df::DataFrame,varname::Symbol;nq::Int = 4, cutoffs::Union{Nothing,AbstractVector} = nothing)
+    xtile(da::AbstractArray;nq::Int = 4, lower::Bool = false, cutoffs::Union{Nothing,AbstractVector} = nothing)
+    xtile(df::DataFrame,varname::Symbol;nq::Int = 4, lower::Bool = false, cutoffs::Union{Nothing,AbstractVector} = nothing)
 
 Create a DataArray{Int8,1} that identifies `nq` categories based on values in `da`.
 The default `nq` is 4. `cutoffs` vector can be provided to make custom categories.
 `cutoffs` vector is expected to contain `nq - 1` elements. The minimum and maximum values
-will be computed.
+will be computed. `lower = true` will make the threshold values to go in the lower category (default: false).
 
 ```
 julia> df[:agecat] = xtile(df[:age], nq = 3)
 ```
 """
-function xtile(da::AbstractArray ; nq::Int = 4, cutoffs::Union{Nothing,AbstractVector} = nothing)
+function xtile(da::AbstractArray ; nq::Int = 4, lower::Bool = false, cutoffs::Union{Nothing,AbstractVector} = nothing)
 
-	function qval(val::Real,cut::Vector)
-        cl = length(cut)
-		for i in 2:cl-1
-            if i == 2 && val < cut[i]
-                return 1
-            elseif i == cl-1 && cut[i] <= val
-                return i
-            elseif cut[i] <= val < cut[i+1]
-				return i
-			end
-		end
-		warn("Error - check qval function")
-	end
+    if nq == 1
+        error("`nq` must be greater than 1")
+    end
+
+    da2 = collect(skipmissing(da))
     if cutoffs == nothing
-	    cutoffs = nquantile(dropmissing(da),nq)
+	    cutoffs = nquantile(da2,nq)
     elseif length(cutoffs) == nq - 1
-        cutoffs = vcat(minimum(dropmissing(da)), cutoffs, maximum(dropmissing(da)))
+        cutoffs = vcat(minimum(da2), cutoffs, maximum(da2))
     else
         error("`cutoffs` vector length is not consistent with `nq`. It must be 1 greater or 1 less than `nq`.")
     end
 
-	return [ismissing(x) ? missing : qval(x,cutoffs) for x in da]
+    if lower
+        return [ismissing(x) ? missing : qval_low(x,cutoffs) for x in da2]
+    else
+        return [ismissing(x) ? missing : qval_high(x,cutoffs) for x in da2]
+    end
 end
 xtile(df::DataFrame,arg::Symbol; nq::Int = 4, cutoffs::Union{Nothing,AbstractVector} = nothing) = xtile(df[arg], nq = nq, cutoffs = cutoffs)
+
+function qval_high(val::Real,cut::Vector)
+    cl = length(cut)
+
+    for i in 2:cl-1
+        if i == 2 && val < cut[i]
+            return 1
+        elseif i == cl-1 && cut[i] <= val
+            return i
+        elseif cut[i] <= val < cut[i+1]
+            return i
+        end
+    end
+    warn("Error - check qval function")
+end
+
+function qval_low(val::Real,cut::Vector)
+    cl = length(cut)
+
+    for i in 2:cl-1
+        if i == 2 && val <= cut[i]
+            return 1
+        elseif i == cl-1 && cut[i] <= val
+            return i
+        elseif cut[i] < val <= cut[i+1]
+            return i
+        end
+    end
+    warn("Error - check qval function")
+end
