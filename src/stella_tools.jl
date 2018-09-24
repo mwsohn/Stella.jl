@@ -370,7 +370,7 @@ function GLM.coeftable(r::StatsModels.RegressionModel,labels::Label)
 	return coeftable2
 end
 
-import StatsBase.nulldeviance StatsBase.nullloglikelihood
+import StatsBase.nullloglikelihood
 function StatsBase.nullloglikelihood(m::GeneralizedLinearModel)
     y = m.rr.y
     d = m.rr.d
@@ -393,6 +393,7 @@ function StatsBase.nullloglikelihood(m::GeneralizedLinearModel)
     ll
 end
 
+import StatsBase.nulldeviance
 function StatsBase.nulldeviance(obj::GenerlizedLinearModel)
     return -2*nullloglikelihood(obj)
 run
