@@ -394,7 +394,7 @@ function StatsBase.nullloglikelihood(m::GeneralizedLinearModel)
 end
 
 import StatsBase.nulldeviance
-function StatsBase.nulldeviance(obj::GenerlizedLinearModel)
+function StatsBase.nulldeviance(obj::GeneralizedLinearModel)
     return -2*nullloglikelihood(obj)
 end
 
