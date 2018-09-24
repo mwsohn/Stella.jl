@@ -79,7 +79,7 @@ that provide functionality to attach variable and value labels.
 function read_stata(fn::String)
 
     dt = ReadStat.read_dta(fn)
-    df = readstat2dataframe(dt,verbose)
+    df = readstat2dataframe(dt)
 
     return df,get_labels(dt)
 end
