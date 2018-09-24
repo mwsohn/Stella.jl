@@ -370,8 +370,8 @@ function GLM.coeftable(r::StatsModels.RegressionModel,labels::Label)
 	return coeftable2
 end
 
-import StatsBase.nulldeviance
-function StatsBase.nulldeviance(m::GeneralizedLinearModel)
+import StatsBase.nulldeviance StatsBase.nullloglikelihood
+function StatsBase.nullloglikelihood(m::GeneralizedLinearModel)
     y = m.rr.y
     d = m.rr.d
     mu = sum(y) / length(y)
@@ -390,9 +390,12 @@ function StatsBase.nulldeviance(m::GeneralizedLinearModel)
             ll += GLM.loglik_obs(d, y[i], mu, 1, ϕ)
         end
     end
-    -2*ll
-
+    ll
 end
+
+function StatsBase.nulldeviance(obj::GenerlizedLinearModel)
+    return -2*nullloglikelihood(obj)
+run
 
 import StatsBase.response
 function StatsBase.response(obj::GeneralizedLinearModel)
