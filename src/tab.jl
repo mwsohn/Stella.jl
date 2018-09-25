@@ -55,7 +55,7 @@ function tab(A::AbstractArray,B::AbstractArray; skipmissing::Bool=false,weights:
         blev = collect(skipmissing(blev))
     end
 
-    cnt = Array{Int64,2}(length(alev),length(blev))
+    cnt = Array{Int64,2}(undef,length(alev),length(blev))
     @inbounds @simd for i=1:length(alev)
         @inbounds @simd for j=1:length(blev)
             el = (alev[i],blev[j])
@@ -104,7 +104,7 @@ function tab(A::AbstractArray; skipmissing::Bool=true,weights::AbstractWeights=f
 
     return NamedArray(reshape(cnt,length(alev),1),(alev,["Frequency"]),("A","Stat"))
 end
-function tab(df::DataFrame,vars::Symbol...;  skipmissing::Bool=false,weights::AbstractWeights=fweights(ones(Int8,size(df,1))))
+function tab(df::DataFrame,vars::Symbol...;  skipmissing::Bool=false, weights::AbstractWeights=fweights(ones(Int8,size(df,1))))
     nvec = length(vars)
     if nvec == 0
         error("At least one variable is required")
@@ -137,8 +137,8 @@ function chi2test(a::Array{Float64,2})
         error("Only two dimensional arrays are supported")
     end
 
-    rowsum = Array(sum(t,2))
-    colsum = Array(sum(t,1))
+    rowsum = Array(sum(t,dims=2))
+    colsum = Array(sum(t,dims=1))
     total = sum(t)
 
     ncol = length(colsum)
@@ -161,7 +161,7 @@ end
 
 function rowpercent(tab::NamedArray)
 
-    totrow = sum(tab,2)
+    totrow = sum(tab,dims=2)
 
     array = 100 * tab.array ./ totrow
 
@@ -171,7 +171,7 @@ end
 
 function colpercent(tab::NamedArray)
 
-    totcol = sum(tab,1)
+    totcol = sum(tab,dims=1)
 
     array = 100 * tab.array ./ tocol
 
@@ -188,11 +188,10 @@ function cellpercent(tab::NamedArray)
 end
 
 
-function tabprint(na::NamedArray; precision=2, chisq=true, row=true, col=true, cell=false, all=false, pagewidth=78)
+function tabprint(na::NamedArray; precision=2, labels::Union{Nothing,Label} = nothing, chisq=true, row=true, col=true, cell=false, all=false, pagewidth=78)
 
-    if ndims(na) == 2 && length(names(na,2)) == 1 && names(na,2)[1] == "Frequency"
-        tabprint1(na, all = all, precision = precision)
-        exit()
+    if ndims(na) == 2 && length(names(na,2)) == 1
+        return tabprint1(na, precision = precision, labels = labels)
     elseif ndims(na) > 2
         error("Only up to two dimensional arrays are currently supported")
     end
@@ -204,12 +203,17 @@ function tabprint(na::NamedArray; precision=2, chisq=true, row=true, col=true, c
         row = col = cell = true
     end
 
-    # row names
-    rownames = string.(names(na,1))
-    maxrowname = maximum(vcat(5,length.(rownames))) # minimum width is 5
+    # row and column names
+    if labels == nothing
+        rownames = string.(names(na,1))
+        colnames = string.(names(na,2))
+    else # labels defined
+        rownames = findvlab(labels,dimnames(na,1),names(na,1))
+        colnames = findvlab(labels,dimnames(na,2),names(na,2))
+    end
 
-    # column names and their widths
-    colnames = string.(names(na,2))
+    # maximum widths
+    maxrowname = maximum(vcat(5,length.(rownames))) # minimum width is 5
     maxcolname = maximum(vcat(3,length.(colnames))) # minimum width is 3
 
     # width of data columns - the same as the greater of the length of the grand total
@@ -233,10 +237,10 @@ function tabprint(na::NamedArray; precision=2, chisq=true, row=true, col=true, c
 
     #---------------------------------------------------
     # column totals
-    colsum = sum(na.array,1)
+    colsum = sum(na.array,dims=1)
 
     # row totals
-    rowsum = sum(na.array,2)
+    rowsum = sum(na.array,dims=2)
 
     #---------------------------------------------------
     # determine how many columns can be printed within
@@ -447,7 +451,7 @@ function tabprint(na::NamedArray; precision=2, chisq=true, row=true, col=true, c
     end
 end
 
-function tabprint1(na::NamedArray; skipmissing = false, precision=2, labels::Union{Label,Nothing} = nothing)
+function tabprint1(na::NamedArray; precision=2, labels::Union{Nothing,Label} = nothing)
 
     if ndims(na) == 2 && names(na,2)[1] != "Frequency"
         error("Cannot print 2 or higher dimensions")
@@ -460,7 +464,7 @@ function tabprint1(na::NamedArray; skipmissing = false, precision=2, labels::Uni
     if labels == nothing
         rownames = string.(names(na,1))
     else
-        rownames = [ ismissing(x) ? "missing" : vallab(labels,dname,x) for x in names(na,1) ]
+        rownames = findvlab(labels,dname,names(na,1)) # [ ismissing(x) ? "missing" : vallab(labels,dname,x) for x in names(na,1) ]
     end
 
     # maximum width for row labels
@@ -545,7 +549,16 @@ function tabprint1(na::NamedArray; skipmissing = false, precision=2, labels::Uni
     print("\n")
 end
 
+function findvlab(labels::Label,v::Symbol,val::Vector)
 
+    lname = lblname(labels,v)
+
+    if lname == nothing
+        return val
+    end
+
+    return [ismissing(x) ? "missing" : vallab(labels,v,x) for x in val]
+end
 
 
 # function tab(x::AbstractVector...; allowmissing=false,weights::AbstractWeights = fweights(ones(Int8,length(x[1]))))

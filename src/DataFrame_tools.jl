@@ -231,7 +231,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
     lablen = zeros(Int,size(df,2)) # length of value labels
     for (i,v) in enumerate(varnames)
         varlen[i] = length(string(v))
-        lablen[i] = haskey(labels.lblname, varnames[i]) ? length(string(labels.lblname[varnames[i]])) : 0
+        lablen[i] = labels != nothing && lblname(labels,v) != nothing ? length(string(lblname(labels,v))) : 0
     end
 
     # width for variable names
@@ -273,7 +273,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
 
     if labels != nothing
         # label
-        print("Label")
+        print("Description")
     end
 
     print("\n")
