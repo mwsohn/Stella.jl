@@ -793,7 +793,7 @@ function destring(da::AbstractArray; force=true)
         da2[i] = ismissing(da[i]) ? missing : parse(T,da[i])
     end
 
-    return compress(da2)
+    return acompress(da2)
 end
 destring(df::DataFrame,strvar::Symbol; force=true) = destring(df[strvar],force=force)
 function destring!(df::DataFrame,strvars; newvars::Vector{Symbol} = [], force=true, replace=false)

@@ -220,6 +220,7 @@ julia> df[:testmean] = substat(df,:test, :class, mean)
 ```
 """
 function substat(df::DataFrame, varname::Symbol, groupvars::Vector{Symbol}, func::Function)
+
     if (eltype(df[varname]) <: Number) == false
         error("Only numeric variables are allowed.")
     end
@@ -227,7 +228,7 @@ function substat(df::DataFrame, varname::Symbol, groupvars::Vector{Symbol}, func
     df2 = by(df,groupvars) do subdf
         da = Vector(collect(skipmissing(subdf[varname])))
         if length(da) == 0
-            DataFrame(x1 = NA)
+            DataFrame(x1 = missing)
         else
             DataFrame(x1 = func(da))
         end

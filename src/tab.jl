@@ -190,13 +190,26 @@ end
 
 function tabprint(na::NamedArray; precision=2, labels::Union{Nothing,Label} = nothing, chisq=true, row=true, col=true, cell=false, all=false, pagewidth=78)
 
-    if ndims(na) == 2 && length(names(na,2)) == 1
+    ndim = ndims(na)
+    if ndim == 2 && length(names(na,2)) == 1
         return tabprint1(na, precision = precision, labels = labels)
-    elseif ndims(na) > 2
-        error("Only up to two dimensional arrays are currently supported")
+    elseif ndim == 3
+        for (i,v) in enumerate(names(na,3))
+            vlab = labels == nothing ? "" : string(" (",varlab(labels,dimnames(na,3)), " = ",vallab(labels,dimnames(na,3), v),")")
+            print("\n",dimnames(na,3)," = ",v,vlab,"\n\n")
+            tabprint(NamedArray(na.array[:,:,i],(names(na,1),names(na,2)),tuple(dimnames(na,1),dimnames(na,2))),
+                precision=precision,labels=labels,chisq=chisq,row=row,col=col,cell=cell,all=all,pagewidth=pagewidth)
+        end
+        return
+    elseif ndim > 2
+        error("Only up to three dimensional arrays are currently supported")
     end
 
-    print(dimnames(na,1), " \\ ", dimnames(na,2),"\n")
+    if labels == nothing
+        print(dimnames(na,1), " \\ ", dimnames(na,2),"\n")
+    else
+        print(varlab(labels,dimnames(na,1)), " \\ ", varlab(labels,dimnames(na,2)),"\n")
+    end
 
     # all is true when row, col, or cell is true
     if all
