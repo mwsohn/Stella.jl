@@ -221,7 +221,7 @@ julia> df[:testmean] = substat(df,:test, :class, mean)
 """
 function substat(df::DataFrame, varname::Symbol, groupvars::Vector{Symbol}, func::Function)
 
-    if (eltype(df[varname]) <: Number) == false
+    if (Missings.T(eltype(df[varname])) <: Number) == false
         error("Only numeric variables are allowed.")
     end
 
