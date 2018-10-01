@@ -471,6 +471,7 @@ function duplicates(df::DataFrame, args::Symbol... ; cmd::Symbol = :report)
         error("`cmd = `", cmd, "` is not supported.")
     end
 
+    # if args are not specified, use all variables
     nargs = length(args)
     if nargs == 0
         args = tuple(names(df)...)
@@ -486,14 +487,14 @@ function duplicates(df::DataFrame, args::Symbol... ; cmd::Symbol = :report)
     end
 
     # substract 1 from :x in dfx (we are reporting 0 for unique observations)
-    dfx[:__dups] -= 1
+    dfx[:__dups] .-= 1
     df = join(df, dfx, on = collect(args), kind = :left)
 
     if cmd == :tag
         return df[:__dups]
     end
 
-    # cmd == :drop
+    # if cmd == :drop
     ba = [x == 1 ? true : false for x in pickone(df,collect(args))]
     return df[ba,collect(names(df[1:end-1]))]
 end
