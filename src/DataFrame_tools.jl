@@ -749,7 +749,7 @@ function renvars!(df::DataFrame; vars=[], case="lower")
     end
 end
 
-vidx(df::DataFrame,varname::Symbol) = findfirst(varname, names(df))
+vidx(df::DataFrame,varname::Symbol) = findfirst(x->x == varname, names(df))
 
 """
     destring(da::AbstractArray;force=true)
