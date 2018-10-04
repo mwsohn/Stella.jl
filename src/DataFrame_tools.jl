@@ -642,7 +642,7 @@ Produces a categorical variable based on a data array and a vector of thresholds
 Use `lower = true` to classify the threshold value to the lower class.
 """
 function classify(da::AbstractVector,thresholds::Vector; lower::Bool = false)
-    da2 = Vector{Union{Missing,Int8}}(length(da))
+    da2 = Vector{Union{Missing,Int8}}(undef,length(da))
     if length(thresholds) > 100
         error("Cannot use more than 100 threshold values.")
     end
@@ -969,4 +969,59 @@ function qval_low(val::Real,cut::Vector)
         end
     end
     warn("Error - check qval function")
+end
+
+"""
+    rapply(df::DataFrame,r::OrderedDict)
+
+Creates a recoded vector of values according to the rule set specified as an ordered dictionary.
+Keys in the rule set must be the recoded value and the values must be the rules.
+The rule must be an expression or a string that return a boolean value (`true` or `false`).
+
+## Example
+
+julia> ruleset = OrderedDict(
+            1 => :( df[:race] .== 1 && df[:hispanic] .== 0),
+            2 => :( df[:race] .== 2 && df[:hispanic] .== 0),
+            3 => :( df[:hispanic] .== 1),
+            4 => :( df[:hispanic] .== 0 && in.(df[:race],[1,2]) == false)
+       )
+OrderedDict{Int64,Expr} with 4 entries:
+  1 => :(df[:race] .== 1 && df[:hispanic] .== 0)
+  2 => :(df[:race] .== 2 && df[:hispanic] .== 0)
+  3 => :(df[:hispanic] .== 1)
+  4 => :(df[:hispanic] .== 0 && in.(df[:race], [1, 2]) == false)
+
+julia> recode(adf,ruleset)
+
+
+"""
+function rapply(df::DataFrame,r::OrderedDict)
+
+    # values
+    vals = sort(collect(keys(r)))
+
+    # types
+    vtyp = eltype(vals)
+
+    # empty Vector
+    vec = Vector{Union{vtyp,Missing}}(undef,size(df,1))
+
+    # go through the rules and assign values
+    for v in vals
+
+        if typeof(r[v]) == String
+            ba = eval(parse(r[v]))
+        elseif typeof(r[v]) == Expr
+            ba = eval(r[v])
+        else
+            error(typeof(r[v]), " is not an allowed type for rule ", string(r[v]))
+        end
+
+        for i in findall(x->x==true,ba)
+            vec[i] = v
+        end
+    end
+
+    return vec
 end
