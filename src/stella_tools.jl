@@ -371,39 +371,6 @@ function GLM.coeftable(r::StatsModels.RegressionModel,labels::Label)
 	return coeftable2
 end
 
-import StatsBase.nullloglikelihood
-function StatsBase.nullloglikelihood(m::GeneralizedLinearModel)
-    y = m.rr.y
-    d = m.rr.d
-    mu = sum(y) / length(y)
-    wts = m.rr.wts
-    dv = sum([GLM.devresid(d,x,mu) for x in y])
-
-    ll  = zero(eltype(mu))
-    if length(wts) == length(y)
-        ϕ = dv/sum(wts)
-        @inbounds for i in eachindex(y, wts)
-            ll += GLM.loglik_obs(d, y[i], mu, wts[i], ϕ)
-        end
-    else
-        ϕ = dv/length(y)
-        @inbounds for i in eachindex(y)
-            ll += GLM.loglik_obs(d, y[i], mu, 1, ϕ)
-        end
-    end
-    ll
-end
-
-import StatsBase.nulldeviance
-function StatsBase.nulldeviance(obj::GeneralizedLinearModel)
-    return -2*nullloglikelihood(obj)
-end
-
-import StatsBase.response
-function StatsBase.response(obj::GeneralizedLinearModel)
-    return obj.rr.y
-end
-
 
 #--------------------------------------------------------------------------
 # pairwise correlations
