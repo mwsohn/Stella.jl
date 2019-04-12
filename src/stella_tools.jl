@@ -138,7 +138,7 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
     for subdf in groupby(indf, groupvar)
 
         # level index to be used as the row number in outdf
-        gidx = findfirst(x->x=subdf[1,groupvar],lev)
+        gidx = findfirst(x->x==subdf[1,groupvar],lev)
 
         # non-missing values only
         da = collect(skipmissing(subdf[var1]))
