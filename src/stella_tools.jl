@@ -134,6 +134,8 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
         end
     end
 
+    println(outdf)
+
     # get stat for each level
     for subdf in groupby(indf, groupvar)
 
