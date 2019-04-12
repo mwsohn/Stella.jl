@@ -109,8 +109,8 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
         error("No statistic functions were specified.")
     end
 
-    # prepend Stella to the functions
-    namevec = [Symbol(string("Stella.",x)) for x in s]
+    # strip prepended "Stella." from the function list
+    namevec = [Symbol(replace(string(x),"Stella." => "")) for x in s]
 
     # number of levels in the groupvar
     lev = DataFrames.levels(indf[groupvar])
