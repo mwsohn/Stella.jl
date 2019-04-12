@@ -110,13 +110,19 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
     end
 
     # prepend Stella to the functions
-    namevec = [Symbol(replace(string(x),"Stella." => "")) for x in s]
+    namevec = [Symbol(string("Stella.",x)) for x in s]
 
     # number of levels in the groupvar
-    gvnum = length(DataFrames.levels(indf[groupvar]))
+    lev = DataFrames.levels(indf[groupvar])
+    gvnum = length(lev)
 
+    # output DataFrame
     outdf = DataFrame()
+
+    # groupvar
     outdf[groupvar] = Vector{Union{Missing,eltype(groupvar)}}(undef, gvnum)
+
+    # stats as variables
     for j = 1:length(namevec)
 
         # for N, create a vector of integers
@@ -128,13 +134,24 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
         end
     end
 
+    # get stat for each level
     for subdf in groupby(indf, groupvar)
-        gidx = findfirst(lev,subdf[1,groupvar])
+
+        # level index to be used as the row number in outdf
+        gidx = findfirst(x->x=subdf[1,groupvar],lev)
+
+        # non-missing values only
         da = collect(skipmissing(subdf[var1]))
+
+        # if array is empty, there is nothing to process
         if length(da) == 0
             continue
         end
+
+        # groupvar value
         outdf[gidx,groupvar] = subdf[1,groupvar]
+
+        # obtain stats
         for j = 1:length(namevec)
             outdf[gidx,namevec[j]] = s[j](da)
         end
