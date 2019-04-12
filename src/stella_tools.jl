@@ -110,21 +110,21 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
     end
 
     # prepend Stella to the functions
-    namevec = [Symbol(replace(string(x),"Stella.","")) for x in s]
+    namevec = [Symbol(replace(string(x),"Stella." => "")) for x in s]
 
     # number of levels in the groupvar
     gvnum = length(DataFrames.levels(indf[groupvar]))
 
     outdf = DataFrame()
-    outdf[groupvar] = Vector{Union{Missing,eltype(groupvar)}}(gvnum)
+    outdf[groupvar] = Vector{Union{Missing,eltype(groupvar)}}(undef, gvnum)
     for j = 1:length(namevec)
 
         # for N, create a vector of integers
         if namevec[j] == :N
-            outdf[namevec[j]] = Vector{Union{Missing,Int}}(gvnum)
+            outdf[namevec[j]] = Vector{Union{Missing,Int}}(undef, gvnum)
         # for all other stats, create float64 vectors
         else
-            outdf[namevec[j]] = Vector{Union{Missing,Float64}}(gvnum)
+            outdf[namevec[j]] = Vector{Union{Missing,Float64}}(undef, gvnum)
         end
     end
 
