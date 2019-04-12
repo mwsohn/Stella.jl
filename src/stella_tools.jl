@@ -110,8 +110,7 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
     end
 
     # strip prepended "Stella." from the function list
-    namevec = [Symbol(replace(string(x),"Stella." => "")) for x in s]
-    namevec = [Symbol(replace(string(x),"Statistics." => "")) for x in s]
+    namevec = [Symbol(replace(string(x),r"(Stella|Statistics)\." => "")) for x in s]
 
     # number of levels in the groupvar
     lev = DataFrames.levels(indf[groupvar])
