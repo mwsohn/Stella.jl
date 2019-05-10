@@ -479,7 +479,7 @@ function duplicates(df::DataFrame, args::Symbol... ; cmd::Symbol = :report)
 
     dfx = by(df,collect(args),x->size(x,1))
 
-    rename!(dfx,:x1,:__dups)
+    rename!(dfx,:x1 => :__dups)
     if cmd == :report
         na = freqtable(dfx, :__dups)
         setdimnames!(na,"copies",1)
@@ -666,7 +666,7 @@ build hierarchically nested models.
 
 ### Example
 
-```jldoctest
+```
 julia> using DataFrames
 
 julia> fm = @formula(income ~ age + male)
@@ -745,7 +745,7 @@ function renvars!(df::DataFrame; vars=[], case="lower")
             error(option," ", case," is not allowed.")
         end
         if nm != Symbol(newname)
-            rename!(df,nm,Symbol(newname))
+            rename!(df,nm => Symbol(newname))
         end
     end
 end
