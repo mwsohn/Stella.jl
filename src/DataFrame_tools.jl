@@ -444,13 +444,13 @@ This function creates a variable similar to the Stata command
 Symbol.
 """
 function pickone(df::DataFrame,groupvars::Vector{Symbol})
-    df[:___obs___] = collect(1:size(df,1))
+    df[:_____obs_____] = collect(1:size(df,1))
     done = zeros(Int8,size(df,1))
     for subdf in groupby(df, groupvars)
-        done[subdf[1,:___obs___]]=1
+        done[subdf[1,:_____obs_____]]=1
     end
-    delete!(df,:___obs___)
-    return convert(Vector{Union{Missing,Int8}},done)
+    deletecols!(df,:_____obs_____)
+    return done
 end
 pickone(df::DataFrame,groupvar::Symbol) = pickone(df, [groupvar])
 
