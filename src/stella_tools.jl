@@ -269,7 +269,7 @@ function eform(glmout::StatsModels.RegressionModel)
     # family and link function
     if isa(glmout.model,GeneralizedLinearModel)
         distrib = glmout.model.rr.d
-        linkfun = Link(glmout.model.rr)
+        linkfun = GLM.Link(glmout.model.rr)
     else
         error("GLM model is required as the argument")
     end
@@ -292,7 +292,7 @@ function eform(glmout::StatsModels.RegressionModel, labels::Label)
     # family and link function
     if isa(glmout.model,GeneralizedLinearModel)
         distrib = glmout.model.rr.d
-        linkfun = Link(glmout.model.rr)
+        linkfun = GLM.Link(glmout.model.rr)
     else
         error("GLM model is required as the argument")
     end
