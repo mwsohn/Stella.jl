@@ -62,6 +62,8 @@ export  read_stata,  # read stata 13 and 14 files into DF
         nulldeviance  # nulldeviance for GLM models
 
 abstract type Link end
+abstract type Formula end
+
 
 ##############################################################################
 ##
