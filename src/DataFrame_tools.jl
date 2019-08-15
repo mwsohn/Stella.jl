@@ -174,12 +174,12 @@ end
 function atype(df::DataFrame,v::Symbol)
     # Array type = DA for DataArray, CA for Categorical Array, and UV for Union Vector
     if isdefined(Main,:CategoricalArrays) && typeof(df[v]) <: CategoricalArray
-        return string("Categorical (", replace(string(eltype(df[v].refs)),"UInt" => ""), ")")
+        return string("Categorical (", replace(string(eltype(df[!,v].refs)),"UInt" => ""), ")")
     elseif isdefined(Main,:DataArrays) && typeof(df[v]) <: DataArray
          return "DataArray"
     elseif isdefined(Main,:PooledArrays) && typeof(df[v]) <: PooledArray
          return "PooledArray"
-    elseif isa(eltype(df[v]),Union)
+    elseif isa(eltype(df[!,v]),Union)
         return "Union Vector" # Union Vector
     else
         return "Vector"
@@ -189,14 +189,14 @@ end
 function etype(df::DataFrame,v::Symbol)
     # Eltype
     if typeof(df[v]) <: CategoricalArray
-        eltyp = string(eltype(df[v].pool.index))
+        eltyp = string(eltype(df[!,v].pool.index))
         if in(eltyp,["String","AbstractString"])
-            eltyp = string("Str",getmaxwidth(df[v].pool.index))
+            eltyp = string("Str",getmaxwidth(df[!,v].pool.index))
         end
     else
-        eltyp = string(Missings.T(eltype(df[v])))
+        eltyp = string(Missings.T(eltype(df[!,v])))
         if in(eltyp,["String","AbstractString"])
-            eltyp = string("Str",getmaxwidth(df[v]))
+            eltyp = string("Str",getmaxwidth(df[!,v]))
         elseif eltyp == "Dates.Date"
             eltyp = "Date"
         end
@@ -206,10 +206,10 @@ function etype(df::DataFrame,v::Symbol)
 end
 
 function eltype2(df::DataFrame,v::Symbol)
-    if typeof(df[v]) <: CategoricalArray
-        return eltype(df[v].pool.index)
+    if typeof(df[!,v]) <: CategoricalArray
+        return eltype(df[!,v].pool.index)
     end
-    return Missings.T(eltype(df[v]))
+    return Missings.T(eltype(df[!,v]))
 end
 
 """
@@ -290,11 +290,11 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
 
     # output dataframe
     dfv = DataFrame(Variable = varnames)
-    dfv[:ArrayType] = Vector{String}(undef,ncols)
-    dfv[:Eltype] = Vector{String}(undef,ncols)
-    dfv[:Missing] = Vector{String}(undef,ncols)
-    dfv[:Lblname] = Vector{String}(undef,ncols)
-    dfv[:Description] = Vector{String}(undef,ncols)
+    dfv[!,:ArrayType] = Vector{String}(undef,ncols)
+    dfv[!,:Eltype] = Vector{String}(undef,ncols)
+    dfv[!,:Missing] = Vector{String}(undef,ncols)
+    dfv[!,:Lblname] = Vector{String}(undef,ncols)
+    dfv[!,:Description] = Vector{String}(undef,ncols)
 
 
     for (i,v) in enumerate(varnames)
@@ -309,7 +309,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
         dfv[i,:Eltype] = etype(df,v)
 
         # percent missing
-        nmiss = sum(Missings.ismissing.(df[v]))
+        nmiss = sum(Missings.ismissing.(df[!,v]))
         dfv[i,:Missing] = string(round(100 * nmiss/nrows,digits=1),"%")
 
         print(lpad(string(i),maxobs),"  ",rpad(varstr,maxval),"  ",
