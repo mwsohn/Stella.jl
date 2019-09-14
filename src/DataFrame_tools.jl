@@ -939,7 +939,7 @@ function xtile(da::AbstractArray ; nq::Int = 4, lower::Bool = false, cutoffs::Un
         return [ismissing(x) ? missing : qval_high(x,cutoffs) for x in da2]
     end
 end
-xtile(df::DataFrame,arg::Symbol; nq::Int = 4, cutoffs::Union{Nothing,AbstractVector} = nothing) = xtile(df[arg], nq = nq, cutoffs = cutoffs)
+xtile(df::DataFrame,arg::Symbol; nq::Int = 4, cutoffs::Union{Nothing,AbstractVector} = nothing) = xtile(df[!,arg], nq = nq, cutoffs = cutoffs)
 
 function qval_high(val::Real,cut::Vector)
     cl = length(cut)
