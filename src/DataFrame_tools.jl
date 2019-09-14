@@ -26,20 +26,20 @@ function readstat2dataframe(dt::ReadStat.ReadStatDataFrame,verbose=false)
 
         # Date or DateTime values
         if dt.types[i] <: Integer && dt.formats[i] in ("%d","%td")
-            df[dt.headers[i]] = [x.hasvalue ? dateoffset + Dates.Day(x.value) : missing for x in dt.data[i]]
+            df[!,dt.headers[i]] = [x.hasvalue ? dateoffset + Dates.Day(x.value) : missing for x in dt.data[i]]
         elseif dt.types[i] <: Integer && dt.formats[i] in ("%tc","%tC")
-            df[dt.headers[i]] = [x.hasvalue ? datetimeoffset + Dates.Millisecond(x.value) : missing for x in dt.data[i]]
+            df[!,dt.headers[i]] = [x.hasvalue ? datetimeoffset + Dates.Millisecond(x.value) : missing for x in dt.data[i]]
         elseif dt.types[i] <: AbstractString
             if memory_saved(dt,i)
-                df[dt.headers[i]] = categorical(String[x.hasvalue ? x.value : "" for x in dt.data[i]],true)
+                df[!,dt.headers[i]] = categorical(String[x.hasvalue ? x.value : "" for x in dt.data[i]],true)
             else
-                df[dt.headers[i]] = [x.hasvalue || x.value != "" ? x.value : missing for x in dt.data[i]]
+                df[!,dt.headers[i]] = [x.hasvalue || x.value != "" ? x.value : missing for x in dt.data[i]]
             end
         # elseif dt.types[i] == Int8 && dt.val_label_keys[i] != ""
         #     # variable is Int8 type and has label name, convert it to categorical array
         #     df[dt.headers[i]] = categorical(Union{Missing,dt.types[i]}[x.hasvalue ? x.value : missing for x in dt.data[i]],true)
         else
-            df[dt.headers[i]] = Union{Missing,dt.types[i]}[x.hasvalue ? x.value : missing for x in dt.data[i]]
+            df[!,dt.headers[i]] = Union{Missing,dt.types[i]}[x.hasvalue ? x.value : missing for x in dt.data[i]]
         end
     end
     return df
@@ -47,7 +47,7 @@ end
 function rs2df(dt::ReadStat.ReadStatDataFrame)
     df=DataFrame()
     for i=1:dt.columns
-        df[dt.headers[i]] = Union{Missing,dt.types[i]}[x.hasvalue ? x.value : missing for x in dt.data[i]]
+        df[!,dt.headers[i]] = Union{Missing,dt.types[i]}[x.hasvalue ? x.value : missing for x in dt.data[i]]
     end
 end
 
