@@ -173,9 +173,9 @@ end
 
 function atype(df::DataFrame,v::Symbol)
     # Array type = DA for DataArray, CA for Categorical Array, and UV for Union Vector
-    if isdefined(Main,:CategoricalArrays) && typeof(df[v]) <: CategoricalArray
+    if isdefined(Main,:CategoricalArrays) && typeof(df[!,v]) <: CategoricalArray
         return string("Categorical (", replace(string(eltype(df[!,v].refs)),"UInt" => ""), ")")
-    elseif isdefined(Main,:DataArrays) && typeof(df[v]) <: DataArray
+    elseif isdefined(Main,:DataArrays) && typeof(df[!,v]) <: DataArray
          return "DataArray"
     elseif isdefined(Main,:PooledArrays) && typeof(df[!,v]) <: PooledArray
          return "PooledArray"
