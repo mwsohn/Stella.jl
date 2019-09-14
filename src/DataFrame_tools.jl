@@ -177,7 +177,7 @@ function atype(df::DataFrame,v::Symbol)
         return string("Categorical (", replace(string(eltype(df[!,v].refs)),"UInt" => ""), ")")
     elseif isdefined(Main,:DataArrays) && typeof(df[v]) <: DataArray
          return "DataArray"
-    elseif isdefined(Main,:PooledArrays) && typeof(df[v]) <: PooledArray
+    elseif isdefined(Main,:PooledArrays) && typeof(df[!,v]) <: PooledArray
          return "PooledArray"
     elseif isa(eltype(df[!,v]),Union)
         return "Union Vector" # Union Vector
@@ -188,13 +188,13 @@ end
 
 function etype(df::DataFrame,v::Symbol)
     # Eltype
-    if typeof(df[v]) <: CategoricalArray
+    if typeof(df[!,v]) <: CategoricalArray
         eltyp = string(eltype(df[!,v].pool.index))
         if in(eltyp,["String","AbstractString"])
             eltyp = string("Str",getmaxwidth(df[!,v].pool.index))
         end
     else
-        eltyp = string(Missings.T(eltype(df[!,v])))
+        eltyp = string(nonmissingtype(eltype(df[!,v])))
         if in(eltyp,["String","AbstractString"])
             eltyp = string("Str",getmaxwidth(df[!,v]))
         elseif eltyp == "Dates.Date"
@@ -209,7 +209,7 @@ function eltype2(df::DataFrame,v::Symbol)
     if typeof(df[!,v]) <: CategoricalArray
         return eltype(df[!,v].pool.index)
     end
-    return Missings.T(eltype(df[!,v]))
+    return nonmissingtype(eltype(df[!,v]))
 end
 
 """
