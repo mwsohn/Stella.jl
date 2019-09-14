@@ -8,7 +8,7 @@ List the `n` smallest values in `da` in a descending order. The default `n` is 5
 function smallest(da::AbstractArray; n::Int = 5)
 	return sort(collect(skipmissing(da)))[1:n]
 end
-smallest(df::DataFrame,varname::Symbol; n = 5) = smallest(df[varname], n = n)
+smallest(df::DataFrame,varname::Symbol; n = 5) = smallest(df[!,varname], n = n)
 
 """
     largest(da::AbstractArray, n::Int) or largest(df::DataFrame, varname::Symbol, n::Int)
@@ -18,7 +18,7 @@ List the `n` largest values in `da` in an ascending order. The default `n` is 5.
 function largest(da::AbstractArray; n::Int = 5)
 	return sort(collect(skipmissing(da)))[end-n+1:end]
 end
-largest(df::DataFrame,varname::Symbol; n = 5) = largest(df[varname], n = n)
+largest(df::DataFrame,varname::Symbol; n = 5) = largest(df[!,varname], n = n)
 
 """
     univariate(da::AbstractArray) or univariate(df::DataFrame,varname::Symbol)
@@ -65,7 +65,7 @@ function univariate(da::AbstractVector)
 			kurtosis(da2)]
 	)
 end
-univariate(df::DataFrame,var::Symbol) = univariate(df[var])
+univariate(df::DataFrame,var::Symbol) = univariate(df[!,var])
 
 function strval(val::AbstractFloat)
   return @sprintf("%.2f",val)
