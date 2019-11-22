@@ -28,7 +28,7 @@ end
 function oneway(df::DataFrame,dep::Symbol,cat::Symbol)
 
 	# establish data
-	ba = completecases(df[[dep,cat]])
+	ba = completecases(df[:,[dep,cat]])
 	dep = df[ba,dep]
 	cat = df[ba,cat]
 
