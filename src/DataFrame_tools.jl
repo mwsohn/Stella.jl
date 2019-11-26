@@ -500,12 +500,45 @@ function duplicates(df::DataFrame, args::Symbol... ; cmd::Symbol = :report)
 end
 
 """
-    dfsample(df::AbstractDataFrame,num::Union{Int64,Float64})
+    sample(df::AbstractDataFrame,num::Real)
+
+Creates an Int8 array that identifies a randomly selected sample (1 = sample; 0 otherwise) from the input dataframe. `num`
+specifies the sample size. If `num` is an integer, it indicates the number of rows to be selected.
+If it is a float, it indicates the percentage of the input dataframe to be randomly selected.
+Use `Random.seed!()` to set a seed before using `sample()`.
+
+##Example
+To select 100 rows, use
+
+```
+julia> df[!,:sample] = sample(df,100)
+```
+
+To select 20% of the original dataframe, use
+
+```
+julia> df[!,:sample2] = sample(df,.2)
+```
+
+"""
+function sample(df::AbstractDataFrame,n::Real)
+    len = size(df,1)
+    asamp = zeros(Int8,len)
+    if isa(n,AbstractFloat)
+        asamp[randsubseq(collect(1:len),n)] .= 1
+    else
+        asamp[randperm(len)[1:n]] .= 1
+    end
+    return asamp
+end
+
+"""
+    dfsample(df::AbstractDataFrame,num::Real)
 
 Creates a dataframe with a randomly selected sample from the input dataframe. `num`
 specifies the sample size. If `num` is an integer, it indicates the number of rows to be selected.
 If it is a float, it indicates the percentage of the input dataframe to be randomly selected.
-Use `srand()` to set a seed before running `dfsample()`.
+Use `Random.seed!()` to set a seed before running `dfsample()`.
 
 ##Example
 To select 100 rows, use
@@ -517,42 +550,12 @@ julia> df2 = dfsample(df,100)
 To select 20% of the original dataframe, use
 
 ```
-julia> df2 = dfsample(df,20.)
-```
-
-or
-
-```
 julia> df2 = dfsample(df,.2)
 ```
 
 """
-function dfsample(df::AbstractDataFrame,num::Union{Int64,Float64})
-
-    df2 = DataFrame()
-    df2[:___ran_num___] = rand(Uniform(),size(df,1))
-    df2[:___obs___] = collect(1:size(df,1))
-
-    if typeof(num) <: AbstractFloat
-
-        if 1. <= num < 100.
-            num /= 100.
-        elseif num >= 100
-            error("A percentage value in floating point number (e.g., 10.0 or .1) is required.")
-        end
-
-        num2 = Int64(round(num*size(df,1)))
-    else
-        # number of obserations
-        if num > size(df,1)
-            error(num, " is greater than the total number of rows in the input dataframe.")
-        end
-        num2 = num
-    end
-
-    sort!(df2,cols=[:___ran_num___])
-    a = convert(Vector,df2[1:num2,:___obs___])
-    return df[sort(a),:]
+function dfsample(df::AbstractDataFrame,num::Real)
+    return df[sample(df,num) .== 1,:]
 end
 
 """
