@@ -426,7 +426,7 @@ function ds(df::DataFrame,re::Regex)
     dslist = Array{Symbol,1}()
 
     for v in names(df)
-        if ismatch(re,string(v))
+        if occursin(re,string(v))
             push!(dslist,v)
         end
     end
