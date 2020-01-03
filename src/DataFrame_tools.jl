@@ -102,14 +102,14 @@ function dfcompress!(df::DataFrame)
 
         # if Array is empty after all missings are dropped
         # drop it from the df
-        if length(df[v]) == sum(ismissing.(df[v]))
+        if length(df[!,v]) == sum(ismissing.(df[!,v]))
             delete!(df,v)
             println(v, " was empty, now deleted")
             continue
         end
 
         # get the original eltype
-        eltype_old = eltype(df[v])
+        eltype_old = nonmissingtype(eltype(df[!,v]))
 
         # if string, continue
         if eltype_old == String
@@ -117,10 +117,10 @@ function dfcompress!(df::DataFrame)
         end
 
         # compress
-        df[v] = acompress(df[v])
+        df[v] = acompress(df[!,v])
 
-        if eltype_old != eltype(df[v])
-            println(v, " was ", eltype_old, ", now ", eltype(df[v]))
+        if eltype_old != nonmissingtype(eltype(df[!,v]))
+            println(v, " was ", eltype_old, ", now ", nonmissingtype(eltype(df[!,v])))
         end
     end
 end
@@ -133,7 +133,7 @@ Compresses a vector to a smallest numeric type that can hold without loss of inf
 function acompress(da::AbstractVector)
 
     # get the original eltype
-    eltype_old = eltype(da)
+    eltype_old = nonmissingtype(eltype(da))
 
     # string variable - do not compress
     if eltype_old == String
@@ -412,9 +412,9 @@ function ds(df::DataFrame, typ::Type, args...)
                     push!(dslist,v)
                 end
             end
-        elseif eltype(df[v]) == typ
+        elseif nonmissingtype(eltype(df[!,v])) == typ
             push!(dslist,v)
-        elseif (typ == Integer && eltype(df[v]) <: Integer) || (typ == AbstractFloat && eltype(df[v]) <: AbstractFloat) || (typ == Number && eltype(df[v]) <: Number)
+        elseif (typ == Integer && nonmissingtype(eltype(df[!,v])) <: Integer) || (typ == AbstractFloat && nonmissingtype(eltype(df[!,v])) <: AbstractFloat) || (typ == Number && nonmissingtype(eltype(df[!,v])) <: Number)
             push!(dslist,v)
         end
     end
