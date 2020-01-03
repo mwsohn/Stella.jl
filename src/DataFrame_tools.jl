@@ -117,7 +117,7 @@ function dfcompress!(df::DataFrame)
         end
 
         # compress
-        df[v] = acompress(df[!,v])
+        df[!,v] = acompress(df[:,v])
 
         if eltype_old != nonmissingtype(eltype(df[!,v]))
             println(v, " was ", eltype_old, ", now ", nonmissingtype(eltype(df[!,v])))
