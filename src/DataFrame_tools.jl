@@ -791,11 +791,7 @@ function destring(da::AbstractArray; force=true)
     end
 
     T = isfloat ? Float64 : Int64
-    da2 = Vector{Union{Missing,T}}(length(da))
-
-    for i in 1:length(da)
-        da2[i] = ismissing(da[i]) ? missing : parse(T,da[i])
-    end
+    da2 = [ismissing(x) ? missing : parse(T,x) for x in da]
 
     return acompress(da2)
 end
