@@ -781,7 +781,7 @@ function destring(da::AbstractArray; force=true)
         if sum([isdigit(x) == false for x in da_safe[i]]) > 0
             alpha = true
         end
-        if ismatch(r"[,0-9]*\.[0-9]+",da_safe[i])
+        if occursin(r"[,0-9]*\.[0-9]+",da_safe[i])
             isfloat = true
         end
     end
@@ -799,7 +799,7 @@ function destring(da::AbstractArray; force=true)
 
     return acompress(da2)
 end
-destring(df::DataFrame,strvar::Symbol; force=true) = destring(df[strvar],force=force)
+destring(df::AbstractDataFrame,strvar::Symbol; force=true) = destring(df[:,strvar],force=force)
 function destring!(df::DataFrame,strvars; newvars::Vector{Symbol} = [], force=true, replace=false)
 
     if replace
