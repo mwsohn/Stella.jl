@@ -767,10 +767,10 @@ If `replace` option is specified, `newvars` array is ignored.
 """
 function destring(da::AbstractArray; force=true)
     if length(da) == 0
-        error(da,"Input data array is empty!")
+        error("Input array is empty!")
     end
-    if eltype(da) <: Number
-        error(da," is a numeric vector.")
+    if nonmissingtype(eltype(da)) <: Number
+        error("Input array is a numeric vector. No conversion needed.")
     end
 
     # check if the values include any alphabetic characters or decimals
@@ -778,7 +778,7 @@ function destring(da::AbstractArray; force=true)
     alpha = false
     da_safe = collect(skipmissing(da))
     for i in length(da_safe)
-        if sum([isalpha(x) for x in da_safe[i]]) > 0
+        if sum([isdigit(x) == false for x in da_safe[i]]) > 0
             alpha = true
         end
         if ismatch(r"[,0-9]*\.[0-9]+",da_safe[i])
@@ -787,7 +787,7 @@ function destring(da::AbstractArray; force=true)
     end
 
     if alpha && force == false
-        error(arg," contains alphabetic letters. Use 'force=true' option to coerce conversion.")
+        error("Input array contains alphabetic letters. Use 'force=true' option to coerce conversion.")
     end
 
     T = isfloat ? Float64 : Int64
