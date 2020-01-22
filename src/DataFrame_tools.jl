@@ -330,9 +330,15 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
 end
 
 function getmaxwidth(s::AbstractArray)
-    return  maximum(length.(s))
+    if isa(s, CategoricalArray) && onmissingtype(eltype(s)) <: CategoricalString
+	return maximum(length.(s.pool.levels))
+    end
+	
+    return  maximum(length.(collect(skipmissing(s))))
 end
-
+function getmaxwidth(s::CategorialArray)
+	
+end
 """
     ds(df::DataFrame, typ::Type, args...)
     ds(df::DataFrame, re::Regex)
@@ -393,7 +399,7 @@ julia> ds(aapl,r".*lose")
 """
 function ds(df::DataFrame, typ::Type, args...)
 
-    dslist = Array{Symbol,1}()
+    dslist = Vector{Symbol}()
 
     for v in names(df)
         if typ == String && eltype(df[v]) == String
