@@ -336,9 +336,7 @@ function getmaxwidth(s::AbstractArray)
 	
     return  maximum(length.(collect(skipmissing(s))))
 end
-function getmaxwidth(s::CategorialArray)
-	
-end
+
 """
     ds(df::DataFrame, typ::Type, args...)
     ds(df::DataFrame, re::Regex)
