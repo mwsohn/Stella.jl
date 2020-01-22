@@ -309,7 +309,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
         dfv[i,:Eltype] = etype(df,v)
 
         # percent missing
-        nmiss = sum(Missings.ismissing.(df[!,v]))
+        nmiss = sum(ismissing.(df[!,v]))
         dfv[i,:Missing] = string(round(100 * nmiss/nrows,digits=1),"%")
 
         print(lpad(string(i),maxobs),"  ",rpad(varstr,maxval),"  ",
@@ -330,7 +330,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
 end
 
 function getmaxwidth(s::AbstractArray)
-    return  maximum(length.(collect(skipmissing(s))))
+    return  maximum(length.(s))
 end
 
 """
