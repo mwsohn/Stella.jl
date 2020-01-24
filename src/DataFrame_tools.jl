@@ -1028,3 +1028,19 @@ function rapply(df::DataFrame,r::OrderedDict)
 
     return vec
 end
+
+"""
+	uncategorical!(df::AbstractDataFrame,vv::Union{Symbol,Vector{Symbol}})
+
+uncategorizes a CategoricalArray by replacing the refs with its original values.
+"""
+function uncategorical!(df::AbstractDataFrame,vv::Union{Symbol,Vector{Symbol}})
+    for v in vcat(vv)
+        if isa(df[:,v],CategoricalArray)
+            lev = df[:,v].pool.levels
+            df[!,v] = [x == 0 ? missing : lev[x] for x in df[:,v].refs]
+        end
+    end
+end
+
+
