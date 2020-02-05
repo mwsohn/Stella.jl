@@ -1,88 +1,494 @@
-function memory_saved(dt,n)
+# function memory_saved(dt,n)
 
-    # total size and levels
-    tsize = sum([ismissing(x) ? 0 : length(x.value) for x in dt.data[n]])
-    s = Set(dt.data[n][:].values)
+#     # total size and levels
+#     tsize = sum([ismissing(x) ? 0 : length(x.value) for x in dt.data[n]])
+#     s = Set(dt.data[n][:].values)
 
-    # for refs size
-    refsize = length(s) < typemax(UInt8) ? 1 : length(s) < typemax(UInt16) ? 2 : 4
+#     # for refs size
+#     refsize = length(s) < typemax(UInt8) ? 1 : length(s) < typemax(UInt16) ? 2 : 4
 
-    # approximate size in categorical arrays
-    rsize = sum(length.(collect(s))) + refsize*dt.rows
+#     # approximate size in categorical arrays
+#     rsize = sum(length.(collect(s))) + refsize*dt.rows
 
-    return tsize*.8 > rsize ? true : false
-end
+#     return tsize*.8 > rsize ? true : false
+# end
 
-function readstat2dataframe(dt::ReadStat.ReadStatDataFrame,verbose=false)
-    df = DataFrame()
-
-    dateoffset = Date(1960,1,1)
-    datetimeoffset = DateTime(1960,1,1,0,0,0)
-
-    for i = 1:dt.columns
-        if verbose
-            println("Processing ",i," ",dt.headers[i])
-        end
-
-        # Date or DateTime values
-        if dt.types[i] <: Integer && dt.formats[i] in ("%d","%td")
-            df[!,dt.headers[i]] = [x.hasvalue ? dateoffset + Dates.Day(x.value) : missing for x in dt.data[i]]
-        elseif dt.types[i] <: Integer && dt.formats[i] in ("%tc","%tC")
-            df[!,dt.headers[i]] = [x.hasvalue ? datetimeoffset + Dates.Millisecond(x.value) : missing for x in dt.data[i]]
-        elseif dt.types[i] <: AbstractString
-            if memory_saved(dt,i)
-                df[!,dt.headers[i]] = categorical(String[x.hasvalue ? x.value : "" for x in dt.data[i]],true)
-            else
-                df[!,dt.headers[i]] = [x.hasvalue || x.value != "" ? x.value : missing for x in dt.data[i]]
+function get_numbytes(typelist,nvar)
+    nb = Vector{UInt16}(undef,nvar)
+    for i in 1:nvar
+        for i in 1:nvar
+            if 0 < typelist[i] < 2045
+                nb[i] = typelist[i]
+            elseif typelist[i] == 32768
+                nb[i] = 8 # 8 bytes
+            elseif typelist[i] == 65526
+                nb[i] = 8 # double
+            elseif typelist[i] == 65527
+                nb[i] = 4 # float
+            elseif typelist[i] == 65528
+                nb[i] = 4 # long
+            elseif typelist[i] == 65529
+                nb[i] = 2 # int
+            elseif typelist[i] == 65530
+                nb[i] = 1 # byte
             end
-        # elseif dt.types[i] == Int8 && dt.val_label_keys[i] != ""
-        #     # variable is Int8 type and has label name, convert it to categorical array
-        #     df[dt.headers[i]] = categorical(Union{Missing,dt.types[i]}[x.hasvalue ? x.value : missing for x in dt.data[i]],true)
+        end
+        return nb
+    end
+end
+
+function strtonull(str)
+
+	n = findfirst(x->isequal('\u0',x) || isvalid(Char,x) == false,str)
+	if n == nothing
+		return str
+	end
+	if n == 1
+		return ""
+	end
+	return str[1:n-1]
+end
+
+function alloc_array(vtype,vfmt,nobs::Int64)
+
+    # create an Array for the relevant type
+    if 0 <= vtype < 2045 || vtype == 32768 # string variable
+        return Vector{Union{Missing,String}}(undef,nobs)
+    elseif vtype == 65526
+        if vfmt == "%d" || vfmt[1:3] == "%td"
+            return Vector{Union{Missing,Date}}(undef,nobs)
+        elseif vfmt[1:3] == "%tc" || vfmt[1:3] == "%tC"
+            return Vector{Union{Missing,DateTime}}(undef,nobs)
         else
-            df[!,dt.headers[i]] = Union{Missing,dt.types[i]}[x.hasvalue ? x.value : missing for x in dt.data[i]]
+            return Vector{Union{Missing,Float64}}(undef,nobs)
         end
-    end
-    return df
-end
-function rs2df(dt::ReadStat.ReadStatDataFrame)
-    df=DataFrame()
-    for i=1:dt.columns
-        df[!,dt.headers[i]] = Union{Missing,dt.types[i]}[x.hasvalue ? x.value : missing for x in dt.data[i]]
-    end
-end
-
-import DataFrames.DataFrame
-DataFrame(x::ReadStat.ReadStatDataFrame) = rs2df(x)
-
-function get_labels(dt::ReadStat.ReadStatDataFrame)
-    # labels
-    label = Label()
-
-    for i=1:dt.columns
-        label.var[dt.headers[i]] = dt.labels[i]
-        if dt.val_label_keys[i] != ""
-            label.lblname[dt.headers[i]] = Symbol(dt.val_label_keys[i])
-            label.val[Symbol(dt.val_label_keys[i])] = dt.val_label_dict[dt.val_label_keys[i]]
+    elseif vtype == 65527
+        if vfmt == "%d" || vfmt[1:3] == "%td"
+            return Vector{Union{Missing,Date}}(undef,nobs)
+        elseif vfmt[1:3] == "%tc" || vfmt[1:3] == "%tC"
+            return Vector{Union{Missing,DateTime}}(undef,nobs)
+        else
+            return Vector{Union{Missing,Float32}}(undef,nobs)
         end
+    elseif vtype == 65528
+        if vfmt == "%d" || vfmt[1:3] == "%td"
+            return Vector{Union{Missing,Date}}(undef,nobs)
+        elseif vfmt[1:3] == "%tc" || vfmt[1:3] == "%tC"
+            return Vector{Union{Missing,DateTime}}(undef,nobs)
+        else
+            return Vector{Union{Missing,Int32}}(undef,nobs)
+        end
+    elseif vtype == 65529
+        if vfmt == "%d" || vfmt[1:3] == "%td"
+            return Vector{Union{Missing,Date}}(undef,nobs)
+        else
+            return Vector{Union{Missing,Int16}}(undef,nobs)
+        end
+    elseif vtype == 65530
+        return Vector{Union{Missing,Int8}}(undef,nobs)
     end
 
-    return label
+    error(vtype, " is not a valid variable type in Stata.")
 end
 
 """
-    df, label = read_stata(fn::String)
+	read_stata(fn::String; chunks::Int=10, read_labels=false)
 
-Converts a Stata datafile into a Julia DataFrame. It produces two memory objects (`df` and `label`).
-The first is the dataframe. The second is a [Lables](https://github.com/mwsohn/Labels.jl) object
-that provide functionality to attach variable and value labels.
+converts a stata datafile `fn` to Julia DataFrame. The original data file bigger than 100MB will be read in `chunks` (default = 10)
+to save memory. If `read_labels` is set to `true`, it will not convert the data but will extract labels (both variable labels
+and value labels) from the stata data file and convert them to Julia [Lables](https://github.com/mwsohn/Labels.jl).
 """
-function read_stata(fn::String)
+function read_stata(fn::String; chunks::Int=10, read_labels=false)
 
-    dt = ReadStat.read_dta(fn)
-    df = readstat2dataframe(dt)
+    fh = open(fn,"r")
 
-    return df,get_labels(dt)
+    # dta file (<stata_dta><header><release>)
+    header = String(read(fh,67))
+    if header[2:10] != "stata_dta"
+        error("Not a version 13 or 14 data file")
+    end
+
+    # data format version
+    release = parse(Int16,header[29:31])
+	if release == 117 # version 13
+		len_varname = 33
+		len_format = 49
+		len_labelname = 33
+		len_varlabel = 81
+	elseif release == 118 # version 14
+		len_varname = 129
+		len_format = 57
+		len_labelname = 129
+		len_varlabel = 321
+	else
+		error("Can't convert data format version ",release,".")
+	end
+
+    # byte order: LSF or MSF
+    byteorder = header[53:55]
+    if byteorder == "MSF"
+        error("Big-endian data are not supported yet.")
+    end
+
+    # number of variables
+    skip(fh,3) # <K>
+    nvar = read(fh,Int16)
+
+    # number of observations
+    skip(fh,7) #</K><N>
+    nobs = Int(read(fh,Int32))
+
+    # dataset label length
+	if release == 117
+		skip(fh,11)
+		dslabel_len = read(fh,Int8)
+    elseif release == 118
+		skip(fh,15)
+		dslabel_len = read(fh,Int16)
+	end
+
+    # read the label
+    if dslabel_len > 0
+        dslabel = String(read(fh,dslabel_len))
+    end
+
+    # time stamp
+    skip(fh,19)
+    timestamplen = read(fh,Int8)
+    if timestamplen > 0
+        timestamp = String(read(fh,timestamplen))
+    end
+
+    # map
+    skip(fh,26) # </timestamp></header><map>
+    statamap =Vector{Int64}(undef,14)
+    read!(fh,statamap)
+
+    # variable types
+    skip(fh,22) # </map><variable_types>
+    typelist = Vector{UInt16}(undef,nvar)
+    read!(fh,typelist)
+    #print(Int.(typelist))
+
+    # variable names
+    skip(fh,27)
+    varlist = Vector{Symbol}(undef,nvar)
+    for i in 1:nvar
+        varlist[i] = Symbol(strtonull(String(read(fh,len_varname))))
+    end
+
+    # sort list
+    skip(fh,21) # </varnames><sortlist>
+    for i in 1:nvar
+        srt = read(fh,Int16)
+    end
+
+    # formats
+    skip(fh,22) # </sortlist><formats> + 2 (2 bytes left over from the previous sequence)
+    fmtlist = Vector{String}(undef,nvar)
+    for i in 1:nvar
+        fmtlist[i] = strtonull(String(read(fh,len_format)))
+    end
+
+    # value label names
+    skip(fh,29) # </formats><value_label_names>
+    valuelabels = Vector{String}(undef,nvar)
+    numvlabels = 0
+    for i in 1:nvar
+        valuelabels[i] = strtonull(String(read(fh,len_labelname)))
+
+        # count the number of value labels
+        if length(valuelabels[i]) > 0
+            numvlabels += 1
+        end
+    end
+
+    # variable labels
+    skip(fh,37) # </value_label_names><variable_labels>
+    varlabels = Vector{String}(undef,nvar)
+    for i in 1:nvar
+        varlabels[i] = strtonull(String(read(fh,len_varlabel)))
+    end
+
+    # characteristics - we will not import them
+    # read until we hit '</characteristics>'
+    skip(fh,35) # </variable_labels><characteristics>
+    while (true)
+        readuntil(fh,'<')
+        if String(copy(read(fh,5))) == "data>"
+            break
+        end
+    end
+
+    # nubmer of bytes for each variable
+    numbytes = get_numbytes(typelist,nvar)
+
+    # total length of each observation
+    rlen = sum(numbytes)
+
+    # number of bytes to skip in IOBuffer
+    numskip = zeros(Int,nvar)
+    numskip[1] = 0
+    for i in 2:length(numbytes)
+        numskip[i] = numbytes[i-1] + numskip[i-1]
+    end
+
+	# save the start position of the data section
+	data_pos = position(fh)
+
+	# skip the data section for now
+	skip(fh,rlen*nobs)
+
+    # if there is strLs, read them now
+    skip(fh,7) # </data>
+    tst = String(read(fh,7))
+    if tst == "<strls>"
+        # read strLs
+        #
+        # strL. Stata 13 introduced long strings up to 2 billon characters. strLs are
+        # separated by "GSO".
+        # (v,o): Position in the data.frame.
+        # t:     129/130 defines whether or not the strL is stored with a binary 0.
+        # len:   length of the strL.
+        # strl:  long string.
+        strls = OrderedDict()
+        t = OrderedDict()
+        while (String(read(fh,3)) == "GSO")
+            v = read(fh,Int32)
+            if release == 117
+                o = read(fh,Int32)
+            elseif release == 118
+                o = read(fh,Int64)
+            end
+            t[(v,o)] = read(fh,UInt8)
+            len = read(fh,UInt32)
+            strls[(v,o)] = String(read(fh,len))
+        end
+    end
+
+	tst = String(read(fh,5))
+    if tst == "trls>"
+        skip(fh,14)
+    else
+        error("Wrong position")
+    end
+
+	if read_labels == true
+
+		# read value labels
+    	# loop through all value labels
+    	# define a Dict first
+
+    	value_labels = Dict()
+
+    	# numvlabels is defined above at the header section
+    	for i in 1:numvlabels
+
+			skipstr = String(read(fh,5))
+			if skipstr != "<lbl>"
+				break
+			end
+        	len = read(fh,Int32)
+        	labname = Symbol(strtonull(String(read(fh,len_labelname))))
+
+        	skip(fh,3) # padding
+	        numvalues = read(fh,Int32) # number of entries
+	        txtlen = read(fh,Int32) # length of value label text
+	        value_labels[labname] = Dict()
+
+	        #
+	        offset = Vector{Int32}(undef,numvalues)
+			read!(fh,offset) # offset
+			values = Vector{Int32}(undef,numvalues)
+	        read!(fh,values) # values
+	        valtext = String(read(fh,txtlen)) # text table
+
+	        for k in 1:numvalues
+	            if k == numvalues
+	                offset_end = txtlen
+	            else
+	                offset_end = offset[k+1]
+	            end
+	            if values[k] != ""
+	                value_labels[labname][values[k]] = strtonull(valtext[offset[k]+1:offset_end])
+	            end
+	        end
+	        skip(fh,6) # </lbl>
+	    end
+
+		variable_dict = Dict()
+		lblname_dict = Dict()
+	    for i in 1:nvar
+	        variable_dict[varlist[i]] = varlabels[i]
+	        lblname_dict[varlist[i]] = Symbol(valuelabels[i])
+	    end
+
+		return Label(variable_dict,value_labels,lblname_dict)
+	end
+
+	# read data now
+	seek(fh,data_pos)
+
+	# if the data size < 100MB, then
+	# slurp the entire data section into memory
+	# otherwise, we will read the data by smaller batches
+	io = IOBuffer()
+	if rlen*nobs < 100_000_000
+		write(io,read(fh,rlen*nobs))
+		seek(io,0)
+		rdf = read_data(io,rlen,nobs)
+	else
+		len = max(100000,ceil(Int,nobs/chunks))
+		totlen = nobs
+		rdf = DataFrame()
+		for nread in 1:ceil(Int,nobs/len)
+			if len < totlen
+				totlen -= len
+			else
+				len = totlen
+			end
+			seek(io,0)
+			write(io,read(fh,rlen*len))
+			seek(io,0)
+
+			rdf = vcat(rdf,_read_dta(io,rlen,len,nvar,varlist,typelist,fmtlist,numskip,strls))
+		end
+	end
+
+	# close the file
+	close(fh)
+
+	# free memory
+	GC.gc()
+
+	return rdf
 end
+
+function read_labels(fn::String)
+	return read_stata(fn,read_labels=true)
+end
+
+function _read_dta(io, rlen, len, nvar,varlist,typelist,fmtlist,numskip,strls)
+
+	df = DataFrame()
+
+	dataitemf32::Float32 = 0.
+	dataitemf64::Float64 = 0.
+	dataitemi8::Int8 = 0
+	dataitemi16::Int16 = 0
+	dataitemi32::Int32 = 0
+	v::Int32 = 0
+	o::Int64 = 0
+	z = zeros(UInt8,8)
+
+	# interate over the number of variables
+	for j in 1:nvar
+
+		df[!,varlist[j]] = alloc_array(typelist[j],fmtlist[j],len)
+
+		# len == number of observation in the batch
+		for i in 1:len
+
+			seek(io,numskip[j] + (i-1)*rlen)
+
+			if 0 <= typelist[j] < 2045
+				df[i,j] = strtonull(String(read(io,typelist[j])))
+				# if empty string, return missing
+				if df[i,j] == ""
+					df[i,j] = missing
+				end
+			elseif typelist[j] == 32768 # long string
+				if release == 117
+					v = read(io,Int32)
+					o = read(io,Int32)
+				elseif release == 118
+					z = read(io,UInt8,8)
+					v = reinterpret(Int16,z[1:2])[1]
+					o = (reinterpret(Int64,z)[1] >> 16)
+				end
+				if (v,o) == (0,0)
+					df[i,j] = missing
+				else
+					df[i,j] = strls[(v,o)]
+				end
+			elseif typelist[j] == 65526
+				dataitemf64 = read(io,Float64)
+				if dataitemf64 > 8.9884656743e307
+					df[i,j] = missing
+				elseif fmtlist[j] == "%d" || fmtlist[j][1:3] == "%td"
+					# convert it to Julia date
+					df[i,j] = Date(1960,1,1) + Dates.Day(round(Int,dataitemf64))
+				elseif fmtlist[j][1:3] == "%tc" || fmtlist[j][1:3] == "%tC"
+					df[i,j] = DateTime(1960,1,1,0,0,0) + Dates.Millisecond(round(Int,dataitemf64))
+				else
+					df[i,j] = dataitemf64
+				end
+			elseif typelist[j] == 65527
+				dataitemf32 = read(io,Float32)
+				if dataitemf32 > 1.70141173319e38
+					df[i,j] = missing
+				elseif fmtlist[j] == "%d" || fmtlist[j][1:3] == "%td"
+					# convert it to Julia date
+					df[i,j] = Date(1960,1,1) + Dates.Day(round(Int,dataitemf32))
+				elseif fmtlist[j][1:3] == "%tc" || fmtlist[j][1:3] == "%tC"
+					df[i,j] = DateTime(1960,1,1,0,0,0) + Dates.Millisecond(round(Int,dataitemf32))
+				else
+					df[i,j] = dataitemf32
+				end
+			elseif typelist[j] == 65528
+				dataitemi32 = read(io,Int32)
+				if dataitemi32 > 2147483620
+					df[i,j] = missing
+				elseif fmtlist[j] == "%d" || fmtlist[j][1:3] == "%td"
+					# convert it to Julia date
+					df[i,j] = Date(1960,1,1) + Dates.Day(dataitemi32)
+				elseif fmtlist[j][1:3] == "%tc" || fmtlist[j][1:3] == "%tC"
+					df[i,j] = DateTime(1960,1,1,0,0,0) + Dates.Millisecond(dataitemi32)
+				else
+					df[i,j] = dataitemi32
+				end
+			elseif typelist[j] == 65529
+				dataitemi16 = read(io,Int16)
+				if dataitemi16 > 32740
+					df[i,j] = missing
+				elseif fmtlist[j] == "%d" || fmtlist[j][1:3] == "%td"
+					# convert it to Julia date
+					df[i,j] = Date(1960,1,1) + Dates.Day(dataitemi16)
+				else
+					df[i,j] = dataitemi16
+				end
+			elseif typelist[j] == 65530
+				dataitemi8 = read(io,Int8)
+				if dataitemi8 > 100
+					df[i,j] = missing
+				else
+					df[i,j] = dataitemi8
+				end
+			end
+		end
+		# strls will be converted to categorical regardless of `categorize` option
+		if typelist[j] == 32768
+			categorical!(df,varlist[j])
+		end
+	end
+
+	return df
+end
+
+# """
+#     df, label = read_stata(fn::String)
+
+# Converts a Stata datafile into a Julia DataFrame. It produces two memory objects (`df` and `label`).
+# The first is the dataframe. The second is a [Lables](https://github.com/mwsohn/Labels.jl) object
+# that provide functionality to attach variable and value labels.
+# """
+# function read_stata(fn::String)
+
+#     dt = ReadStat.read_dta(fn)
+#     df = readstat2dataframe(dt)
+
+#     return df,get_labels(dt)
+# end
 
 
 #############################################################################
@@ -400,13 +806,13 @@ function ds(df::DataFrame, typ::Type, args...)
     dslist = Vector{Symbol}()
 
     for v in names(df)
-        if typ == String && eltype(df[v]) == String
+        if typ == String && nonmissingtype(eltype(df[!,v])) == String
             if length(args) == 0
                 push!(dslist,v)
                 continue
             end
 
-            maxlen = getmaxwidth(df[v])
+            maxlen = getmaxwidth(df[!,v])
             if length(args) == 1
                 if args[1] <= maxlen
                     push!(dslist,v)
