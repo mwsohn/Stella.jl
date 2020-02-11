@@ -336,7 +336,7 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
 	if rlen*nobs < 100_000_000
 		write(io,read(fh,rlen*nobs))
 		seek(io,0)
-		rdf = _read_dta(io,rlen,len,nvar,varlist,typelist,fmtlist,numskip,strls)
+		rdf = _read_dta(io,rlen,nobs,nvar,varlist,typelist,fmtlist,numskip,strls)
 	else
 		len = max(100000,ceil(Int,nobs/chunks))
 		totlen = nobs
