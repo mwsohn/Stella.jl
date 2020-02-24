@@ -691,8 +691,8 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
     else
         println(repeat("-",numdashes+30))
     end
-
-    nrows,ncols = size(df)
+    ncols = length(varnames)
+    nrows = size(df,1)
 
     # output dataframe
     dfv = DataFrame(Variable = varnames)
