@@ -646,6 +646,6 @@ function printdir(vstr::Vector{String})
   maxlen = maximum(length.(vstr))
 
   for i=1:length(vstr)
-    println(rpad(vstr[i],maxlen),"  ", datasize(stat(vstr[i]).size))
+    println(rpad(vstr[i],maxlen),"  ", Humanize.datasize(stat(vstr[i]).size))
   end
 end
