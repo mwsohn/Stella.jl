@@ -703,7 +703,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
     dfv[!,:Description] = Vector{String}(undef,size(dfv,1))
 
 
-    for (i,v) in enumerate(varnames)
+    for (i,v) in enumerate(collect(varnames))
 
         # variable name
         varstr = string(v)
