@@ -626,7 +626,7 @@ pwcorr(a::DataFrame, args::Vector{Symbol}; out=true) = pwcorr(df[args], out = ou
 # #
 
 function dir(str::String)
-  if contains(str,"*") || contains(str,"?")
+  if occursin("*",str) || occursin("?",str)
     printdir(glob(str))
   elseif str == "." || str == ".."
     printdir(glob(string(str,"/*")))
