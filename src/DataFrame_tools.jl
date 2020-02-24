@@ -696,11 +696,11 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
 
     # output dataframe
     dfv = DataFrame(Variable = varnames)
-    dfv[!,:ArrayType] = Vector{String}(undef,numvar)
-    dfv[!,:Eltype] = Vector{String}(undef,numvar)
-    dfv[!,:Missing] = Vector{String}(undef,numvar)
-    dfv[!,:Lblname] = Vector{String}(undef,numvar)
-    dfv[!,:Description] = Vector{String}(undef,numvar)
+    dfv[!,:ArrayType] = Vector{String}(undef,size(dfv,1))
+    dfv[!,:Eltype] = Vector{String}(undef,size(dfv,1))
+    dfv[!,:Missing] = Vector{String}(undef,size(dfv,1))
+    dfv[!,:Lblname] = Vector{String}(undef,size(dfv,1))
+    dfv[!,:Description] = Vector{String}(undef,size(dfv,1))
 
 
     for (i,v) in enumerate(varnames)
