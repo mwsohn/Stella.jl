@@ -643,7 +643,7 @@ function printdir(vstr::Vector{String})
   for i=1:length(vstr)
     vstr[i] = isdir(vstr[i]) ? string(vstr[i],"/") : vstr[i]
   end
-  maxlen = getmaxlength(vstr)
+  maxlen = Stella.getmaxlength(vstr)
 
   for i=1:length(vstr)
     println(append_spaces(vstr[i],maxlen),"  ", datasize(stat(vstr[i]).size))
