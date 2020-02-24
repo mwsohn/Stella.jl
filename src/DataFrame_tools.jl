@@ -633,10 +633,13 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
         varnames = names(df)
     end
 
-    varlen = zeros(Int,size(df,2)) # length of variable names
-    lablen = zeros(Int,size(df,2)) # length of value labels
+    # number of variables
+    numvar = length(varnames)
+
+    # length of variable names and value labels 
+    varlen = length.(string.(varnames)) # length of variable names
+    lablen = zeros(Int,length(varnames)) # length of value labels
     for (i,v) in enumerate(varnames)
-        varlen[i] = length(string(v))
         lablen[i] = labels != nothing && lblname(labels,v) != nothing ? length(string(lblname(labels,v))) : 0
     end
 
@@ -656,9 +659,6 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
     # width for display formats
     # maxformat = maximum(forlen)
     # maxformat = maxformat < 6 ? 6 : maxformat
-
-    # number of variables
-    numvar = length(varnames)
 
     # width for the variable index - minimum 3 spaces
     maxobs = length(string(numvar))
@@ -691,16 +691,16 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
     else
         println(repeat("-",numdashes+30))
     end
-    ncols = length(varnames)
+	
     nrows = size(df,1)
 
     # output dataframe
     dfv = DataFrame(Variable = varnames)
-    dfv[!,:ArrayType] = Vector{String}(undef,ncols)
-    dfv[!,:Eltype] = Vector{String}(undef,ncols)
-    dfv[!,:Missing] = Vector{String}(undef,ncols)
-    dfv[!,:Lblname] = Vector{String}(undef,ncols)
-    dfv[!,:Description] = Vector{String}(undef,ncols)
+    dfv[!,:ArrayType] = Vector{String}(undef,numvar)
+    dfv[!,:Eltype] = Vector{String}(undef,numvar)
+    dfv[!,:Missing] = Vector{String}(undef,numvar)
+    dfv[!,:Lblname] = Vector{String}(undef,numvar)
+    dfv[!,:Description] = Vector{String}(undef,numvar)
 
 
     for (i,v) in enumerate(varnames)
