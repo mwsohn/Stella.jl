@@ -359,7 +359,7 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
 	close(fh)
 
 	# free memory
-	GC.gc()
+	# GC.gc()
 
 	return rdf
 end
