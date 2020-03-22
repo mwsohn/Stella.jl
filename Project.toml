@@ -1,0 +1,28 @@
+name = "Stella"
+uuid = "b1cd83c4-5688-5aa2-8927-7445e86cd0e2"
+version = "0.0.3"
+
+[deps]
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+ExcelTables = "6d3cd347-c0ae-55ec-b195-83e33ed26c18"
+Formatting = "59287772-0a20-5a39-b81b-1366585eb4c0"
+FreqTables = "da1fdf0e-e0ff-5433-a45f-9bb5ff651cb1"
+GLM = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
+Glob = "c27321d9-0574-5035-807b-f59d2c89b15c"
+HypothesisTests = "09f84164-cd44-5f33-b23f-e6b0d136a0d5"
+Labels = "6d0b4fd8-9bf0-50c8-8d0e-d6c2328e7f2a"
+NamedArrays = "86f7a689-2022-50b4-a561-43c23ac3c673"
+ReadStat = "d71aba96-b539-5138-91ee-935c3ee1374c"
+StatFiles = "1463e38c-9381-5320-bcd4-4134955f093a"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+
+[compat]
+julia = "1"
+
+[extras]
+
+[targets]
+
