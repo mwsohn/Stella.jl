@@ -1,12 +1,11 @@
 name = "Stella"
 uuid = "b1cd83c4-5688-5aa2-8927-7445e86cd0e2"
-version = "0.0.5"
+version = "0.0.6"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
-ExcelTables = "6d3cd347-c0ae-55ec-b195-83e33ed26c18"
 Formatting = "59287772-0a20-5a39-b81b-1366585eb4c0"
 FreqTables = "da1fdf0e-e0ff-5433-a45f-9bb5ff651cb1"
 GLM = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
