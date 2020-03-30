@@ -60,7 +60,8 @@ export  read_stata,  # read stata 13 and 14 files into DF
         ds,         # filenames according to type, length, or regex
         # getmaxwidth, # maximum length of a string variable
         eltype2,
-        nulldeviance  # nulldeviance for GLM models
+        nulldeviance,  # nulldeviance for GLM models
+        rowpct, colpct, cellpct, chi2 # freqtable functions
 
 abstract type Link end
 abstract type Formula end
