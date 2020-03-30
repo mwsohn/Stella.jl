@@ -159,6 +159,46 @@ function chi2test(a::Array{Float64,2})
     return XsqResult(chisq,df,Distributions.ccdf(Distributions.Chisq(df),chisq))
 end
 
+
+function rowpct(na::NamedArray)
+    return 100. * na ./ sum(na.array,dims=2)
+end
+
+function colpct(na::NamedArray)
+    return 100. * na ./ sum(na.array,dims=1)
+end
+
+function cellpct(na::NamedArray)
+    return 100. * na ./ sum(na)
+end
+
+function chi2(t::NamedArray)
+    if ndims(t) != 2
+        error("Only two dimensional arrays are supported")
+    end
+
+    rowsum = sum(t,dims=2)
+    colsum = sum(t,dims=1)
+    total = sum(t)
+
+    ncol = length(colsum)
+    nrow = length(rowsum)
+
+    chisq = 0.
+    for i = 1:nrow
+        for j = 1:ncol
+            expected = rowsum[i]*colsum[j]/total
+            chisq += ((t[i,j] - expected)^2)/expected
+        end
+    end
+
+    # degress of freedom
+    df = (ncol-1)*(nrow-1)
+
+    # return a tuple of chisq, df, p-value
+    return (chisq,df,Distributions.ccdf(Distributions.Chisq(df),chisq))
+end
+
 function rowpercent(tab::NamedArray)
 
     totrow = sum(tab,dims=2)
