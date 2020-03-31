@@ -1343,9 +1343,9 @@ function xtile(da::AbstractArray ; nq::Int = 4, lower::Bool = false, cutoffs::Un
     end
 
     if lower
-        return [ismissing(x) ? missing : qval_low(x,cutoffs) for x in da2]
+        return [ismissing(x) ? missing : qval_low(x,cutoffs) for x in da]
     else
-        return [ismissing(x) ? missing : qval_high(x,cutoffs) for x in da2]
+        return [ismissing(x) ? missing : qval_high(x,cutoffs) for x in da]
     end
 end
 xtile(df::DataFrame,arg::Symbol; nq::Int = 4, cutoffs::Union{Nothing,AbstractVector} = nothing) = xtile(df[!,arg], nq = nq, cutoffs = cutoffs)
