@@ -1,4 +1,4 @@
-VERSION >= v"0.7.0"
+# VERSION >= v"0.7.0"
 
 module Stella
 
