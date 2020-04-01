@@ -26,7 +26,6 @@ export  read_stata,  # read stata 13 and 14 files into DF
         dflist,      # list
         dfmerge,     # merge two dataframes
         dfsample,    # select a sample from a df
-        dfappend,    # stack two df's
         univariate,  # univariate statistics in DF
         tabstat,     # unviariate statistics by subgroups
         substat,     # attach univariate stat to original DF by subgroups
