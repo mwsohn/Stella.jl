@@ -1017,16 +1017,6 @@ function dfmerge(df1::DataFrame,df2::DataFrame,linkers::Union{Symbol,Vector};kin
     return df_merged
 end
 
-"""
-    dfappend(df1::DataFrame,df2::DataFrame)
-
-Produces a dataframe with two sources stacked together. It is simply a wrapper
-for `[df1;df2]` operation to micmic `append using ...` command in Stata.
-"""
-function dfappend(df1::DataFrame,df2::DataFrame)
-    return [df1;df2]
-end
-
 function get_class(val::Real,thresholds::Vector,lower::Bool)
     if lower == false
         for i = 1:length(thresholds)
