@@ -646,6 +646,28 @@ function printdir(vstr::Vector{String})
   maxlen = maximum(length.(vstr))
 
   for i=1:length(vstr)
-    println(rpad(vstr[i],maxlen),"  ", Humanize.datasize(stat(vstr[i]).size))
+    println(rpad(vstr[i],maxlen),"  ", humanReadableByteCountBin(stat(vstr[i]).size))
   end
+end
+
+units   = ["K",  "M",  "G",  "T",  "P"]
+bin_div = [0x1p10, 0x1p20, 0x1p30, 0x1p40, 0x1p40]
+
+function humanReadableByteCountBin(bytes::Int64)
+    b = bytes == typemin(Int64) ? typemax(Int64) : abs(bytes)
+    if b < 1024
+        return @sprintf("%d B", b)
+    end
+    sf = 40
+    for i in 1:5
+        if b < 0xfffcccccccccccc >> sf
+            if i == 5
+                b >>= 10
+            end
+            return @sprintf("%.1f %siB", b / bin_div[i], units[i])
+        end
+        sf -= 10
+    end
+    b = (b >> 20) / 0x1p40
+    return @sprintf("%.1f EiB", b)
 end
