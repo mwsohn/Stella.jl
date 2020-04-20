@@ -1,4 +1,6 @@
-VERSION >= v"0.7.0"
+VERSION >= v"1.0.0"
+
+__precompile__()
 
 module Stella
 
