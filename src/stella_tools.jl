@@ -664,10 +664,10 @@ function humanReadableByteCountBin(bytes::Int64)
             if i == 5
                 b >>= 10
             end
-            return @sprintf("%.1f %siB", b / bin_div[i], units[i])
+            return @sprintf("%.1f %sB", b / bin_div[i], units[i])
         end
         sf -= 10
     end
     b = (b >> 20) / 0x1p40
-    return @sprintf("%.1f EiB", b)
+    return @sprintf("%.1f EB", b)
 end
