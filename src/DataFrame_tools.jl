@@ -402,7 +402,7 @@ function _read_dta(io, release, rlen, len, nvar,varlist,typelist,fmtlist,numskip
 					v = read(io,Int32)
 					o = read(io,Int32)
 				elseif release == 118
-					z = read(io,UInt8,8)
+					z = read(io,8)
 					v = reinterpret(Int16,z[1:2])[1]
 					o = (reinterpret(Int64,z)[1] >> 16)
 				end
