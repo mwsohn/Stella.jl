@@ -409,7 +409,7 @@ function _read_dta(io, release, rlen, len, nvar,varlist,typelist,fmtlist,numskip
 				if (v,o) == (0,0)
 					df[i,j] = missing
 				else
-					df[i,j] = strls[(v,o)]
+					df[i,j] = strtonull(strls[(v,o)])
 				end
 			elseif typelist[j] == 65526
 				dataitemf64 = read(io,Float64)
