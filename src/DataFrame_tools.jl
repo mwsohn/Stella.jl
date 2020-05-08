@@ -504,7 +504,7 @@ the type that can accommodate the larget and the smallest values within the same
 integer or float class.
 """
 function dfcompress!(df::DataFrame)
-    for v in names(df)
+    for v in propertynames(df)
 
         # if Array is empty after all missings are dropped
         # drop it from the df
@@ -630,7 +630,7 @@ be easily created as described in [Labels](https://github.com/mwsohn/Labels.jl).
 function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=nothing)
 
     if length(varnames) == 0
-        varnames = names(df)
+        varnames = propertynames(df)
     end
 
     # number of variables
@@ -805,7 +805,7 @@ function ds(df::DataFrame, typ::Type, args...)
 
     dslist = Vector{Symbol}()
 
-    for v in names(df)
+    for v in propertynames(df)
         if typ == String && nonmissingtype(eltype(df[!,v])) == String
             if length(args) == 0
                 push!(dslist,v)
@@ -835,7 +835,7 @@ end
 function ds(df::DataFrame,re::Regex)
     dslist = Array{Symbol,1}()
 
-    for v in names(df)
+    for v in propertynames(df)
         if occursin(re,string(v))
             push!(dslist,v)
         end
@@ -906,7 +906,7 @@ function duplicates(df::DataFrame, args::Symbol... ; cmd::Symbol = :report)
 
     # if cmd == :drop
     ba = [x == 1 ? true : false for x in pickone(df,collect(args))]
-    return df[ba,collect(names(df[1:end-1]))]
+    return df[ba,collect(propertynames(df[1:end-1]))]
 end
 
 """
@@ -992,10 +992,10 @@ Optionally, `kind` argument can be specified. Available options are
 the `join` function in the DataFrames package.
 """
 function dfmerge(df1::DataFrame,df2::DataFrame,linkers::Union{Symbol,Vector};kind::Symbol = :outer)
-    if in(:_merge,names(df1))
+    if in(:_merge,propertynames(df1))
         error("`:_merge' exists in the first dataframe")
     end
-    if in(:_merge,names(df2))
+    if in(:_merge,propertynames(df2))
         error("`:_merge' exists in the second dataframe")
     end
 
@@ -1130,12 +1130,12 @@ all columns to lower case names.
 """
 function renvars!(df::DataFrame; vars=[], case="lower")
     numvar = length(vars)
-    symnames = names(df)
+    symnames = propertynames(df)
 
     if numvar == 0
-        varnames = names(df)
+        varnames = propertynames(df)
     else
-        varnames = names(df[vars])
+        varnames = propertynames(df[vars])
     end
 
     for nm in varnames
@@ -1153,7 +1153,7 @@ function renvars!(df::DataFrame; vars=[], case="lower")
     end
 end
 
-vidx(df::DataFrame,varname::Symbol) = findfirst(x->x == varname, names(df))
+vidx(df::DataFrame,varname::Symbol) = findfirst(x->x == varname, propertynames(df))
 
 """
     destring(da::AbstractArray;force=true)
