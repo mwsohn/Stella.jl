@@ -887,9 +887,9 @@ function duplicates(df::DataFrame, args::Symbol... ; cmd::Symbol = :report)
         args = tuple(names(df)...)
     end
 
-    dfx = by(df,collect(args),x->size(x,1))
+    gdf = groupby(df,collect(args))
+    dfx = combine(gdf,x->size(x,1) => :__dups)
 
-    rename!(dfx,:x1 => :__dups)
     if cmd == :report
         na = freqtable(dfx, :__dups)
         setdimnames!(na,"copies",1)
@@ -898,7 +898,7 @@ function duplicates(df::DataFrame, args::Symbol... ; cmd::Symbol = :report)
 
     # substract 1 from :x in dfx (we are reporting 0 for unique observations)
     dfx[:__dups] .-= 1
-    df = join(df, dfx, on = collect(args), kind = :left)
+    df = leftjoin(df, dfx, on = collect(args))
 
     if cmd == :tag
         return df[:__dups]
