@@ -715,8 +715,9 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
         dfv[i,:Eltype] = etype(df,v)
 
         # percent missing
-        nmiss = sum(ismissing.(df[!,v]))
-        dfv[i,:Missing] = string(round(100 * nmiss/nrows,digits=1),"%")
+#         nmiss = sum(ismissing.(df[!,v]))
+	nmiss = 0
+         dfv[i,:Missing] = string(round(100 * nmiss/nrows,digits=1),"%")
 
         print(lpad(string(i),maxobs),"  ",rpad(varstr,maxval),"  ",
             rpad(dfv[i,:ArrayType],maxatype),"  ",
