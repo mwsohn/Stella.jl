@@ -715,12 +715,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
         dfv[i,:Eltype] = etype(df,v)
 
         # percent missing
-	if typeof(df[!,v]) <: CategoricalArray
-		nmiss = skipmissing(df[!,v]).x.refs.length
-	else
-        	nmiss = skipmissing(df[!,v]).x.length
-	end
-        dfv[i,:Missing] = string(round(100 * nmiss/nrows,digits=1),"%")
+        dfv[i,:Missing] = string(round(100 * nmissing(df[!,v])/nrows,digits=1),"%")
 
         print(lpad(string(i),maxobs),"  ",rpad(varstr,maxval),"  ",
             rpad(dfv[i,:ArrayType],maxatype),"  ",
@@ -739,12 +734,19 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
     return dfv
 end
 
+function nmissing(s::AbstractArray)
+    if typeof(df[!,v]) <: CategoricalArray
+	return skipmissing(df[!,v]).x.refs.length
+    ebd
+    return skipmissing(df[!,v]).x.length
+end
+
 function getmaxwidth(s::AbstractArray)
     if isa(s, CategoricalArray) && nonmissingtype(eltype(s)) <: CategoricalString
 	return maximum(length.(s.pool.levels))
     end
 	
-    if skipmissing(s).x.length == size(s,1)
+    if nmissing(s) == size(s,1)
 	return 0
     end
 	
