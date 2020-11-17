@@ -25,6 +25,7 @@ export  read_stata,  # read stata 13 and 14 files into DF
         dfcompress!, # compress DF
         dacompress,  # compress a DataArray
         desc,        # list variables with Stata labels and value labels
+        nmissing,    # returns the number of missing values in an AbstractArray
         dflist,      # list
         dfmerge,     # merge two dataframes
         dfsample,    # select a sample from a df
