@@ -708,15 +708,19 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
         # variable name
         varstr = string(v)
 
-        # percent missing
-        nmiss = skipmissing(df[!,v]).x.length
-        dfv[i,:Missing] = string(round(100 * nmiss/nrows,digits=1),"%")
-
 	# Array Type
         dfv[i,:ArrayType] = atype(df,v)
 
         # Eltype
         dfv[i,:Eltype] = etype(df,v)
+
+        # percent missing
+	if isa(df[!,v],CategoricalArray)
+		nmiss = skipmissing(df[!,v]).x.refs.length
+	else
+        	nmiss = skipmissing(df[!,v]).x.length
+	end
+        dfv[i,:Missing] = string(round(100 * nmiss/nrows,digits=1),"%")
 
         print(lpad(string(i),maxobs),"  ",rpad(varstr,maxval),"  ",
             rpad(dfv[i,:ArrayType],maxatype),"  ",
