@@ -715,7 +715,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
         dfv[i,:Eltype] = etype(df,v)
 
         # percent missing
-	if isa(df[!,v],CategoricalArray)
+	if typeof(df[!,v]) <: CategoricalArray
 		nmiss = skipmissing(df[!,v]).x.refs.length
 	else
         	nmiss = skipmissing(df[!,v]).x.length
