@@ -580,15 +580,15 @@ end
 function atype(df::DataFrame,v::Symbol)
     # Array type = DA for DataArray, CA for Categorical Array, and UV for Union Vector
     if isdefined(Main,:CategoricalArrays) && typeof(df[!,v]) <: CategoricalArray
-        return string("Categorical (", replace(string(eltype(df[!,v].refs)),"UInt" => ""), ")")
+        return string("CA (", replace(string(eltype(df[!,v].refs)),"UInt" => ""), ")")
     elseif isdefined(Main,:DataArrays) && typeof(df[!,v]) <: DataArray
-         return "DataArray"
+         return "DA"
     elseif isdefined(Main,:PooledArrays) && typeof(df[!,v]) <: PooledArray
-         return "PooledArray"
+         return "PA"
     elseif isa(eltype(df[!,v]),Union)
-        return "Union Vector" # Union Vector
+        return "UV" # Union Vector
     else
-        return "Vector"
+        return "VC"
     end
 end
 
@@ -708,16 +708,15 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
         # variable name
         varstr = string(v)
 
-        # Array Type
+        # percent missing
+        nmiss = skipmissing(df[!,v])).x.length
+        dfv[i,:Missing] = string(round(100 * nmiss/nrows,digits=1),"%")
+
+	# Array Type
         dfv[i,:ArrayType] = atype(df,v)
 
         # Eltype
         dfv[i,:Eltype] = etype(df,v)
-
-        # percent missing
-#         nmiss = sum(ismissing.(df[!,v]))
-	nmiss = 0
-         dfv[i,:Missing] = string(round(100 * nmiss/nrows,digits=1),"%")
 
         print(lpad(string(i),maxobs),"  ",rpad(varstr,maxval),"  ",
             rpad(dfv[i,:ArrayType],maxatype),"  ",
@@ -737,8 +736,12 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
 end
 
 function getmaxwidth(s::AbstractArray)
-    if isa(s, CategoricalArray) && onmissingtype(eltype(s)) <: CategoricalString
+    if isa(s, CategoricalArray) && nonmissingtype(eltype(s)) <: CategoricalString
 	return maximum(length.(s.pool.levels))
+    end
+	
+    if skipmissing(s).x.length == size(s,1)
+	return 0
     end
 	
     return  maximum(length.(collect(skipmissing(s))))
