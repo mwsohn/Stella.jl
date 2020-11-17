@@ -709,7 +709,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
         varstr = string(v)
 
         # percent missing
-        nmiss = skipmissing(df[!,v])).x.length
+        nmiss = skipmissing(df[!,v]).x.length
         dfv[i,:Missing] = string(round(100 * nmiss/nrows,digits=1),"%")
 
 	# Array Type
