@@ -648,7 +648,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
     maxval = maxval < 8 ? 8 : maxval
 
     # width for variable types
-    maxatype = 16
+    maxatype = 8
     maxeltype = 7
     maxmiss = 7
 
@@ -737,7 +737,7 @@ end
 function nmissing(s::AbstractArray)
     if typeof(df[!,v]) <: CategoricalArray
 	return skipmissing(df[!,v]).x.refs.length
-    ebd
+    end
     return skipmissing(df[!,v]).x.length
 end
 
