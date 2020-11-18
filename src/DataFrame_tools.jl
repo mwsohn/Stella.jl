@@ -736,7 +736,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
 end
 
 function nmissing(s::AbstractArray)
-    return length(skipmissing(s).x)
+    return sum(ismissing.(s))
 end
 
 function getmaxwidth(s::AbstractArray)
