@@ -736,10 +736,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
 end
 
 function nmissing(s::AbstractArray)
-    if typeof(s) <: CategoricalArray || typeof(s) <: Arrow.DictEncoding
-	return skipmissing(s).x.refs.length
-    end
-    return skipmissing(s).x.length
+    return length(skipmissing(s).x)
 end
 
 function getmaxwidth(s::AbstractArray)
