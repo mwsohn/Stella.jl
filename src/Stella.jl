@@ -63,10 +63,13 @@ export  read_stata,  # read stata 13 and 14 files into DF
         # getmaxwidth, # maximum length of a string variable
         eltype2,
         nulldeviance,  # nulldeviance for GLM models
-        rowpct, colpct, cellpct, chi2 # freqtable functions
+        rowpct, colpct, cellpct, chi2, # freqtable functions
+        convert_feather, # coonvert Arrow data types in feather file to Julia data types
+        identify_condition, identify_condition2 # used to identify conditions in claims files
 
 abstract type Link end
 abstract type Formula end
+abstract type DictEncoding end
 
 
 ##############################################################################
