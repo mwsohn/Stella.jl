@@ -1447,4 +1447,18 @@ function uncategorical!(df::AbstractDataFrame,vv::Union{Symbol,Vector{Symbol}})
     end
 end
 
+# convert the Arrow data types from the feather file
+function convert_feather(df::DataFrame)
+    for v in propertynames(df)
+        typ = typeof(df[!,v])
+        if typ <: DictEncoding
+            df[!,v] = CategoricalArray(df[!,v])
+        else
+            df[!,v] = Array(df[!,v])
+        end
+    end
+
+    return df
+end
+
 
