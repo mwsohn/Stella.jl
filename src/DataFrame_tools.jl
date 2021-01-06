@@ -1447,6 +1447,15 @@ function uncategorical!(df::AbstractDataFrame,vv::Union{Symbol,Vector{Symbol}})
     end
 end
 
+"""
+	uncategorize(v::AbstractArray)
+
+produces an array by uncategorizing a CategoricalArray by replacing the refs with its original values.
+"""
+function uncategorize(v::CategoricalArray)
+    return [x == 0 ? missing : v.pool.levels[x] for x in v.refs]
+end
+
 # convert the Arrow data types from the feather file
 function convert_feather(df::DataFrame)
     for v in propertynames(df)
