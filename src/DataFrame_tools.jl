@@ -867,7 +867,7 @@ function pickone(df::DataFrame,groupvars::Vector{Symbol})
     for subdf in groupby(df, groupvars)
         done[subdf[1,:_____obs_____]]=1
     end
-    deletecols!(df,:_____obs_____)
+    select!(df,Not(:_____obs_____))
     return done
 end
 pickone(df::DataFrame,groupvar::Symbol) = pickone(df, [groupvar])
@@ -883,7 +883,7 @@ request one of the actions:
 - :tag - for identifying rows with duplicate values
 - :drop - for dropping all rows with duplicate values except for the first row.
 """
-function duplicates(df::DataFrame, args::Symbol... ; cmd::Symbol = :report)
+function duplicates(df::DataFrame, args::Union{Symbol,String}... ; cmd::Symbol = :report)
 
     if in(cmd,[:report,:drop,:tag]) == false
         error("`cmd = `", cmd, "` is not supported.")
@@ -896,10 +896,10 @@ function duplicates(df::DataFrame, args::Symbol... ; cmd::Symbol = :report)
     end
 
     gdf = groupby(df,collect(args))
-    dfx = combine(gdf,x->size(x,1) => :__dups)
+    dfx = combine(gdf,nrow => :__dups__)
 
     if cmd == :report
-        na = freqtable(dfx, :__dups)
+        na = freqtable(dfx, :__dups__)
         setdimnames!(na,"copies",1)
         return na
     end
@@ -909,12 +909,12 @@ function duplicates(df::DataFrame, args::Symbol... ; cmd::Symbol = :report)
     df = leftjoin(df, dfx, on = collect(args))
 
     if cmd == :tag
-        return df[:__dups]
+        return df[:__dups__]
     end
 
     # if cmd == :drop
     ba = [x == 1 ? true : false for x in pickone(df,collect(args))]
-    return df[ba,collect(propertynames(df[1:end-1]))]
+    return select(df[ba,:],Not(:__dups__))
 end
 
 """
