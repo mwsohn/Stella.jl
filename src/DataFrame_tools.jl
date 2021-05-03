@@ -1459,9 +1459,10 @@ end
 # convert the Arrow data types from the feather file
 function convert_feather(df::DataFrame)
     for v in propertynames(df)
-        typ = typeof(df[!,v])
-        if typ <: DictEncoding
+        if typeof(df[!,v]) <: DictEncoding
             df[!,v] = CategoricalArray(df[!,v])
+	elseif eltype(df[!,v]) == Feather.Arrow.Datestamp
+	    df[!,v] = convert.(Date,df[!,v])		
         else
             df[!,v] = Array(df[!,v])
         end
