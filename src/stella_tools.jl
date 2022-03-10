@@ -141,7 +141,7 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
         gidx = findfirst(x->x==subdf[1,groupvar],lev)
 
         # non-missing values only
-        da = collect(skipmissing(subdf[var1]))
+        da = collect(skipmissing(subdf[!,var1]))
 
         # if array is empty, there is nothing to process
         if length(da) == 0
@@ -243,7 +243,7 @@ function substat(df::DataFrame, varname::Symbol, groupvars::Vector{Symbol}, func
     end
 
     df2 = by(df,groupvars) do subdf
-        da = Vector(collect(skipmissing(subdf[varname])))
+        da = Vector(collect(skipmissing(subdf[!,varname])))
         if length(da) == 0
             DataFrame(x1 = missing)
         else
@@ -515,10 +515,10 @@ pwcorr(a::DataFrame, args::Vector{Symbol}; out=true) = pwcorr(df[args], out = ou
 # function signrank(df::DataFrame,var1::Symbol,var2::Symbol)
 #
 #     # complete cases only
-#     df2 = df[completecases(df[[var1,var2]]),[var1,var2]]
+#     df2 = df[completecases(df[!,[var1,var2]]),[var1,var2]]
 #
 #     # difference
-#     d = df[var1] .- df[var2]
+#     d = df[!,var1] .- df[!,var2]
 #
 #     # sign
 #     s = sign.(d)
