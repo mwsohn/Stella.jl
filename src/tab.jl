@@ -114,13 +114,13 @@ function tab(df::DataFrame,vars::Symbol...;  skipmissing::Bool=false, weights::A
 
     # oneway table
     if nvec == 1
-        na = tab(df[vars[1]], skipmissing = skipmissing, weights = weights)
+        na = tab(df[!,vars[1]], skipmissing = skipmissing, weights = weights)
         setdimnames!(na,(vars[1],"Stat"))
         return na
     end
 
     # two-way table
-    na = tab(df[vars[1]], df[vars[2]], skipmissing = skipmissing, weights = weights)
+    na = tab(df[!,vars[1]], df[!,vars[2]], skipmissing = skipmissing, weights = weights)
 
     setdimnames!(na,(vars[1],vars[2]))
     return na
