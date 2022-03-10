@@ -340,7 +340,7 @@ function eform(glmout::StatsModels.RegressionModel, labels::Label)
 	return coeftable2
 end
 
-function coeflab(d::UnivariateDistribution,l::Link)
+function coeflab(d,l)
     if (isa(d,Bernoulli) || isa(d,Binomial)) && isa(l,LogitLink)
         return "OR"
     elseif (isa(d,Binomial) || isa(d,NegativeBinomial)) && isa(l,LogLink)
