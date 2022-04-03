@@ -743,7 +743,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
 	header = vcat(header,"% Miss")
 	alignment = vcat(alignment,:r)
     end
-    if labels
+    if labels != nothing
     	header = vcat(header,["Lbl Name","Description"])
 	alignment = vcat(alignment,[:l,:l])
     end
