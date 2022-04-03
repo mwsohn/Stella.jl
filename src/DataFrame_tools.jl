@@ -619,7 +619,7 @@ function eltype2(df::DataFrame,v::Symbol)
 end
 
 """
-    desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=nothing, dfout::Bool = false)
+    desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=nothing, dfout::Bool = false, nmiss::Bool = false)
 
 Displays variables in a dataframe much like `showcols`. It can display additional
 attributes such as variable labels, value labels and display formats (not used in Julia)
@@ -627,7 +627,7 @@ if an optional `labels` is specified. It mimics Stata's `describe` command.
 `labels` is automatically converted from a stata file by `read_stata` function. Or one can
 be easily created as described in [Labels](https://github.com/mwsohn/Labels.jl).
 """
-function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=nothing, dfout::Bool = false, nmiss:Bool = false)
+function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=nothing, dfout::Bool = false, nmiss::Bool = false)
 
     if length(varnames) == 0
         varnames = propertynames(df)
