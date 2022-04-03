@@ -584,7 +584,7 @@ function atype(df::DataFrame,v::Symbol)
     elseif isdefined(Main,:DataArrays) && typeof(df[!,v]) <: DataArray
          return "DA"
     elseif isdefined(Main,:PooledArrays) && typeof(df[!,v]) <: PooledArray
-         return "PA"
+         return string("PA (", replace(string(eltype(df[!,v].refs)),"UInt" => ""), ")")
     elseif isa(eltype(df[!,v]),Union)
         return "UV" # Union Vector
     else
