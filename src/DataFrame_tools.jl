@@ -698,7 +698,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
     dfv = DataFrame(Variable = varnames)
     dfv[!,:ArrayType] = Vector{String}(undef,size(dfv,1))
     dfv[!,:Eltype] = Vector{String}(undef,size(dfv,1))
-    if nmissing = true
+    if nmissing == true
     	dfv[!,:Missing] = Vector{String}(undef,size(dfv,1))
     end
     if labels != nothing
