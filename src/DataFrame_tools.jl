@@ -635,8 +635,6 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
 
     # number of variables
     numvar = length(varnames)
-	
-    nrows = size(df,1)
 
     # output dataframe
     dfv = DataFrame(Variable = varnames)
@@ -664,7 +662,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
         # percent missing
 	if nmiss
 	    _nmiss = nmissing(df[!,v])
-            dfv[i,:Missing] = string(round(100 * _nmiss/nrows,digits=1),"%")
+            dfv[i,:Missing] = string(round(100 * _nmiss/size(df,1),digits=1),"%")
 	end
 					
         if labels != nothing
