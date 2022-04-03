@@ -635,64 +635,8 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
 
     # number of variables
     numvar = length(varnames)
-
-    # length of variable names and value labels 
-#     varlen = length.(string.(varnames)) # length of variable names
-#     lablen = zeros(Int,length(varnames)) # length of value labels
-#     for (i,v) in enumerate(varnames)
-#         lablen[i] = labels != nothing && lblname(labels,v) != nothing ? length(string(lblname(labels,v))) : 0
-#     end
-
-#     # width for variable names
-#     maxval = maximum(varlen)
-#     maxval = maxval < 8 ? 8 : maxval
-
-#     # width for variable types
-#     maxatype = 8
-#     maxeltype = 7
-#     maxmiss = 7
-
-#     # width for value label names
-#     maxlab = maximum(lablen)
-#     maxlab = maxlab < 11 ? 11 : maxlab
-
-#     # width for display formats
-#     # maxformat = maximum(forlen)
-#     # maxformat = maxformat < 6 ? 6 : maxformat
-
-#     # width for the variable index - minimum 3 spaces
-#     maxobs = length(string(numvar))
-#     maxobs = maxobs < 3 ? 3 : maxobs
-#     print(lpad("Num",maxobs),"  ")
-
-#     # variable name
-#     print(rpad("Variable",maxval),"  ")
-
-#     # type of array
-#     print(rpad("Atype",maxatype),"  ")
-
-#     # type (eltype)
-#     print(rpad("Eltype",maxeltype),"  ")
-
-#     # percent missing
-#     print(rpad("Missing",maxmiss),"  ")
-
-#     if labels != nothing
-#         # label
-#         print("Description")
-#     end
-
-#     print("\n")
-
-#     # dashes for a line by itself -- assume 30 characters for "label"
-#     numdashes = maxobs+maxval+maxatype+maxmiss+maxeltype+4
-#     if labels == nothing
-#         println(repeat("-",numdashes+4))
-#     else
-#         println(repeat("-",numdashes+30))
-#     end
 	
-#     nrows = size(df,1)
+    nrows = size(df,1)
 
     # output dataframe
     dfv = DataFrame(Variable = varnames)
@@ -723,18 +667,11 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
             dfv[i,:Missing] = string(round(100 * _nmiss/nrows,digits=1),"%")
 	end
 					
-#         print(lpad(string(i),maxobs),"  ",rpad(varstr,maxval),"  ",
-#             rpad(dfv[i,:ArrayType],maxatype),"  ",
-#             rpad(dfv[i,:Eltype],maxeltype),"  ",
-#             lpad(dfv[i,:Missing],maxmiss),"  ")
-
         if labels != nothing
             dfv[i,:Lblname] = lblname(labels,v) == nothing ? "" : string(lblname(labels,v))
             dfv[i,:Description] = varlab(labels,v)
             # print(dfv[i,:Description])
         end
-
-        # print("\n")
     end
 					
     header = ["Variable","Atype","Eltype"]
@@ -756,7 +693,6 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
 		header=header,
 		crop=:none,
 		show_row_number = true)
-		
 end
 
 function nmissing(s::AbstractArray)
