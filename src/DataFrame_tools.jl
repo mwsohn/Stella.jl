@@ -619,7 +619,7 @@ function eltype2(df::DataFrame,v::Symbol)
 end
 
 """
-    desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=nothing)
+    desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=nothing, dfout::Bool = false)
 
 Displays variables in a dataframe much like `showcols`. It can display additional
 attributes such as variable labels, value labels and display formats (not used in Julia)
@@ -627,7 +627,7 @@ if an optional `labels` is specified. It mimics Stata's `describe` command.
 `labels` is automatically converted from a stata file by `read_stata` function. Or one can
 be easily created as described in [Labels](https://github.com/mwsohn/Labels.jl).
 """
-function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=nothing)
+function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=nothing, dfout::Bool = false, nmiss:Bool = false)
 
     if length(varnames) == 0
         varnames = propertynames(df)
@@ -637,71 +637,74 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
     numvar = length(varnames)
 
     # length of variable names and value labels 
-    varlen = length.(string.(varnames)) # length of variable names
-    lablen = zeros(Int,length(varnames)) # length of value labels
-    for (i,v) in enumerate(varnames)
-        lablen[i] = labels != nothing && lblname(labels,v) != nothing ? length(string(lblname(labels,v))) : 0
-    end
+#     varlen = length.(string.(varnames)) # length of variable names
+#     lablen = zeros(Int,length(varnames)) # length of value labels
+#     for (i,v) in enumerate(varnames)
+#         lablen[i] = labels != nothing && lblname(labels,v) != nothing ? length(string(lblname(labels,v))) : 0
+#     end
 
-    # width for variable names
-    maxval = maximum(varlen)
-    maxval = maxval < 8 ? 8 : maxval
+#     # width for variable names
+#     maxval = maximum(varlen)
+#     maxval = maxval < 8 ? 8 : maxval
 
-    # width for variable types
-    maxatype = 8
-    maxeltype = 7
-    maxmiss = 7
+#     # width for variable types
+#     maxatype = 8
+#     maxeltype = 7
+#     maxmiss = 7
 
-    # width for value label names
-    maxlab = maximum(lablen)
-    maxlab = maxlab < 11 ? 11 : maxlab
+#     # width for value label names
+#     maxlab = maximum(lablen)
+#     maxlab = maxlab < 11 ? 11 : maxlab
 
-    # width for display formats
-    # maxformat = maximum(forlen)
-    # maxformat = maxformat < 6 ? 6 : maxformat
+#     # width for display formats
+#     # maxformat = maximum(forlen)
+#     # maxformat = maxformat < 6 ? 6 : maxformat
 
-    # width for the variable index - minimum 3 spaces
-    maxobs = length(string(numvar))
-    maxobs = maxobs < 3 ? 3 : maxobs
-    print(lpad("Num",maxobs),"  ")
+#     # width for the variable index - minimum 3 spaces
+#     maxobs = length(string(numvar))
+#     maxobs = maxobs < 3 ? 3 : maxobs
+#     print(lpad("Num",maxobs),"  ")
 
-    # variable name
-    print(rpad("Variable",maxval),"  ")
+#     # variable name
+#     print(rpad("Variable",maxval),"  ")
 
-    # type of array
-    print(rpad("Atype",maxatype),"  ")
+#     # type of array
+#     print(rpad("Atype",maxatype),"  ")
 
-    # type (eltype)
-    print(rpad("Eltype",maxeltype),"  ")
+#     # type (eltype)
+#     print(rpad("Eltype",maxeltype),"  ")
 
-    # percent missing
-    print(rpad("Missing",maxmiss),"  ")
+#     # percent missing
+#     print(rpad("Missing",maxmiss),"  ")
 
-    if labels != nothing
-        # label
-        print("Description")
-    end
+#     if labels != nothing
+#         # label
+#         print("Description")
+#     end
 
-    print("\n")
+#     print("\n")
 
-    # dashes for a line by itself -- assume 30 characters for "label"
-    numdashes = maxobs+maxval+maxatype+maxmiss+maxeltype+4
-    if labels == nothing
-        println(repeat("-",numdashes+4))
-    else
-        println(repeat("-",numdashes+30))
-    end
+#     # dashes for a line by itself -- assume 30 characters for "label"
+#     numdashes = maxobs+maxval+maxatype+maxmiss+maxeltype+4
+#     if labels == nothing
+#         println(repeat("-",numdashes+4))
+#     else
+#         println(repeat("-",numdashes+30))
+#     end
 	
-    nrows = size(df,1)
+#     nrows = size(df,1)
 
     # output dataframe
     dfv = DataFrame(Variable = varnames)
     dfv[!,:ArrayType] = Vector{String}(undef,size(dfv,1))
     dfv[!,:Eltype] = Vector{String}(undef,size(dfv,1))
-    dfv[!,:Missing] = Vector{String}(undef,size(dfv,1))
-    dfv[!,:Lblname] = Vector{String}(undef,size(dfv,1))
-    dfv[!,:Description] = Vector{String}(undef,size(dfv,1))
-
+    if nmissing = true
+    	dfv[!,:Missing] = Vector{String}(undef,size(dfv,1))
+    end
+    if labels != nothing
+    	dfv[!,:Lblname] = Vector{String}(undef,size(dfv,1))
+    	dfv[!,:Description] = Vector{String}(undef,size(dfv,1))
+    end
 
     for (i,v) in enumerate(collect(varnames))
 
@@ -715,24 +718,45 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
         dfv[i,:Eltype] = etype(df,v)
 
         # percent missing
-	nmiss = nmissing(df[!,v])
-        dfv[i,:Missing] = string(round(100 * nmiss/nrows,digits=1),"%")
-
-        print(lpad(string(i),maxobs),"  ",rpad(varstr,maxval),"  ",
-            rpad(dfv[i,:ArrayType],maxatype),"  ",
-            rpad(dfv[i,:Eltype],maxeltype),"  ",
-            lpad(dfv[i,:Missing],maxmiss),"  ")
+	if nmissing
+	    nmiss = nmissing(df[!,v])
+            dfv[i,:Missing] = string(round(100 * nmiss/nrows,digits=1),"%")
+	end
+					
+#         print(lpad(string(i),maxobs),"  ",rpad(varstr,maxval),"  ",
+#             rpad(dfv[i,:ArrayType],maxatype),"  ",
+#             rpad(dfv[i,:Eltype],maxeltype),"  ",
+#             lpad(dfv[i,:Missing],maxmiss),"  ")
 
         if labels != nothing
             dfv[i,:Lblname] = lblname(labels,v) == nothing ? "" : string(lblname(labels,v))
             dfv[i,:Description] = varlab(labels,v)
-            print(dfv[i,:Description])
+            # print(dfv[i,:Description])
         end
 
-        print("\n")
+        # print("\n")
+    end
+					
+    header = ["Variable","Atype","Eltype"]
+    alignment = [:l,:l,:l]
+    if nmiss
+	header = vcat(header,"% Miss")
+	alignment = vcat(alignment,:r)
+    end
+    if labels
+    	header = vcat(header,["Lbl Name","Description"])
+	alignment = vcat(alignment,[:l,:l])
     end
 
-    return dfv
+    if dfout 
+    	return dfv
+    end
+    pretty_table(dfv,
+		alignment=alignment,
+		header=header,
+		crop=:none,
+		show_row_number = true)
+		
 end
 
 function nmissing(s::AbstractArray)
