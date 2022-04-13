@@ -281,6 +281,10 @@ function eform(glmout::StatsModels.RegressionModel)
 
 	# standard errors
 	coeftable2.cols[2] = coeftable2.cols[1] .* coeftable2.cols[2]
+							
+	# 95% CI
+    	coeftable2.cols[5] = exp.(coeftable2.cols[5])
+    	coeftable2.cols[6] = exp.(coeftable2.cols[6])
 
 	# rename column1 to OR
     coeftable2.colnms[1] = coeflab(distrib,linkfun)
@@ -304,6 +308,10 @@ function eform(glmout::StatsModels.RegressionModel, labels::Label)
 
 	# standard errors
 	coeftable2.cols[2] = coeftable2.cols[1] .* coeftable2.cols[2]
+
+	# 95% CI
+    	coeftable2.cols[5] = exp.(coeftable2.cols[5])
+    	coeftable2.cols[6] = exp.(coeftable2.cols[6])
 
 	# rename column1 to OR
 	coeftable2.colnms[1] = coeflab(distrib,linkfun)
