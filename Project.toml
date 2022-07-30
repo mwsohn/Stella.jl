@@ -1,6 +1,5 @@
 name = "Stella"
 uuid = "b1cd83c4-5688-5aa2-8927-7445e86cd0e2"
-version = "0.1.6"
 
 [deps]
 Arrow ="69666777-d1a9-59fb-9406-91d4454c9d45"
@@ -26,7 +25,6 @@ PooledArrays = "2dfb63ee-cc39-5dd5-95bd-886bf059d720"
 PrettyTables = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
 
 [compat]
-julia = "1"
 
 [extras]
 
