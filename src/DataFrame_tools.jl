@@ -957,7 +957,7 @@ Optionally, `kind` argument can be specified. Available options are
 `:left`, `:right`, `:inner`,`:outer`,`:semi`, and `:anti`. Consult the documentation for
 the `join` function in the DataFrames package.
 """
-function dfmerge(df1::DataFrame,df2::DataFrame,linkers::Union{Symbol,Vector};kind::Symbol = :outer)
+function dfmerge(df1::DataFrame,df2::DataFrame,linkers::Union{Symbol,Vector})
     if in(:_merge,propertynames(df1))
         error("`:_merge' exists in the first dataframe")
     end
@@ -968,7 +968,7 @@ function dfmerge(df1::DataFrame,df2::DataFrame,linkers::Union{Symbol,Vector};kin
     df1[!,:___mergeleft___] = ones(Int8,size(df1,1))
     df2[!,:___mergeright___] = ones(Int8,size(df2,1))
 
-    df_merged = join(df1,df2,on = linkers,kind=kind)
+    df_merged = outerjoin(df1,df2,on = linkers)
     df_merged[!,:_merge] = zeros(Int8,size(df_merged,1))
     for i = 1:size(df_merged,1)
         if ismissing(df_merged[i,:___mergeright___])
