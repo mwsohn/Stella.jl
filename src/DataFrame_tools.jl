@@ -566,15 +566,15 @@ function dfmerge(df1::DataFrame,df2::DataFrame,linkers::Union{Symbol,Vector};kin
         error("`:_merge' exists in the second dataframe")
     end
 
-    df1[:___mergeleft___] = ones(Int8,size(df1,1))
-    df2[:___mergeright___] = ones(Int8,size(df2,1))
+    df1[!,:___mergeleft___] = ones(Int8,size(df1,1))
+    df2[!,:___mergeright___] = ones(Int8,size(df2,1))
 
     df_merged = join(df1,df2,on = linkers,kind=kind)
-    df_merged[:_merge] = zeros(Int8,size(df_merged,1))
+    df_merged[!,:_merge] = zeros(Int8,size(df_merged,1))
     for i = 1:size(df_merged,1)
         if isna(df_merged[i,:___mergeright___])
             df_merged[i,:_merge] = 1
-        elseif isna(df_merged[i,:___mergeleft___])
+        elseif ismissing(df_merged[i,:___mergeleft___])
             df_merged[i,:_merge] = 2
         elseif df_merged[i,:___mergeleft___] == 1 && df_merged[i,:___mergeright___] == 1
             df_merged[i,:_merge] = 3
