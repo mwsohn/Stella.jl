@@ -277,7 +277,7 @@ function read_stata!(fn,df::DataFrame,label::Dict; categorize=true, verbose=fals
             println("Processing variable ",j," ", varlist[j])
         end
 
-        df[varlist[j]] = alloc_array(typelist[j],fmtlist[j],nobs)
+        df[!,varlist[j]] = alloc_array(typelist[j],fmtlist[j],nobs)
 
 		for i in 1:nobs
 
@@ -367,6 +367,11 @@ function read_stata!(fn,df::DataFrame,label::Dict; categorize=true, verbose=fals
         if categorize && 0 < typelist[j] < 2045 && in(varlist[j],exclude) # character variable
             categorical!(df,varlist[j])
             gc()
+        end
+
+        # if there are no missing values, convert the variable to an appropriate vector
+        if sum(ismissing.(df[:,j])) == 0
+            df[!,varlist[j]] = convert(Vector{nonmissingtype(eltype(df[!,varlist[j]]))},df[!,varlist[j]])
         end
     end
 
