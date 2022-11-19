@@ -470,6 +470,11 @@ function _read_dta(io, release, rlen, len, nvar,varlist,typelist,fmtlist,numskip
 		if typelist[j] == 32768
 			categorical!(df,varlist[j])
 		end
+
+        # for vectors without missing values, convert the vector to an appropirate type
+        if sum(ismissing.(df[!,varlist[j]])) == 0
+            df[!,varlist[j]] = convert(Vector{nonmissingtype(eltype(df[!,varlist[j]]))},df[!,varlist[j]])
+        end
 	end
 
 	return df
