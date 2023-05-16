@@ -1396,6 +1396,22 @@ function rapply(df::DataFrame,r::OrderedDict)
     return vec
 end
 
+
+
+"""
+	categorical!(df::AbstractDataFrame,vv::Union{Symbol,Vector{Symbol}})
+
+converts vectors into CategoricalArrays
+"""
+function categorical!(df::AbstractDataFrame,vv::Union{Symbol,Vector{Symbol}})
+    for v in vcat(vv)
+        if isa(df[:,v],CategoricalArray) == false
+            df[!,v] = categoical(df[!,v])
+        end
+    end
+end
+
+
 """
 	uncategorical!(df::AbstractDataFrame,vv::Union{Symbol,Vector{Symbol}})
 
