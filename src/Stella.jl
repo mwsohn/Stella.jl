@@ -60,8 +60,7 @@ export  read_stata,  # read stata 13 and 14 files into DF
         eltype2,
         nulldeviance,  # nulldeviance for GLM models
         rowpct, colpct, cellpct, chi2, # freqtable functions
-        uncategorical!, uncategorize, # functions to reverse CategoricalArray(s) to their original values
-        convert_feather, # coonvert Arrow data types in feather file to Julia data types
+        categorical!, uncategorical!, uncategorize, # functions to create CategoricalArrays or reverse them to their original values
         identify_condition, identify_condition2 # used to identify conditions in claims files
 
 abstract type Link end
