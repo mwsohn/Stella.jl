@@ -1124,7 +1124,35 @@ function renvars!(df::DataFrame; vars=[], case="lower")
     end
 end
 
-vidx(df::DataFrame,varname::Symbol) = findfirst(x->x == varname, propertynames(df))
+"""
+	ci(df::AbstractDataFrame,colname::Union{Symbol,String})
+	ci(df::AbstractDataFrame, colname1::Union{Symbol,String}, colname2::Union{Symbol,String})
+	ci(df::AbstractDataFrame,colre::Regex)
+
+Produces column index using DataFrames.columnindex() function. It can produce a single index,
+or a range of indices, or multiple indices matching a regular expression.
+"""
+function ci(df::AbstractDataFrame,colname::Union{Symbol,String})
+    return columnindex(df,colname)
+end
+function ci(df::AbstractDataFrame, colname1::Union{Symbol,String}, colname2::Union{Symbol,String})
+    ci1 = columnindex(df,colname1)
+    ci2 = columnindex(df,colname2)
+    return ci1 < ci2 ? range(ci1,ci2) : range(ci2,ci1)
+end
+function ci(df::AbstractDataFrame,colre::Regex)
+
+    vec = Int[]
+    for n in names(df)
+        m = match(colre, n)
+        if m !== nothing
+            push!(vec,columnindex(df,n))
+        end
+    end
+
+    return vec
+end
+
 
 """
     destring(da::AbstractArray;force=true)
