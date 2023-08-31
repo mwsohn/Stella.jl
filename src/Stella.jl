@@ -79,7 +79,7 @@ include("DataFrame_tools.jl")
 include("tab.jl")
 include("t-test.jl")
 include("anova.jl")
-include("show.jl")
+# include("show.jl")
 include("other.jl")
 
 end
