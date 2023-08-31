@@ -8,8 +8,6 @@ Use `skipmissing = true` to obtain frequencies that include `missing` values.
 The returned table is a `NamedArray`. Frequencies are in an n-dimensional array `na.array`
 where `na` is the returned NamedArray. 
 """
-using PrettyTables, NamedArrays
-
 function tab(na::NamedArray)
     
     len = length(na.dimnames)
