@@ -30,7 +30,7 @@ function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String};
 end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String},var3::Union{Symbol,String};
     maxrows = -1, maxcols = 20, labels=nothing)
-    _tab3(freqtable(df,var1,var2,var3); maxrows=maxrows, maxcols=maxcols, labels=labels)
+    _tab3(freqtable(indf,var1,var2,var3); maxrows=maxrows, maxcols=maxcols, labels=labels)
 end
 
 
