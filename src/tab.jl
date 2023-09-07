@@ -100,6 +100,9 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing)
         max_num_of_columns = maxcols,
         hlines = hlines)
 
+    (statistic, pval) = chi2(na.array)
+    println("Pearson chi-square test of independence: chi2 = ", round(statistic, sigdigits = 6), " (", (ncol-1)*(nrow-1), "), 
+        p ", pval < 0.0001 ? "< 0.0001" : string("= ",round(pval,sigdigits = 6)))
 end
 
 function _tab3(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing)
@@ -115,3 +118,21 @@ function _tab3(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing)
     end
 end
 
+"""
+    chi2(m::AbstractMatrix{Integer})
+
+Returns chi squared test statistic and p-value for the test of independence.
+"""
+function chi2(m::AbstractMatrix{Integer})
+    (nrow, ncol) = size(m)
+    if nrow <= 1 || ncol <= 1
+        error("at least a 2x2 table is expected")
+    end
+    rowsum = sum(m, dims=2)
+    colsum = sum(m, dims=1)
+    df = (nrow - 1)*(ncol - 1)
+    e = rowsum * colsum ./ sum(m)
+    statistic = sum((m .- e).^2 ./ e)
+    pvalue = HypothesisTests.ccdf(Distributions.Chisq(df),statistic)
+    return (statistic, pvalue)
+end
