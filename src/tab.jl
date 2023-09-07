@@ -100,7 +100,7 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing)
         max_num_of_columns = maxcols,
         hlines = hlines)
 
-    (statistic, pval) = chi2(na.array)
+    (statistic, pval) = Stella.chi2(na.array)
     println("Pearson chi-square test of independence: chi2 = ", round(statistic, sigdigits = 6), " (", (ncol-1)*(nrow-1), "), 
         p ", pval < 0.0001 ? "< 0.0001" : string("= ",round(pval,sigdigits = 6)))
 end
