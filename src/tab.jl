@@ -123,7 +123,7 @@ end
 
 Returns chi squared test statistic and p-value for the test of independence.
 """
-function chi2(m::AbstractMatrix{Integer})
+function chi2(m::AbstractMatrix{T}) where {T <: Integer}
     (nrow, ncol) = size(m)
     if nrow <= 1 || ncol <= 1
         error("at least a 2x2 table is expected")
