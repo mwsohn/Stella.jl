@@ -100,8 +100,8 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing)
         max_num_of_columns = maxcols,
         hlines = hlines)
 
-    (statistic, pval) = Stella.chi2(na.array)
-    println("Pearson chi-square = ", @sprintf("%.4f",statistic), " (", (ncol-1)*(nrow-1), "), p ", 
+    (statistic, dof, pval) = Stella.chi2(na.array)
+    println("Pearson chi-square = ", @sprintf("%.4f",statistic), " (", dof, "), p ", 
         pval < 0.0001 ? "< 0.0001" : string("= ",round(pval,sigdigits = 6)))
 end
 
@@ -130,9 +130,9 @@ function chi2(m::AbstractMatrix{T}) where {T <: Integer}
     end
     rowsum = sum(m, dims=2)
     colsum = sum(m, dims=1)
-    df = (nrow - 1)*(ncol - 1)
+    dof = (nrow - 1)*(ncol - 1)
     e = rowsum * colsum ./ sum(m)
     statistic = sum((m .- e).^2 ./ e)
-    pvalue = HypothesisTests.ccdf(Distributions.Chisq(df),statistic)
-    return (statistic, pvalue)
+    pvalue = Distributions.ccdf(Distributions.Chisq(dof),statistic)
+    return (statistic, dof, pvalue)
 end
