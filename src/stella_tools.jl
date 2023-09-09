@@ -113,7 +113,7 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
     namevec = [Symbol(replace(string(x),r"(Stella|Statistics)\." => "")) for x in s]
 
     # grouped df
-    gdf = groupby(df, groupvar, skipmissing=skipmissing)
+    gdf = groupby(indf, groupvar, skipmissing=skipmissing)
 	
     # number of levels in the groupvar
     lev = sort(collect(values(gdf.keymap)))
@@ -122,7 +122,7 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
     outdf = DataFrame()
 
     # output in df
-    # outdf[!,groupvar] = Vector{Union{Missing,eltype(groupvar)}}(undef, gdf.ngroups + 1)
+    # outdf[!,groupvar] = Vector{Union{Missing,eltype(groupvar)}}(undef, gdf.ngroups)
 
     # groupvar
     outdf[!,groupvar] = lev
