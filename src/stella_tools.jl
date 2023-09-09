@@ -129,7 +129,7 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
     # sort!(outdf,groupvar)
     pretty_table(outdf)
 
-    return outdf;
+    return outdf
 end
 
 #----------------------------------------------------------------------------
@@ -208,26 +208,25 @@ julia> df[:testmean] = substat(df,:test, :class, mean)
 """
 function substat(df::DataFrame, varname::Symbol, groupvars::Vector{Symbol}, func::Function)
 
-    if (Missings.T(eltype(df[varname])) <: Number) == false
+    if (nonmissingtype(eltype(df[varname])) <: Number) == false
         error("Only numeric variables are allowed.")
     end
 
-    df2 = by(df,groupvars) do subdf
-        da = Vector(collect(skipmissing(subdf[!,varname])))
-        if length(da) == 0
+    df2 = groupby(df,groupvars) do subdf
+        v = collect(skipmissing(subdf[!.varname]))
+        if length(v) == 0
             DataFrame(x1 = missing)
         else
-            DataFrame(x1 = func(da))
+            DataFrame(x1 = func(v))
         end
     end
 
-    df4 = DataFrame()
-    df4[groupvars] = df[groupvars]
-    df4[:___obs___] = collect(1:size(df4,1))
+    df3 = hcat(DataFrame(___obs___ = 1:size(df,1)), df[groupvars])
 
-    df5 = join(df4, df2, on = groupvars, kind = :left)
-    sort!(df5,cols=[:___obs___])
-    return df5[:x1]
+    df4 = leftjoin(df4, df2, on = groupvars)
+
+    sort!(df4,:___obs___)
+    return df4[:x1]
 end
 substat(df::DataFrame, varname::Symbol, groupvar::Symbol, func::Function) = substat(df,varname,[groupvar],func)
 
