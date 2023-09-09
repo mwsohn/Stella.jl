@@ -221,7 +221,7 @@ function substat(df::DataFrame, varname::Symbol, groupvars::Vector{Symbol}, func
     df5 = leftjoin(df4, df3, on = groupvars)
 
     sort!(df5,:___obs___)
-    return df5[:x1]
+    return df5[!,:x1]
 end
 substat(df::DataFrame, varname::Symbol, groupvar::Symbol, func::Function) = substat(df,varname,[groupvar],func)
 
