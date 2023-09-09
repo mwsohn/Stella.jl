@@ -99,11 +99,11 @@ end
     tabstat(df::DataFrame,varname::Symbol,groupvar::Symbol;s::Vector{Function} = [N,mean,sd,minimum,p25,median,p75,maximum ], skipmissing=false)
 
 Produce a DataFrame that contains summary statistics for each `groupvar` subgroup
-of the `varname` column in the `df`. The following are computed: `n` (total non-missing rows),
+of the `varname` column in the `df`. The following are computed: `N` (total non-missing rows, default),
 `mean` (mean), `sd` (standard deviation), `min` (minimum), `p25` (25th percentile),
 `median` (median), `p75` (75th percentile), and `max` (maximum).
 """
-function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Function} = [N,mean,sd,minimum,p25,median,p75,maximum ], skipmissing=false)
+function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Function} = [mean,sd,minimum,p25,median,p75,maximum ], skipmissing=false)
 
     if length(s) == 0
         error("No statistic functions were specified.")
@@ -113,23 +113,17 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
     namevec = [Symbol(replace(string(x),r"(Stella|Statistics)\." => "")) for x in s]
 
     # grouped df
-    gdf = groupby(indf, groupvar, skipmissing=skipmissing)
+    gdf = groupby(indf, groupvar)
 	
     # number of levels in the groupvar
     lev = sort(collect(values(gdf.keymap)))
 
-    # output DataFrame
-    outdf = DataFrame()
-
-    # output in df
-    # outdf[!,groupvar] = Vector{Union{Missing,eltype(groupvar)}}(undef, gdf.ngroups)
-
-    # groupvar
-    outdf[!,groupvar] = lev
+    # groupvar and N
+    outdf = combine(gdf, groupvar => length => :N)
 
     # stats 
     for j = 1:length(namevec) 
-        outdf[!,namevec[j]] = combine(gdf, var1 => s[j] => Symbol(s[j]))
+        outdf[!,namevec[j]] = [s[j](x[!,var1]) for x in gdf]
     end
 		
     # sort!(outdf,groupvar)
