@@ -221,9 +221,9 @@ function substat(df::DataFrame, varname::Symbol, groupvars::Vector{Symbol}, func
         end
     end
 
-    df3 = hcat(DataFrame(___obs___ = 1:size(df,1)), df[groupvars])
+    df3 = hcat(DataFrame(___obs___ = 1:size(df,1)), df[!,groupvars])
 
-    df4 = leftjoin(df4, df2, on = groupvars)
+    df4 = leftjoin(df3, df2, on = groupvars)
 
     sort!(df4,:___obs___)
     return df4[:x1]
