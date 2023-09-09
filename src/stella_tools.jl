@@ -208,12 +208,12 @@ julia> df[:testmean] = substat(df,:test, :class, mean)
 """
 function substat(df::DataFrame, varname::Symbol, groupvars::Vector{Symbol}, func::Function)
 
-    if (nonmissingtype(eltype(df[varname])) <: Number) == false
+    if (nonmissingtype(eltype(df[!,varname])) <: Number) == false
         error("Only numeric variables are allowed.")
     end
 
     df2 = groupby(df,groupvars) do subdf
-        v = collect(skipmissing(subdf[!.varname]))
+        v = collect(skipmissing(subdf[!, varname]))
         if length(v) == 0
             DataFrame(x1 = missing)
         else
