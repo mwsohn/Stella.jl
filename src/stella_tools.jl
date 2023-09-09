@@ -212,7 +212,7 @@ function substat(df::DataFrame, varname::Symbol, groupvars::Vector{Symbol}, func
         error("Only numeric variables are allowed.")
     end
 
-    df2 = df[completecases(df[!,varname]), vcat(varname, groupvars)]
+    df2 = df[completecases(df[!,[varname]]), vcat(varname, groupvars)]
     
     df3 = combine(groupby(df2, groupvars), varname => func => Symbol(func))
 
