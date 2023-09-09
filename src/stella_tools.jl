@@ -213,7 +213,7 @@ function substat(df::DataFrame, varname::Symbol, groupvars::Vector{Symbol}, func
     end
 
     df2 = groupby(df,groupvars) do subdf
-        v = collect(skipmissing(subdf[!, varname]))
+        v = collect(DataFrames.skipmissing(subdf[!, varname]))
         if length(v) == 0
             DataFrame(x1 = missing)
         else
