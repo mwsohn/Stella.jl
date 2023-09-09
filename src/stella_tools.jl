@@ -103,7 +103,7 @@ of the `varname` column in the `df`. The following are computed: `N` (total non-
 `mean` (mean), `sd` (standard deviation), `min` (minimum), `p25` (25th percentile),
 `median` (median), `p75` (75th percentile), and `max` (maximum).
 """
-function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Function} = [mean,sd,minimum,p25,median,p75,maximum ], skipmissing=false)
+function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Function} = [mean,sd,minimum,p25,median,p75,maximum], skipmissing = false)
 
     if length(s) == 0
         error("No statistic functions were specified.")
@@ -113,7 +113,7 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
     namevec = [Symbol(replace(string(x),r"(Stella|Statistics)\." => "")) for x in s]
 
     # grouped df
-    gdf = groupby(indf, groupvar)
+    gdf = groupby(indf, groupvar, skipmissing = skipmissing)
 	
     # number of levels in the groupvar
     lev = sort(collect(values(gdf.keymap)))
@@ -123,7 +123,7 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
 
     # stats 
     for j = 1:length(namevec) 
-        outdf[!,namevec[j]] = [s[j](skipmissing(x[!,var1])) for x in gdf]
+        outdf[!,namevec[j]] = [s[j](DataFrames.skipmissing(x[!,var1])) for x in gdf]
     end
 		
     # sort!(outdf,groupvar)
