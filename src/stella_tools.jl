@@ -212,21 +212,16 @@ function substat(df::DataFrame, varname::Symbol, groupvars::Vector{Symbol}, func
         error("Only numeric variables are allowed.")
     end
 
-    df2 = groupby(df,groupvars) do subdf
-        v = collect(DataFrames.skipmissing(subdf[!, varname]))
-        if length(v) == 0
-            DataFrame(x1 = missing)
-        else
-            DataFrame(x1 = func(v))
-        end
-    end
+    df2 = df[.!ismissing(df[!,varname]), vcat(varname, groupvars)]
+    
+    df3 = combine(groupby(df2, groupvars), varname => func => Symbol(func))
 
-    df3 = hcat(DataFrame(___obs___ = 1:size(df,1)), df[!,groupvars])
+    df4 = hcat(DataFrame(___obs___ = 1:size(df,1)), df[!,groupvars])
 
-    df4 = leftjoin(df3, df2, on = groupvars)
+    df5 = leftjoin(df4, df3, on = groupvars)
 
-    sort!(df4,:___obs___)
-    return df4[:x1]
+    sort!(df5,:___obs___)
+    return df5[:x1]
 end
 substat(df::DataFrame, varname::Symbol, groupvar::Symbol, func::Function) = substat(df,varname,[groupvar],func)
 
