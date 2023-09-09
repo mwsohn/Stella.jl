@@ -123,7 +123,7 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
 
     # stats 
     for j = 1:length(namevec) 
-        outdf[!,namevec[j]] = [s[j](x[!,var1]) for x in gdf]
+        outdf[!,namevec[j]] = [s[j](skipmissing(x[!,var1])) for x in gdf]
     end
 		
     # sort!(outdf,groupvar)
