@@ -122,14 +122,14 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
     outdf = DataFrame()
 
     # output in df
-    outdf[!,groupvar] = Vector{Union{Missing,eltype(groupvar)}}(undef, gdf.ngroups + 1)
+    # outdf[!,groupvar] = Vector{Union{Missing,eltype(groupvar)}}(undef, gdf.ngroups + 1)
 
     # groupvar
     outdf[!,groupvar] = lev
 
     # stats 
     for j = 1:length(namevec) 
-        outdf[!,namevec[j]] = combine(gdf, var1 => s[j] => Symbol(s[j])
+        outdf[!,namevec[j]] = combine(gdf, var1 => s[j] => Symbol(s[j]))
     end
 		
     # sort!(outdf,groupvar)
