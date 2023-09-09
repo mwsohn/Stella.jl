@@ -1,5 +1,3 @@
-dropmissing(x) = collect(skipmissing(x))
-
 """
     smallest(da::AbstractArray, n::Int) or smallest(df::DataFrame, varname::Symbol, n::Int)
 
@@ -35,9 +33,9 @@ function univariate(da::AbstractVector)
     da2 = dropmissing(da)
 
 	return DataFrame(
-		Statistic = [:N_Total,
-			:N_Missing,
-			:N_Used,
+		Statistic = [Symbol("N Total"),
+			Symbol("N Missing"),
+			Symbol("N Used"),
 			:Sum,
 			:Mean,
 			:SD,
@@ -66,6 +64,54 @@ function univariate(da::AbstractVector)
 	)
 end
 univariate(df::DataFrame,var::Symbol) = univariate(df[!,var])
+
+
+"""
+    univ(vec::AbstractVector)
+    univ(df::DataFrame,varname::Union{Symbol,String})
+
+Produce univariate statistics using `vec` or `df[!,varname]` and return
+a DataFrame with univariate statistics and percentile values.
+Computed statistics include `N Total` (number of rows in the input DataArray), 
+`N Missing` (number of rows with missing values), `N Used` (number of non-missing rows),
+`Sum` (sum), `Mean` (mean), `SD` (standard deviation), `Var` (variance), `Min` (minimum),
+`P25` (25th percentile), `Median` (median), `P75` (75th percentile), `Max` (maximum),
+`Skewness` (skewness), and `Kurtosis` (kurtosis).
+"""
+function univ(v::AbstractVector)
+
+    v2 = convert(Vector{Float64},v[.!ismissing.(v)])
+    S = smallest(v2)
+    L = largest(v2)
+
+    output = [
+        "N"           size(v,1)                    "Minimum"               minimum(v2);
+        "N Missing"   (size(v,1) - size(v2,1))     "5%"                    quantile(v2,0.05);
+        "N Used"      size(v2,1)                   "10%"                   quantile(v2,0.1)
+        "Sum"         sum(v2)                      "25%"                   quantile(v2, 0.25);
+        "Mean"        mean(v2)                     "Median"                quantile(v2,0.5);
+        "SD"          sqrt(var(v2))                "75%"                   quantile(v2, 0.75)
+        "Var"         var(v2)                      "90%"                   quantile(v2, 0.9)
+        "Skewness"    skewness(v2)                 "95%"                   quantile(v2,0.95);
+        "Kurtosis"    kurtosis(v2)                 "Maximum"               maximum(v2);
+        "Smallest"    ""                           "Largest"               "";
+        1             S[1]                         1                       L[1];
+        2             S[2]                         2                       L[2];
+        3             S[3]                         3                       L[3];
+        4             S[4]                         4                       L[4];
+        5             S[5]                         5                       L[5];
+    ]
+
+    #@show output
+    pretty_table(output, header = ["Statistic","","Percentile",""],hlines=[0,1,10,16])
+
+    return output
+
+end
+function univ(df::DataFrame,s::Union{Symbol,String})
+    univ(df[!,s])
+end
+
 
 function strval(val::AbstractFloat)
   return @sprintf("%.2f",val)
