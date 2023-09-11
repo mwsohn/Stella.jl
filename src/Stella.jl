@@ -26,13 +26,13 @@ export  read_stata,  # read stata 13 and 14 files into DF
         dflist,      # list
         dfmerge,     # merge two dataframes
         dfsample,    # select a sample from a df
-        univariate,  # univariate statistics in DF
+        univariate, univ, # univariate statistics in DF
         tabstat,     # unviariate statistics by subgroups
         substat,     # attach univariate stat to original DF by subgroups
         xtile,       # create variable that classify a column into percentiles
         rowsum,      # create variable that sums rows
         strval,      # convert floats or ints to strings
-        chi2test,    # compute chisquare statistics from na.array
+        chi2test, chi2,    # compute chisquare statistics from na.array
         prepend_spaces, append_spaces, # create fixed length strings
         smallest, largest, # list smallest and largest values in a DA
         pickone,     # create a binary variable that identifies one records in a subgroup

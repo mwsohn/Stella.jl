@@ -410,6 +410,28 @@ end
 #--------------------------------------------------------------------------
 # pairwise correlations
 #--------------------------------------------------------------------------
+"""
+    interleave(args...)
+
+Produces a matrix whose rows were interleaved from all `args` matrices. All
+matrices should be of the same dimensions. Only two-dimensional matrices are allowed.
+"""
+function interleave(args::AbstractMatrix...)
+    if ndims(args[1]) != 2
+        error("Only 2-dimensional arrays are allowed.")
+    end
+    len = size(args[1],1)
+    nargs = length(args)
+    dd = zeros(Float64,len*nargs,len)
+
+    for i in 1:len
+        for (j, mat) in enumerate(args)
+            dd[ i*nargs - (nargs - j), :] = mat[i,:]
+        end
+    end
+    dd
+end
+
 struct pwcorr_return
     r::AbstractArray
     pval::AbstractArray
@@ -418,7 +440,7 @@ struct pwcorr_return
 end
 
 """
-    pwcorr(a::AbstractArray)
+    pwcorr(a::AbstractMatrix)
     pwcorr(a::AbstractVector...)
     pwcorr(df::DataFrame, args::Symbol...)
 
@@ -428,7 +450,7 @@ p-values which is calculated using the Fisher transformation. When the option `o
 is set, pwcorr prints the correlation coeffients and p-values (if specified) to the console
 in addition to returning them in arrays.
 """
-function pwcorr(a::AbstractArray)
+function pwcorr(a::AbstractMatrix{T}) where {T <: Real}
 
     cols = size(a,2)
     N = zeros(Int64,cols,cols)
@@ -450,8 +472,10 @@ function pwcorr(a::AbstractArray)
                 end
                 r[i,j] = r[j,i] = cor(x)[1,2]
                 rows = N[i,j] = N[j,i] = size(x,1)
-                z = (sqrt(rows - 3) / 2)*log((1+r[i,j])/(1-r[i,j]))
-                pval[i,j] = pval[j,i] = Distributions.ccdf(Distributions.Normal(),z) / 2.0
+                if rows > 3
+                    z = (sqrt(rows - 3) / 2)*log((1+r[i,j])/(1-r[i,j]))
+                    pval[i,j] = pval[j,i] = Distributions.ccdf(Distributions.Normal(),z) / 2.0
+                end
             end
         end
     end
