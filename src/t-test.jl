@@ -137,14 +137,14 @@ function ttest(df::DataFrame,varname::Symbol; by::Union{Nothing,Symbol} = nothin
 
     dft = df[completecases(df[[varname,by]]),[varname,by]]
 
-    lev = sort(collect(Set(dft[by])))
+    lev = sort(unique(dft[by]))
     if length(lev) != 2
         error(by," must have two levels; it has ",length(lev), " levels.")
     end
 
-    val = Vector(2)
-    val[1] = Vector(dft[dft[by] .== lev[1],varname])
-    val[2] = Vector(dft[dft[by] .== lev[2],varname])
+    # val = Vector{Float64}(undef,2, length(lev))
+    # val[1] = Vector(dft[dft[by] .== lev[1],varname])
+    # val[2] = Vector(dft[dft[by] .== lev[2],varname])
     if length(val[1]) == 0 || length(val[2]) == 0
         error("On or both groups have zero observations")
     end
