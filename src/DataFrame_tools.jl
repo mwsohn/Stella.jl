@@ -38,14 +38,8 @@ function get_numbytes(typelist,nvar)
 end
 
 function strtonull(str)
-
 	n = findfirst(x->isequal('\u0',x) || isvalid(Char,x) == false,str)
-	if n == nothing
-		return str
-	end
-	if n == 1
-		return ""
-	end
+	n == nothing && return str
 	return str[1:n-1]
 end
 
