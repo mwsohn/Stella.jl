@@ -438,7 +438,8 @@ end
 
 Produces a pairwise (n x n) correlation matrix that contain correlation coefficients
 between all `n` columns. It also displays the number of observations used for computing
-each correlation coefficient and a p-value for testing H₀: r = 0.
+each correlation coefficient and a p-value for testing H₀: r = 0. The number of digits
+after the decimal point can be specified by `decimals` option (default = 4).
 """
 function pwcorr(indf::DataFrame, args::Vector{Symbol}; decimals=4)
 
@@ -471,7 +472,7 @@ function pwcorr(indf::DataFrame, args::Vector{Symbol}; decimals=4)
         end
     end
 
-    # interleave   three arrays 
+    # interleave the three arrays 
     outmat = collect(reshape([r N pval]'[:], cols, cols*3)')
 
     # decimals
