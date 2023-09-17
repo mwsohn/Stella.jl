@@ -432,57 +432,64 @@ function interleave(args::AbstractMatrix...)
     dd
 end
 
-struct pwcorr_return
-    r::AbstractArray
-    pval::AbstractArray
-    N::AbstractArray
-    colnms::Vector
-end
-
 """
-    pwcorr(a::AbstractMatrix)
-    pwcorr(a::AbstractVector...)
-    pwcorr(df::DataFrame, args::Symbol...)
+    pwcorr(df::DataFrame, args::Symbol...; decimals = 4)
+    pwcorr(df::DataFrame, args::Vector{Symbol}; decimals = 4)
 
-Produces a n x n matrix that contain correlation coefficients between all `n` columns.
-When the option `p = true` is specified, it produces a second n x n matrix containing
-p-values which is calculated using the Fisher transformation. When the option `out = true`
-is set, pwcorr prints the correlation coeffients and p-values (if specified) to the console
-in addition to returning them in arrays.
+Produces a pairwise (n x n) correlation matrix that contain correlation coefficients
+between all `n` columns. It also displays the number of observations used for computing
+each correlation coefficient and a p-value for testing H₀: r = 0.
 """
-function pwcorr(a::AbstractMatrix{T}) where {T <: Real}
+function pwcorr(indf::DataFrame, args::Vector{Symbol}; decimals=4)
 
-    cols = size(a,2)
-    N = zeros(Int64,cols,cols)
-    r = zeros(Float64,cols,cols)
-    pval = zeros(Float64,cols,cols)
-    if typeof(a) == DataFrame
-        colnames = names(a)
-    else
-        colnames = collect(1:size(a,2))
-    end
+    a = indf[!,args]
+    colnames = names(a)
+    cols = length(colnames)
+    N = Array{Union{Missing,Int64}}(missing, cols, cols)
+    r = Array{Union{Missing,Float64}}(missing, cols, cols)
+    pval = Array{Union{Missing,Float64}}(missing, cols, cols)
 
     for j = 1:cols
+        var1 = colnames[j]
         for i = j:cols
+            var2 = colnames[i]
             if i != j
-                if typeof(a) == DataFrame
-                    x = Array(a[completecases(a[[i,j]]),[i,j]])
-                else
-                    x = a[:,[i,j]]
+                b = a[completecases(indf[!,[var1,var2]]), [var1, var2]]
+                if size(b,1) == 0
+                    error("No usable common observations in ", colnames[i], " and ", colnames[j])
                 end
-                r[i,j] = r[j,i] = cor(x)[1,2]
-                rows = N[i,j] = N[j,i] = size(x,1)
-                if rows > 3
-                    z = (sqrt(rows - 3) / 2)*log((1+r[i,j])/(1-r[i,j]))
-                    pval[i,j] = pval[j,i] = Distributions.ccdf(Distributions.Normal(),z) / 2.0
-                end
+                ret = HypothesisTests.CorrelationTest(b[!,var1], b[!,var2])
+                n = N[i,j] = N[j,i] = ret.n
+                rr = r[i,j] = r[j,i] = ret.r
+                t = ret.t
+                pval[i,j] = pval[j,i] = 2*min(ccdf(TDist(n - 2),t),ccdf(TDist(n - 2),-t))
+
+            else
+                N[i,i] = length(collect(skipmissing(a[!,colnames[i]])))
+                r[i,i] = 1.0
             end
         end
     end
-    return pwcorr_return(r, pval, N, colnames)
+
+    # interleave   three arrays 
+    outmat = collect(reshape([r N pval]'[:], cols, cols*3)')
+
+    # decimals
+    fmt = string("%.",decimals,"f")
+
+    # row formatter
+    nrow = size(outmat,1)
+    r_printf = (v,i,j) -> (mod(i,3) == 2 ? split(v,".")[1] : v)
+
+    # pretty_table
+    pretty_table(outmat,
+        header = colnames, 
+        row_labels = vcat([[x,"",""] for x in colnames]...),
+        formatters = (ft_nomissing, ft_printf(fmt),r_printf),
+        hlines = vcat([0, 1], [x*3 + 1 for x in 1:cols]))
+
 end
-pwcorr(a::AbstractArray...) = pwcorr(hcat(a...))
-pwcorr(a::DataFrame, args::Vector{Symbol}; out=true) = pwcorr(df[args], out = out)
+pwcorr(a::DataFrame, args::Symbol...; decimals = 4) = pwcorr2(a, [args...]; decimals = decimals)
 
 #--------------------------------------------------------------------------
 # ranksum(), signrank(), signtest()
