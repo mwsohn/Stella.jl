@@ -173,7 +173,7 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
     end
 		
     # sort!(outdf,groupvar)
-    pretty_table(outdf)
+    pretty_table(outdf, show_subheader = false)
 
     return outdf
 end
