@@ -441,7 +441,7 @@ between all `n` columns. It also displays the number of observations used for co
 each correlation coefficient and a p-value for testing H₀: r = 0. The number of digits
 after the decimal point can be specified by `decimals` option (default = 4).
 """
-function pwcorr(indf::DataFrame, args::Vector{Symbol}; decimals=4)
+function pwcorr(indf::DataFrame, args::Vector{Symbol}; decimals=4, html=false)
 
     a = indf[!,args]
     colnames = names(a)
@@ -483,12 +483,19 @@ function pwcorr(indf::DataFrame, args::Vector{Symbol}; decimals=4)
     r_printf = (v,i,j) -> (mod(i,3) == 2 ? split(v,".")[1] : v)
 
     # pretty_table
-    pretty_table(outmat,
-        header = colnames, 
-        row_labels = vcat([[x,"",""] for x in colnames]...),
-        formatters = (ft_nomissing, ft_printf(fmt),r_printf),
-        hlines = vcat([0, 1], [x*3 + 1 for x in 1:cols]))
-
+    if hmtl
+        pretty_table(outmat,
+            backend=Val(:html),
+            header = colnames, 
+            row_labels = vcat([[x,"",""] for x in colnames]...),
+            formatters = (ft_nomissing, ft_printf(fmt),r_printf))
+    else
+        pretty_table(outmat,
+            header = colnames, 
+            row_labels = vcat([[x,"",""] for x in colnames]...),
+            formatters = (ft_nomissing, ft_printf(fmt),r_printf),
+            hlines = vcat([0, 1], [x*3 + 1 for x in 1:cols]))
+    end
 end
 pwcorr(a::DataFrame, args::Symbol...; decimals = 4) = pwcorr2(a, [args...]; decimals = decimals)
 
