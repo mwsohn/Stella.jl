@@ -1,5 +1,5 @@
 """
-	anova(df::DataFrame, contvar::Symbol, groupvar::Symbol; table=false)
+	anova(df::DataFrame, contvar::Symbol, groupvar::Symbol; pval=false)
 
 Produces an one-way ANOVA table by default. `contvar' is a continous variable and `groupvar' is
 the group variable. If `table` is set to false, you will have a DataFrame with ANOVA table values
@@ -38,8 +38,8 @@ function anova(_df::DataFrame, dep::Symbol, cat::Symbol; table = true)
     msbetween = ssbetween / dfbetween
     F = msbetween / mswithin
 
-    pval = Distributions.ccdf(Distributions.FDist(dfbetween, dfwithin), F)
-    pstr = pval < 0.0001 ? "< 0.0001" : @sprintf("%.5f", pval)
+    pvalue = Distributions.ccdf(Distributions.FDist(dfbetween, dfwithin), F)
+    pstr = pvalue < 0.0001 ? "< 0.0001" : @sprintf("%.5f", pvalue)
 
     outdf = DataFrame(
         Source=["Between", "Within", "Total"],
@@ -50,11 +50,11 @@ function anova(_df::DataFrame, dep::Symbol, cat::Symbol; table = true)
         P=[pstr, missing, missing]
     )
 
-	if table == true
+	if pval == false
     	println("\nOne-Way Analysis of Variance: ", dep, " by ", cat)
     	pretty_table(outdf; formatters=(ft_nomissing, ft_printf("%.4f", [3, 4, 5])))
 	else
-		return outdf
+		return pvalue
 	end
 
 end
