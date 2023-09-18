@@ -2,10 +2,10 @@
 	anova(df::DataFrame, contvar::Symbol, groupvar::Symbol; pval=false)
 
 Produces an one-way ANOVA table by default. `contvar' is a continous variable and `groupvar' is
-the group variable. If `table` is set to false, you will have a DataFrame with ANOVA table values
-reutrned. The p-value is in row 1, column 6 of the returned DataFrame.
+the group variable. If `pval = false` (default), you will have a DataFrame with ANOVA table values
+reutrned. With `pval = true`, this function will return the p-value in Float64.
 """
-function anova(_df::DataFrame, dep::Symbol, cat::Symbol; table = true)
+function anova(_df::DataFrame, dep::Symbol, cat::Symbol; pval = false)
 
     # establish data
     df = _df[completecases(_df[:, [dep, cat]]), [dep, cat]]
