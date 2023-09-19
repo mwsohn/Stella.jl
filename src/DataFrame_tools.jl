@@ -37,10 +37,10 @@ function get_numbytes(typelist,nvar)
     end
 end
 
-function strtonull(str)
-	n = findfirst(x->isequal('\u0',x) || isvalid(Char,x) == false,str)
+function strtonull(str::Vector{UInt8})
+	n = findfirst(iszero,x)
 	n == nothing && return str
-	return str[1:n-1]
+	return SubString[String(str),1,n-1]
 end
 
 function alloc_array(vtype,vfmt,nobs::Int64)
@@ -580,8 +580,8 @@ function atype(df::DataFrame,v::Symbol)
     # Array type = DA for DataArray, CA for Categorical Array, and UV for Union Vector
     if isdefined(Main,:CategoricalArrays) && typeof(df[!,v]) <: CategoricalArray
         return string("CA (", replace(string(eltype(df[!,v].refs)),"UInt" => ""), ")")
-    elseif isdefined(Main,:DataArrays) && typeof(df[!,v]) <: DataArray
-         return "DA"
+    # elseif isdefined(Main,:DataArrays) && typeof(df[!,v]) <: DataArray
+    #      return "DA"
     elseif isdefined(Main,:PooledArrays) && typeof(df[!,v]) <: PooledArray
          return string("PA (", replace(string(eltype(df[!,v].refs)),"UInt" => ""), ")")
     elseif isa(eltype(df[!,v]),Union)
@@ -684,12 +684,13 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
 
     if dfout 
     	return dfv
+    else
+        pretty_table(dfv,
+            alignment=alignment,
+            header=header,
+            crop=:none,
+            show_row_number = true)
     end
-    pretty_table(dfv,
-		alignment=alignment,
-		header=header,
-		crop=:none,
-		show_row_number = true)
 end
 
 function nmissing(s::AbstractArray)
@@ -1363,60 +1364,60 @@ function qval_low(val::Real,cut::Vector)
     warn("Error - check qval function")
 end
 
-"""
-    rapply(df::DataFrame,r::OrderedDict)
+# """
+#     rapply(df::DataFrame,r::OrderedDict)
 
-Creates a recoded vector of values according to the rule set specified as an ordered dictionary.
-Keys in the rule set must be the recoded value and the values must be the rules.
-The rule must be an expression or a string that return a boolean value (`true` or `false`).
+# Creates a recoded vector of values according to the rule set specified as an ordered dictionary.
+# Keys in the rule set must be the recoded value and the values must be the rules.
+# The rule must be an expression or a string that return a boolean value (`true` or `false`).
 
-## Example
+# ## Example
 
-julia> ruleset = OrderedDict(
-            1 => :( df[:race] .== 1 && df[:hispanic] .== 0),
-            2 => :( df[:race] .== 2 && df[:hispanic] .== 0),
-            3 => :( df[:hispanic] .== 1),
-            4 => :( df[:hispanic] .== 0 && in.(df[:race],[1,2]) == false)
-       )
-OrderedDict{Int64,Expr} with 4 entries:
-  1 => :(df[:race] .== 1 && df[:hispanic] .== 0)
-  2 => :(df[:race] .== 2 && df[:hispanic] .== 0)
-  3 => :(df[:hispanic] .== 1)
-  4 => :(df[:hispanic] .== 0 && in.(df[:race], [1, 2]) == false)
+# julia> ruleset = OrderedDict(
+#             1 => :( df[:race] .== 1 && df[:hispanic] .== 0),
+#             2 => :( df[:race] .== 2 && df[:hispanic] .== 0),
+#             3 => :( df[:hispanic] .== 1),
+#             4 => :( df[:hispanic] .== 0 && in.(df[:race],[1,2]) == false)
+#        )
+# OrderedDict{Int64,Expr} with 4 entries:
+#   1 => :(df[:race] .== 1 && df[:hispanic] .== 0)
+#   2 => :(df[:race] .== 2 && df[:hispanic] .== 0)
+#   3 => :(df[:hispanic] .== 1)
+#   4 => :(df[:hispanic] .== 0 && in.(df[:race], [1, 2]) == false)
 
-julia> recode(adf,ruleset)
+# julia> rapply(adf,ruleset)
 
 
-"""
-function rapply(df::DataFrame,r::OrderedDict)
+# """
+# function rapply(df::DataFrame,r::OrderedDict)
 
-    # values
-    vals = sort(collect(keys(r)))
+#     # values
+#     vals = sort(collect(keys(r)))
 
-    # types
-    vtyp = eltype(vals)
+#     # types
+#     vtyp = eltype(vals)
 
-    # empty Vector
-    vec = Vector{Union{vtyp,Missing}}(undef,size(df,1))
+#     # empty Vector
+#     vec = Vector{Union{vtyp,Missing}}(undef,size(df,1))
 
-    # go through the rules and assign values
-    for v in vals
+#     # go through the rules and assign values
+#     for v in vals
 
-        if typeof(r[v]) == String
-            ba = eval(parse(r[v]))
-        elseif typeof(r[v]) == Expr
-            ba = eval(r[v])
-        else
-            error(typeof(r[v]), " is not an allowed type for rule ", string(r[v]))
-        end
+#         if typeof(r[v]) == String
+#             ba = eval(parse(r[v]))
+#         elseif typeof(r[v]) == Expr
+#             ba = eval(r[v])
+#         else
+#             error(typeof(r[v]), " is not an allowed type for rule ", string(r[v]))
+#         end
 
-        for i in findall(x->x==true,ba)
-            vec[i] = v
-        end
-    end
+#         for i in findall(x->x==true,ba)
+#             vec[i] = v
+#         end
+#     end
 
-    return vec
-end
+#     return vec
+# end
 
 
 
@@ -1437,7 +1438,7 @@ end
 """
 	uncategorical!(df::AbstractDataFrame,vv::Union{Symbol,Vector{Symbol}})
 
-uncategorizes a CategoricalArray by replacing the refs with its original values.
+uncategorizes a vector of CategoricalArrays by replacing the refs with their original values.
 """
 function uncategorical!(df::AbstractDataFrame,vv::Union{Symbol,Vector{Symbol}})
     for v in vcat(vv)
@@ -1458,18 +1459,18 @@ function uncategorize(v::CategoricalArray)
 end
 
 # convert the Arrow data types from the feather file
-function convert_feather(df::DataFrame)
-    for v in propertynames(df)
-        if typeof(df[!,v]) <: DictEncoding
-            df[!,v] = CategoricalArray(df[!,v])
-	elseif eltype(df[!,v]) == Feather.Arrow.Datestamp
-	    df[!,v] = convert.(Date,df[!,v])		
-        else
-            df[!,v] = Array(df[!,v])
-        end
-    end
+# function convert_feather(df::DataFrame)
+#     for v in propertynames(df)
+#         if typeof(df[!,v]) <: DictEncoding
+#             df[!,v] = CategoricalArray(df[!,v])
+# 	elseif eltype(df[!,v]) == Feather.Arrow.Datestamp
+# 	    df[!,v] = convert.(Date,df[!,v])		
+#         else
+#             df[!,v] = Array(df[!,v])
+#         end
+#     end
 
-    return df
-end
+#     return df
+# end
 
 

@@ -147,9 +147,10 @@ end
 Produce a DataFrame that contains summary statistics for each `groupvar` subgroup
 of the `varname` column in the `df`. The following are computed: `N` (total non-missing rows, default),
 `mean` (mean), `sd` (standard deviation), `min` (minimum), `p25` (25th percentile),
-`median` (median), `p75` (75th percentile), and `max` (maximum).
+`median` (median), `p75` (75th percentile), and `max` (maximum). If `table` is set to `false`,
+the output will be returned as a DataFrame.
 """
-function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Function} = [mean,sd,minimum,p25,median,p75,maximum], skipmissing = false)
+function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Function} = [mean,sd,minimum,p25,median,p75,maximum], skipmissing = false, table = true)
 
     if length(s) == 0
         error("No statistic functions were specified.")
@@ -173,9 +174,11 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
     end
 		
     # sort!(outdf,groupvar)
-    pretty_table(outdf, show_subheader = false)
-
-    return outdf
+    if table
+        pretty_table(outdf, show_subheader = false)
+    else
+        return outdf
+    end
 end
 
 #----------------------------------------------------------------------------
