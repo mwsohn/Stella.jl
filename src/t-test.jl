@@ -149,6 +149,14 @@ function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, sig = 95, w
     end
     tt = ttest(val1,val2,paired=false,welch=welch,sig=sig,levels=lev)
     tt.colnms[1] = string(by)
+
+    pretty_table(hcat(tt.array...)[:,2:end],
+        header = tt.colnms[2:end],
+        row_labels = tt.array[:,1],
+        row_label_column_title = by,
+        hlines = [0,1,3,4,5],
+        formatters = (ft_printf("%.0f",1), ft_printf("%.4f",[2,3,4,5])))
+        
     return tt
 end
 function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = false, welch = false)
