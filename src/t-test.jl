@@ -151,7 +151,7 @@ function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, sig = 95, w
     # tt.colnms[1] = string(by)
 
     pretty_table(hcat(tt.array...)[:,2:end],
-        header = tt.colnms[2:end],
+        # header = tt.colnms[2:end],
         row_labels = tt.array[:,1],
         row_label_column_title = tt.colnms[1],
         hlines = [0,1,3,4,5],
