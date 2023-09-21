@@ -135,16 +135,14 @@ function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, sig = 95, w
         error("`by` is required.")
     end
 
-    dft = df[!, [varname, by]]
-
-    dft = dropmissing(dft)
+    dft = dropmissing( df[!, [varname, by]] )
 
     lev = sort(unique(dft[!,by]))
     if length(lev) != 2
         error(by," must have two levels; it has ",length(lev), " levels.")
     end
 
-    val = Vector{Float64}(undef,2, length(lev))
+    val = Vector{Union{Missing,Float64}}(missing, 2, length(lev))
     val[1] = Vector(dft[dft[!, by] .== lev[1],varname])
     val[2] = Vector(dft[dft[!, by] .== lev[2],varname])
     if length(val[1]) == 0 || length(val[2]) == 0
