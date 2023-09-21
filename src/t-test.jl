@@ -142,13 +142,12 @@ function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, sig = 95, w
         error(by," must have two levels; it has ",length(lev), " levels.")
     end
 
-    val = Vector{Union{Missing,Float64}}(missing, 2, length(lev))
-    val[1] = Vector(dft[dft[!, by] .== lev[1],varname])
-    val[2] = Vector(dft[dft[!, by] .== lev[2],varname])
-    if length(val[1]) == 0 || length(val[2]) == 0
+    val1 = dft[dft[!, by] .== lev[1],varname]
+    val2 = dft[dft[!, by] .== lev[2],varname]
+    if length(val1) == 0 || length(val2) == 0
         error("On or both groups have zero observations")
     end
-    tt = ttest(val[1],val[2],paired=false,welch=welch,sig=sig,levels=lev)
+    tt = ttest(val1,val2,paired=false,welch=welch,sig=sig,levels=lev)
     tt.colnms[1] = string(by)
     return tt
 end
