@@ -148,12 +148,12 @@ function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, sig = 95, w
         error("On or both groups have zero observations")
     end
     tt = ttest(val1,val2,paired=false,welch=welch,sig=sig,levels=lev)
-    tt.colnms[1] = string(by)
+    # tt.colnms[1] = string(by)
 
     pretty_table(hcat(tt.array...)[:,2:end],
         header = tt.colnms[2:end],
         row_labels = tt.array[:,1],
-        row_label_column_title = string(by),
+        row_label_column_title = tt.colnms[1],
         hlines = [0,1,3,4,5],
         formatters = (ft_printf("%.0f",1), ft_printf("%.4f",[2,3,4,5])))
 
