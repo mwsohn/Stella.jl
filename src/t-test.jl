@@ -157,7 +157,7 @@ function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, sig = 95, w
         hlines = [0,1,3,4,5],
         formatters = (ft_printf("%.0f",1), ft_printf("%.4f",[2,3,4,5])))
 
-    println("\ndiff = mean($lev[1]) - mean($lev[2])\n")
+    println("\ndiff = mean(",lev[1],") - mean(",lev[2],")\n")
     println("H₀: diff = 0")
     println("t = ",tt.t," df = ",tt.dof\n")
 
