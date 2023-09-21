@@ -130,12 +130,14 @@ Pr(T < t) = 0.0837         Pr(|T| > |t|) = 0.1673         Pr(T > t) = 0.9163
 ```
 
 """
-function ttest(df::DataFrame,varname::Symbol; by::Symbol = nothing, sig = 95, welch = false)
+function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, sig = 95, welch = false)
     if by == nothing
         error("`by` is required.")
     end
 
-    dft = DataFrames.dropmissing(df[!,[varname, by]])
+    dft = df[!, [varname, by]]
+
+    dft = dropmissing(dft)
 
     lev = sort(unique(dft[!,by]))
     if length(lev) != 2
