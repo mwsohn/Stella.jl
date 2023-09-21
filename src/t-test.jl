@@ -195,7 +195,7 @@ function ttest(x::AbstractVector,y::AbstractVector; paired::Bool=false,welch::Bo
         MEAN[i] = mean(val[i])
         SD[i] = std(val[i])
         SE[i] = SD[i] / sqrt(N[i])
-        LB[i],UB[i] = StatsBase.confint(OneSampleTTest(val[i],0),1-sig/100)
+        LB[i],UB[i] = StatsAPI.confint(OneSampleTTest(val[i],0),1-sig/100)
     end
 
     # combined
@@ -203,14 +203,14 @@ function ttest(x::AbstractVector,y::AbstractVector; paired::Bool=false,welch::Bo
     MEAN[3] = mean(vcat(val[1],val[2]))
     SD[3] = std(vcat(val[1],val[2]))
     SE[3] = SD[3] / sqrt(N[3])
-    LB[3],UB[3] = StatsBase.confint(OneSampleTTest(vcat(val[1],val[2]),0),1 .- sig/100)
+    LB[3],UB[3] = StatsAPI.confint(OneSampleTTest(vcat(val[1],val[2]),0),1 .- sig/100)
 
     # diff
     N[4] = paired ? N[1] : 0 # not to be used
     MEAN[4] = tt.xbar
     SD[4] = paired ? tt.stderr*sqrt(N[4]) : 0.0 # not to be used
     SE[4] = tt.stderr
-    LB[4],UB[4] = StatsBase.confint(tt,1 .- sig/100)
+    LB[4],UB[4] = StatsAPI.confint(tt,1 .- sig/100)
 
     return TTReturn(title,
         ["Variable", "N", "Mean", "SD", "SE", string(sig,"% LB"), string(sig,"% UB")],
@@ -246,7 +246,7 @@ function ttest(var::AbstractVector,μ0::Real = 0; sig = 95)
 
     # compute standard errors and confidence intervals
     SE = SD / sqrt(N)
-    (LB, UB) = StatsBase.confint(OneSampleTTest(var,0),1-sig/100)
+    (LB, UB) = StatsAPI.confint(OneSampleTTest(var,0),1-sig/100)
 
     return TTReturn(title,
         ["Variable", "N", "Mean", "SD", "SE", string(sig,"% LB"), string(sig,"% UB")],
