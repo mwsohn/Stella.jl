@@ -182,12 +182,12 @@ function ttest(x::AbstractVector,y::AbstractVector; paired::Bool=false,welch::Bo
     end
 
     # compute standard errors and confidence intervals
-    N = Vector{Int64}(4)
-    MEAN = Vector{Float64}(4)
-    SD = Vector{Float64}(4)
-    SE = Vector{Float64}(4)
-    LB = Vector{Float64}(4)
-    UB = Vector{Float64}(4)
+    N = Vector{Int64}(undef, 4)
+    MEAN = Vector{Float64}(undef, 4)
+    SD = Vector{Float64}(undef, 4)
+    SE = Vector{Float64}(undef, 4)
+    LB = Vector{Float64}(undef, 4)
+    UB = Vector{Float64}(undef, 4)
 
     val = [x,y]
     for i = 1:2
