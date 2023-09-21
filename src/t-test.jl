@@ -135,9 +135,9 @@ function ttest(df::DataFrame,varname::Symbol; by::Union{Nothing,Symbol} = nothin
         error("`by` is required.")
     end
 
-    dft = df[completecases(df[[varname,by]]),[varname,by]]
+    dft = df[completecases(df[!,[varname,by]]),[varname,by]]
 
-    lev = sort(unique(dft[by]))
+    lev = sort(unique(dft[!,by]))
     if length(lev) != 2
         error(by," must have two levels; it has ",length(lev), " levels.")
     end
@@ -155,12 +155,12 @@ end
 function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = false, welch = false)
 
     if paired == true
-        ba = completecases(df[[var1,var2]])
+        ba = completecases(df[!,[var1,var2]])
         x = Vector(df[ba,var1])
         y = Vector(df[ba,var2])
     else
-        x = Vector(dropna(df[var1]))
-        y = Vector(dropna(df[var2]))
+        x = Vector(dropna(df[!,var1]))
+        y = Vector(dropna(df[!,var2]))
     end
 
     length(x) > 0 && length(y) > 0 || error("One or both variables are empty")
