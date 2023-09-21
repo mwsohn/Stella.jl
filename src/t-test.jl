@@ -135,7 +135,7 @@ function ttest(df::DataFrame,varname::Symbol; by::Symbol = nothing, sig = 95, we
         error("`by` is required.")
     end
 
-    dft = dropmissing(df[!,[varname, by]])
+    dft = DataFrames.dropmissing(df[!,[varname, by]])
 
     lev = sort(unique(dft[!,by]))
     if length(lev) != 2
