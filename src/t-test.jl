@@ -130,7 +130,7 @@ Pr(T < t) = 0.0837         Pr(|T| > |t|) = 0.1673         Pr(T > t) = 0.9163
 ```
 
 """
-function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, sig = 95, welch = false)
+function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, table = true, sig = 95, welch = false)
     if by == nothing
         error("`by` is required.")
     end
@@ -150,6 +150,8 @@ function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, sig = 95, w
     tt = ttest(val1,val2,paired=false,welch=welch,sig=sig,levels=lev)
     # tt.colnms[1] = string(by)
 
+    if table
+
     pretty_table(hcat(tt.array...)[:,2:end],
         header = tt.colnms[2:end],
         row_labels = tt.array[1],
@@ -167,7 +169,7 @@ function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, sig = 95, w
         alignment = [:l,:c,:r],
         hlines = :none,
         vlines = :none)
-        
+    end    
         
     return tt
 end
