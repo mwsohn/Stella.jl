@@ -161,7 +161,7 @@ function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, sig = 95, w
     println("H₀: diff = 0")
     println("t = ",tt.t," df = ",tt.dof,"\n")
 
-    pretty_table([tt.p_left,tt.p_both,tt.p_right],
+    pretty_table([tt.p_left tt.p_both tt.p_right],
         header = ["Hₐ: diff < 0          ","          Hₐ: diff != 0          ","          Hₐ: diff > 0"],
         hlines = :none,
         vlines = :none)
