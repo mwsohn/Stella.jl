@@ -508,7 +508,7 @@ function dfcompress(df::DataFrame; verbose = false)
 
         # if Array is empty after all missings are dropped
         # drop it from the df
-        if length(df2[!,v]) == sum(ismissing.(df2[!,v]))
+        if verbose && length(df2[!,v]) == sum(ismissing.(df2[!,v]))
             select!(df2,Not(v))
             println(v, " was empty, now deleted")
             continue
