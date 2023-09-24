@@ -523,7 +523,6 @@ function dfcompress(df::DataFrame)
         end
 
         # compress
-        println(v)
         df2[!,v] = Stella.acompress(df2[!,v])
 
         if eltype_old != nonmissingtype(eltype(df2[!,v]))
