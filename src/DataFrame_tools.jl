@@ -539,9 +539,9 @@ function acompress(da::AbstractVector)
     eltyp = eltype(da)
     eltype_old = nonmissingtype(eltype(da))
     
-    nomiss = false
+    nomiss = true
     if eltyp == Union{Missing,eltype_old}
-        nomiss = true;
+        nomiss = false;
     end
 
     # string variable - do not compress
@@ -549,10 +549,9 @@ function acompress(da::AbstractVector)
         return da
     end
 
-    # varmin = minimum(collect(skipmissing(da)))
-    varmax = maximum(collect(skipmissing(da)))
-
     if  eltype_old <: Integer
+
+        varmax = maximum(collect(skipmissing(da)))
         if eltype_old != Int8 && varmax <= typemax(Int8)
             if nomiss = false
                 return convert(Vector{Int8},da)
