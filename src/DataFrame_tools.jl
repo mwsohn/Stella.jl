@@ -469,7 +469,7 @@ function _read_dta(io, release, rlen, len, nvar,varlist,typelist,fmtlist,numskip
         end
 	end
 
-	dfcompress!(df)
+	return dfcompress(df)
 end
 
 # """
@@ -500,19 +500,22 @@ Reduce `df`'s memory use by changing the eltype of each column in the `df` to
 the type that can accommodate the larget and the smallest values within the same
 integer or float class.
 """
-function dfcompress!(df::DataFrame)
+function dfcompress(df::DataFrame)
+
+    df2 = deepcopy(df)
+
     for v in propertynames(df)
 
         # if Array is empty after all missings are dropped
         # drop it from the df
-        if length(df[!,v]) == sum(ismissing.(df[!,v]))
-            select!(df,Not(v))
+        if length(df2[!,v]) == sum(ismissing.(df2[!,v]))
+            select!(df2,Not(v))
             println(v, " was empty, now deleted")
             continue
         end
 
         # get the original eltype
-        eltype_old = nonmissingtype(eltype(df[!,v]))
+        eltype_old = nonmissingtype(eltype(df2[!,v]))
 
         # if string, continue
         if eltype_old == String
@@ -521,12 +524,14 @@ function dfcompress!(df::DataFrame)
 
         # compress
         println(v)
-        df[!,v] = Stella.acompress(df[!,v])
+        df2[!,v] = Stella.acompress(df2[!,v])
 
-        if eltype_old != nonmissingtype(eltype(df[!,v]))
-            println(v, " was ", eltype_old, ", now ", nonmissingtype(eltype(df[!,v])))
+        if eltype_old != nonmissingtype(eltype(df2[!,v]))
+            println(v, " was ", eltype_old, ", now ", nonmissingtype(eltype(df2[!,v])))
         end
     end
+
+    return df2
 end
 
 """
