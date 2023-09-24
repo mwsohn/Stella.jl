@@ -16,25 +16,23 @@
 function get_numbytes(typelist,nvar)
     nb = Vector{UInt16}(undef,nvar)
     for i in 1:nvar
-        for i in 1:nvar
-            if 0 < typelist[i] < 2045
-                nb[i] = typelist[i]
-            elseif typelist[i] == 32768
-                nb[i] = 8 # 8 bytes
-            elseif typelist[i] == 65526
-                nb[i] = 8 # double
-            elseif typelist[i] == 65527
-                nb[i] = 4 # float
-            elseif typelist[i] == 65528
-                nb[i] = 4 # long
-            elseif typelist[i] == 65529
-                nb[i] = 2 # int
-            elseif typelist[i] == 65530
-                nb[i] = 1 # byte
-            end
+        if 0 < typelist[i] < 2045
+            nb[i] = typelist[i]
+        elseif typelist[i] == 32768
+            nb[i] = 8 # 8 bytes
+        elseif typelist[i] == 65526
+            nb[i] = 8 # double
+        elseif typelist[i] == 65527
+            nb[i] = 4 # float
+        elseif typelist[i] == 65528
+            nb[i] = 4 # long
+        elseif typelist[i] == 65529
+            nb[i] = 2 # int
+        elseif typelist[i] == 65530
+            nb[i] = 1 # byte
         end
-        return nb
     end
+    return nb
 end
 
 function strtonull(str::Vector{UInt8})
@@ -47,39 +45,39 @@ function alloc_array(vtype,vfmt,nobs::Int64)
 
     # create an Array for the relevant type
     if 0 <= vtype < 2045 || vtype == 32768 # string variable
-        return Vector{Union{Missing,String}}(undef,nobs)
+        return Vector{Union{Missing,String}}(missing,nobs)
     elseif vtype == 65526
         if vfmt == "%d" || vfmt[1:3] == "%td"
-            return Vector{Union{Missing,Date}}(undef,nobs)
+            return Vector{Union{Missing,Date}}(missing,nobs)
         elseif vfmt[1:3] == "%tc" || vfmt[1:3] == "%tC"
-            return Vector{Union{Missing,DateTime}}(undef,nobs)
+            return Vector{Union{Missing,DateTime}}(missing,nobs)
         else
-            return Vector{Union{Missing,Float64}}(undef,nobs)
+            return Vector{Union{Missing,Float64}}(missing,nobs)
         end
     elseif vtype == 65527
         if vfmt == "%d" || vfmt[1:3] == "%td"
-            return Vector{Union{Missing,Date}}(undef,nobs)
+            return Vector{Union{Missing,Date}}(missing,nobs)
         elseif vfmt[1:3] == "%tc" || vfmt[1:3] == "%tC"
-            return Vector{Union{Missing,DateTime}}(undef,nobs)
+            return Vector{Union{Missing,DateTime}}(missing,nobs)
         else
-            return Vector{Union{Missing,Float32}}(undef,nobs)
+            return Vector{Union{Missing,Float32}}(missing,nobs)
         end
     elseif vtype == 65528
         if vfmt == "%d" || vfmt[1:3] == "%td"
-            return Vector{Union{Missing,Date}}(undef,nobs)
+            return Vector{Union{Missing,Date}}(missing,nobs)
         elseif vfmt[1:3] == "%tc" || vfmt[1:3] == "%tC"
-            return Vector{Union{Missing,DateTime}}(undef,nobs)
+            return Vector{Union{Missing,DateTime}}(missing,nobs)
         else
-            return Vector{Union{Missing,Int32}}(undef,nobs)
+            return Vector{Union{Missing,Int32}}(missing,nobs)
         end
     elseif vtype == 65529
         if vfmt == "%d" || vfmt[1:3] == "%td"
-            return Vector{Union{Missing,Date}}(undef,nobs)
+            return Vector{Union{Missing,Date}}(missing,nobs)
         else
-            return Vector{Union{Missing,Int16}}(undef,nobs)
+            return Vector{Union{Missing,Int16}}(missing,nobs)
         end
     elseif vtype == 65530
-        return Vector{Union{Missing,Int8}}(undef,nobs)
+        return Vector{Union{Missing,Int8}}(missing,nobs)
     end
 
     error(vtype, " is not a valid variable type in Stata.")
@@ -168,7 +166,7 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
     skip(fh,27)
     varlist = Vector{Symbol}(undef,nvar)
     for i in 1:nvar
-        varlist[i] = Symbol(strtonull(String(read(fh,len_varname))))
+        varlist[i] = Symbol(strtonull(read(fh,len_varname)))
     end
 
     # sort list
@@ -181,7 +179,7 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
     skip(fh,22) # </sortlist><formats> + 2 (2 bytes left over from the previous sequence)
     fmtlist = Vector{String}(undef,nvar)
     for i in 1:nvar
-        fmtlist[i] = strtonull(String(read(fh,len_format)))
+        fmtlist[i] = strtonull(read(fh,len_format))
     end
 
     # value label names
@@ -189,7 +187,7 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
     valuelabels = Vector{String}(undef,nvar)
     numvlabels = 0
     for i in 1:nvar
-        valuelabels[i] = strtonull(String(read(fh,len_labelname)))
+        valuelabels[i] = strtonull(read(fh,len_labelname))
 
         # count the number of value labels
         if length(valuelabels[i]) > 0
@@ -201,7 +199,7 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
     skip(fh,37) # </value_label_names><variable_labels>
     varlabels = Vector{String}(undef,nvar)
     for i in 1:nvar
-        varlabels[i] = strtonull(String(read(fh,len_varlabel)))
+        varlabels[i] = strtonull(read(fh,len_varlabel))
     end
 
     # characteristics - we will not import them
@@ -283,7 +281,7 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
 				break
 			end
         	len = read(fh,Int32)
-        	labname = Symbol(strtonull(String(read(fh,len_labelname))))
+        	labname = Symbol(strtonull(read(fh,len_labelname)))
 
         	skip(fh,3) # padding
 	        numvalues = read(fh,Int32) # number of entries
@@ -522,7 +520,7 @@ function dfcompress!(df::DataFrame)
         end
 
         # compress
-        df[!,v] = Stella.acompress(df[:,v])
+        df[!,v] = Stella.acompress(df[!,v])
 
         if eltype_old != nonmissingtype(eltype(df[!,v]))
             println(v, " was ", eltype_old, ", now ", nonmissingtype(eltype(df[!,v])))
@@ -539,26 +537,26 @@ function acompress(da::AbstractVector)
 
     # get the original eltype
     eltype_old = nonmissingtype(eltype(da))
+    # atype = 
 
     # string variable - do not compress
     if eltype_old == String
         return da
     end
 
-    # copy the vector
-    da2 = copy(da)
-
     if  eltype_old <: Integer
         # get minimum and maximum values
-        varmin = minimum(collect(skipmissing(da2)))
-        varmax = maximum(collect(skipmissing(da2)))
-        # test if Int8
+        varmin = minimum(collect(skipmissing(da)))
+        varmax = maximum(collect(skipmissing(da)))
+        
         if eltype_old != Int8 && varmin >= typemin(Int8) && varmax <= typemax(Int8)
-            return convert(Vector{Union{Missing,Int8}},da2)
+            return convert(Vector{Union{Missing,Int8}},da)
         elseif eltype_old != Int16 && varmin >= typemin(Int16) && varmax <= typemax(Int16)
-            return convert(Vector{Union{Missing,Int16}},da2)
+            return convert(Vector{Union{Missing,Int16}},da)
+        elseif eltype_old != Int32 && varmin >= typemin(Int32) && varmax <= typemax(Int32)
+            return convert(Vector{Union{Missing,Int32}},da)
         else
-            return da2
+            return da
         end
     elseif eltype_old <: AbstractFloat
         # first test if the floats are integer numbers
