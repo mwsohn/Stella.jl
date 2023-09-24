@@ -540,7 +540,7 @@ function acompress(da::AbstractVector)
     eltype_old = nonmissingtype(eltype(da))
     
     nomiss = true
-    if eltyp == Union{Missing,eltype_old}
+    if eltyp == Union{Missing,eltype_old} && sum(ismissing.(da)) > 0
         nomiss = false;
     end
 
