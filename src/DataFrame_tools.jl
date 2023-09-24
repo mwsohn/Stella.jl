@@ -500,7 +500,7 @@ Reduce `df`'s memory use by changing the eltype of each column in the `df` to
 the type that can accommodate the larget and the smallest values within the same
 integer or float class.
 """
-function dfcompress(df::DataFrame)
+function dfcompress(df::DataFrame; verbose = false)
 
     df2 = deepcopy(df)
 
@@ -525,7 +525,7 @@ function dfcompress(df::DataFrame)
         # compress
         df2[!,v] = Stella.acompress(df2[!,v])
 
-        if eltype_old != nonmissingtype(eltype(df2[!,v]))
+        if verbose && eltype_old != nonmissingtype(eltype(df2[!,v]))
             println(v, " was ", eltype_old, ", now ", nonmissingtype(eltype(df2[!,v])))
         end
     end
