@@ -600,6 +600,8 @@ function acompress(da::AbstractVector)
         else
             return da
         end
+    else
+        return da
     end
 end
 
