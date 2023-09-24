@@ -536,39 +536,64 @@ Compresses a vector to a smallest numeric type that can hold without loss of inf
 function acompress(da::AbstractVector)
 
     # get the original eltype
+    eltyp = eltype(da)
     eltype_old = nonmissingtype(eltype(da))
-    # atype = 
+    
+    nomiss = false
+    if eltyp == Union{Missing,eltype_old}
+        nomiss = true;
+    end
 
     # string variable - do not compress
     if eltype_old == String
         return da
     end
 
+    # varmin = minimum(collect(skipmissing(da)))
+    varmax = maximum(collect(skipmissing(da)))
+
     if  eltype_old <: Integer
-        # get minimum and maximum values
-        varmin = minimum(collect(skipmissing(da)))
-        varmax = maximum(collect(skipmissing(da)))
-        
-        if eltype_old != Int8 && varmin >= typemin(Int8) && varmax <= typemax(Int8)
-            return convert(Vector{Union{Missing,Int8}},da)
-        elseif eltype_old != Int16 && varmin >= typemin(Int16) && varmax <= typemax(Int16)
-            return convert(Vector{Union{Missing,Int16}},da)
-        elseif eltype_old != Int32 && varmin >= typemin(Int32) && varmax <= typemax(Int32)
-            return convert(Vector{Union{Missing,Int32}},da)
+        if eltype_old != Int8 && varmax <= typemax(Int8)
+            if nomiss = false
+                return convert(Vector{Int8},da)
+            else
+                return convert(Vector{Union{Missing,Int8}},da)
+            end
+        elseif eltype_old != Int16 && varmax <= typemax(Int16)
+            if nomiss = false
+                return convert(Vector{Int16}, da)
+            else
+                return convert(Vector{Union{Missing,Int16}}, da)
+            end
+        elseif eltype_old != Int32 && varmax <= typemax(Int32)
+            if nomiss = false
+                return convert(Vector{Int32}, da)
+            else
+                return convert(Vector{Union{Missing,Int32}}, da)
+            end
         else
             return da
         end
     elseif eltype_old <: AbstractFloat
         # first test if the floats are integer numbers
-        if sum(isinteger.(collect(skipmissing(da2))) .== false) == 0
-            return acompress(convert(Vector{Union{Missing,Int64}},da2))
+        if all(collect(skipmissing(da))) .% 1 == 0) == true
+            if nomiss
+                return acompress(convert(Vector{Int64},da))
+            else
+                return acompress(convert(Vector{Union{Missing,Int64}},da))
+            end
         end
 
-        # get minimum and maximum values
-        if eltype_old == Float64 && minimum(collect(skipmissing(da2))) >= floatmin(Float32) && maximum(collect(skipmissing(da2))) <= floatmax(Float32)
-            return convert(Vector{Union{Missing,Float32}},da2)
+        if eltype_old == Float64 && 
+            minimum(collect(skipmissing(da))) >= floatmin(Float32) && 
+            maximum(collect(skipmissing(da))) <= floatmax(Float32)
+            if nomiss
+                return convert(Vector{Float32},da)
+            else
+                return convert(Vector{Union{Missing,Float32}},da)
+            end
         else
-            return da2
+            return da
         end
     end
 end
