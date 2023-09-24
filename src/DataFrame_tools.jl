@@ -578,9 +578,8 @@ function acompress(da::AbstractVector)
             else
                 return convert(Vector{Union{Missing,Int32}}, da)
             end
-        else
-            return da
         end
+        return da
     elseif eltype_old <: AbstractFloat
         # first test if the floats are integer numbers
         if all(collect(skipmissing(da)) .% 1 == 0) == true
@@ -590,19 +589,6 @@ function acompress(da::AbstractVector)
                 return acompress(convert(Vector{Union{Missing,Int64}},da))
             end
         end
-
-        # if eltype_old == Float64 && 
-        #     minimum(collect(skipmissing(da))) >= typemin(Float32) && 
-        #     maximum(collect(skipmissing(da))) <= typemax(Float32)
-        #     if nomiss
-        #         return convert(Vector{Float32},da)
-        #     else
-        #         return convert(Vector{Union{Missing,Float32}},da)
-        #     end
-        # else
-        return da
-        # end
-    else
         return da
     end
 end
