@@ -35,10 +35,10 @@ function get_numbytes(typelist,nvar)
     return nb
 end
 
-function strtonull(str::Vector{UInt8})
-	n = findfirst(iszero,str)
+function strtonull(str::String)
+	n = findfirst('\0',str)
 	n == nothing && return str
-	return SubString[String(str),1,n-1]
+	return str[1:n-1]
 end
 
 function alloc_array(vtype,vfmt,nobs::Int64)
@@ -166,7 +166,7 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
     skip(fh,27)
     varlist = Vector{Symbol}(undef,nvar)
     for i in 1:nvar
-        varlist[i] = Symbol(strtonull(read(fh,len_varname)))
+        varlist[i] = Symbol(strtonull(String(read(fh,len_varname))))
     end
 
     # sort list
@@ -179,7 +179,7 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
     skip(fh,22) # </sortlist><formats> + 2 (2 bytes left over from the previous sequence)
     fmtlist = Vector{String}(undef,nvar)
     for i in 1:nvar
-        fmtlist[i] = strtonull(read(fh,len_format))
+        fmtlist[i] = strtonull(String(read(fh,len_format)))
     end
 
     # value label names
@@ -187,7 +187,7 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
     valuelabels = Vector{String}(undef,nvar)
     numvlabels = 0
     for i in 1:nvar
-        valuelabels[i] = strtonull(read(fh,len_labelname))
+        valuelabels[i] = strtonull(String(read(fh,len_labelname)))
 
         # count the number of value labels
         if length(valuelabels[i]) > 0
@@ -199,7 +199,7 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
     skip(fh,37) # </value_label_names><variable_labels>
     varlabels = Vector{String}(undef,nvar)
     for i in 1:nvar
-        varlabels[i] = strtonull(read(fh,len_varlabel))
+        varlabels[i] = strtonull(String(read(fh,len_varlabel)))
     end
 
     # characteristics - we will not import them
@@ -281,7 +281,7 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
 				break
 			end
         	len = read(fh,Int32)
-        	labname = Symbol(strtonull(read(fh,len_labelname)))
+        	labname = Symbol(strtonull(String(read(fh,len_labelname))))
 
         	skip(fh,3) # padding
 	        numvalues = read(fh,Int32) # number of entries
