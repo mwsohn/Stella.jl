@@ -578,8 +578,6 @@ function acompress(da::AbstractVector)
             else
                 return convert(Vector{Union{Missing,Int32}}, da)
             end
-        else
-            return da
         end
     elseif eltype_old <: AbstractFloat
         # first test if the floats are integer numbers
@@ -589,10 +587,9 @@ function acompress(da::AbstractVector)
             else
                 return acompress(convert(Vector{Union{Missing,Int64}},da))
             end
-        else
-            return da
         end
     end
+    return da
 end
 
 
