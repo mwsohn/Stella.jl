@@ -553,19 +553,19 @@ function acompress(da::AbstractVector)
 
         varmax = maximum(collect(skipmissing(da)))
         if eltype_old != Int8 && varmax <= typemax(Int8)
-            if nomiss = false
+            if nomiss == true
                 return convert(Vector{Int8},da)
             else
                 return convert(Vector{Union{Missing,Int8}},da)
             end
         elseif eltype_old != Int16 && varmax <= typemax(Int16)
-            if nomiss = false
+            if nomiss == true
                 return convert(Vector{Int16}, da)
             else
                 return convert(Vector{Union{Missing,Int16}}, da)
             end
         elseif eltype_old != Int32 && varmax <= typemax(Int32)
-            if nomiss = false
+            if nomiss == true
                 return convert(Vector{Int32}, da)
             else
                 return convert(Vector{Union{Missing,Int32}}, da)
