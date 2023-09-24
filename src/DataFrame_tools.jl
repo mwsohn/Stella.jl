@@ -494,7 +494,7 @@ end
 #
 #############################################################################
 """
-    dfcompress!(df::DataFrame)
+    dfcompress(df::DataFrame)
 
 Reduce `df`'s memory use by changing the eltype of each column in the `df` to
 the type that can accommodate the larget and the smallest values within the same
@@ -556,20 +556,21 @@ function acompress(da::AbstractVector)
 
     if  eltype_old <: Integer
 
+        varmin = minimum(collect(skipmissing(da)))
         varmax = maximum(collect(skipmissing(da)))
-        if eltype_old != Int8 && varmax <= typemax(Int8)
+        if eltype_old != Int8 && varmin <= typemin(Int8) && varmax <= typemax(Int8)
             if nomiss
                 return convert(Vector{Int8},da)
             else
                 return convert(Vector{Union{Missing,Int8}},da)
             end
-        elseif eltype_old != Int16 && varmax <= typemax(Int16)
+        elseif eltype_old != Int16 && varmin <= typemin(Int16) && varmax <= typemax(Int16)
             if nomiss
                 return convert(Vector{Int16}, da)
             else
                 return convert(Vector{Union{Missing,Int16}}, da)
             end
-        elseif eltype_old != Int32 && varmax <= typemax(Int32)
+        elseif eltype_old != Int32 && varmin <= typemin(Int32) && varmax <= typemax(Int32)
             if nomiss
                 return convert(Vector{Int32}, da)
             else
@@ -589,8 +590,8 @@ function acompress(da::AbstractVector)
         end
 
         if eltype_old == Float64 && 
-            minimum(collect(skipmissing(da))) >= floatmin(Float32) && 
-            maximum(collect(skipmissing(da))) <= floatmax(Float32)
+            minimum(collect(skipmissing(da))) >= typemin(Float32) && 
+            maximum(collect(skipmissing(da))) <= typemax(Float32)
             if nomiss
                 return convert(Vector{Float32},da)
             else
