@@ -469,7 +469,7 @@ function _read_dta(io, release, rlen, len, nvar,varlist,typelist,fmtlist,numskip
         end
 	end
 
-	return df
+	return dfcompress(df)
 end
 
 # """
