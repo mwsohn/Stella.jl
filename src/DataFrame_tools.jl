@@ -591,17 +591,17 @@ function acompress(da::AbstractVector)
             end
         end
 
-        if eltype_old == Float64 && 
-            minimum(collect(skipmissing(da))) >= typemin(Float32) && 
-            maximum(collect(skipmissing(da))) <= typemax(Float32)
-            if nomiss
-                return convert(Vector{Float32},da)
-            else
-                return convert(Vector{Union{Missing,Float32}},da)
-            end
-        else
-            return da
-        end
+        # if eltype_old == Float64 && 
+        #     minimum(collect(skipmissing(da))) >= typemin(Float32) && 
+        #     maximum(collect(skipmissing(da))) <= typemax(Float32)
+        #     if nomiss
+        #         return convert(Vector{Float32},da)
+        #     else
+        #         return convert(Vector{Union{Missing,Float32}},da)
+        #     end
+        # else
+        return da
+        # end
     else
         return da
     end
