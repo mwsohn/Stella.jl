@@ -36,7 +36,7 @@ function get_numbytes(typelist,nvar)
 end
 
 function strtonull(str::Vector{UInt8})
-	n = findfirst(iszero,x)
+	n = findfirst(iszero,str)
 	n == nothing && return str
 	return SubString[String(str),1,n-1]
 end
