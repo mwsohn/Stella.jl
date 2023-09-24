@@ -130,26 +130,47 @@ Pr(T < t) = 0.0837         Pr(|T| > |t|) = 0.1673         Pr(T > t) = 0.9163
 ```
 
 """
-function ttest(df::DataFrame,varname::Symbol; by::Union{Nothing,Symbol} = nothing, sig = 95, welch = false)
+function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, table = true, sig = 95, welch = false)
     if by == nothing
         error("`by` is required.")
     end
 
-    dft = df[completecases(df[!,[varname,by]]),[varname,by]]
+    dft = dropmissing( df[!, [varname, by]] )
 
     lev = sort(unique(dft[!,by]))
     if length(lev) != 2
         error(by," must have two levels; it has ",length(lev), " levels.")
     end
 
-    # val = Vector{Float64}(undef,2, length(lev))
-    # val[1] = Vector(dft[dft[by] .== lev[1],varname])
-    # val[2] = Vector(dft[dft[by] .== lev[2],varname])
-    if length(val[1]) == 0 || length(val[2]) == 0
+    val1 = dft[dft[!, by] .== lev[1],varname]
+    val2 = dft[dft[!, by] .== lev[2],varname]
+    if length(val1) == 0 || length(val2) == 0
         error("On or both groups have zero observations")
     end
-    tt = ttest(val[1],val[2],paired=false,welch=welch,sig=sig,levels=lev)
-    tt.colnms[1] = string(by)
+    tt = ttest(val1,val2,paired=false,welch=welch,sig=sig,levels=lev)
+    # tt.colnms[1] = string(by)
+
+    if table
+
+    pretty_table(hcat(tt.array...)[:,2:end],
+        header = tt.colnms[2:end],
+        row_labels = tt.array[1],
+        row_label_column_title = tt.colnms[1],
+        hlines = [0,1,3,4,5],
+        formatters = (ft_printf("%.0f",1), ft_printf("%.4f",[2,3,4,5])))
+
+    println("\ndiff = mean(",lev[1],") - mean(",lev[2],")")
+    println("H₀: diff = 0")
+    println("t = ",tt.t," df = ",tt.dof,"\n")
+
+    pretty_table([tt.p_left tt.p_both tt.p_right],
+        header = ["Hₐ: diff < 0       ","       Hₐ: diff != 0       ","       Hₐ: diff > 0"],
+        formatters = (ft_printf("%.5f")),
+        alignment = [:l,:c,:r],
+        hlines = :none,
+        vlines = :none)
+    end    
+        
     return tt
 end
 function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = false, welch = false)
@@ -183,12 +204,12 @@ function ttest(x::AbstractVector,y::AbstractVector; paired::Bool=false,welch::Bo
     end
 
     # compute standard errors and confidence intervals
-    N = Vector{Int64}(4)
-    MEAN = Vector{Float64}(4)
-    SD = Vector{Float64}(4)
-    SE = Vector{Float64}(4)
-    LB = Vector{Float64}(4)
-    UB = Vector{Float64}(4)
+    N = Vector{Int64}(undef, 4)
+    MEAN = Vector{Float64}(undef, 4)
+    SD = Vector{Float64}(undef, 4)
+    SE = Vector{Float64}(undef, 4)
+    LB = Vector{Float64}(undef, 4)
+    UB = Vector{Float64}(undef, 4)
 
     val = [x,y]
     for i = 1:2
@@ -196,7 +217,7 @@ function ttest(x::AbstractVector,y::AbstractVector; paired::Bool=false,welch::Bo
         MEAN[i] = mean(val[i])
         SD[i] = std(val[i])
         SE[i] = SD[i] / sqrt(N[i])
-        LB[i],UB[i] = StatsBase.confint(OneSampleTTest(val[i],0),1-sig/100)
+        LB[i],UB[i] = StatsAPI.confint(OneSampleTTest(val[i]))
     end
 
     # combined
@@ -204,14 +225,14 @@ function ttest(x::AbstractVector,y::AbstractVector; paired::Bool=false,welch::Bo
     MEAN[3] = mean(vcat(val[1],val[2]))
     SD[3] = std(vcat(val[1],val[2]))
     SE[3] = SD[3] / sqrt(N[3])
-    LB[3],UB[3] = StatsBase.confint(OneSampleTTest(vcat(val[1],val[2]),0),1 .- sig/100)
+    LB[3],UB[3] = StatsAPI.confint(OneSampleTTest(vcat(val[1],val[2])))
 
     # diff
     N[4] = paired ? N[1] : 0 # not to be used
     MEAN[4] = tt.xbar
     SD[4] = paired ? tt.stderr*sqrt(N[4]) : 0.0 # not to be used
     SE[4] = tt.stderr
-    LB[4],UB[4] = StatsBase.confint(tt,1 .- sig/100)
+    LB[4],UB[4] = StatsAPI.confint(tt)
 
     return TTReturn(title,
         ["Variable", "N", "Mean", "SD", "SE", string(sig,"% LB"), string(sig,"% UB")],
@@ -247,7 +268,7 @@ function ttest(var::AbstractVector,μ0::Real = 0; sig = 95)
 
     # compute standard errors and confidence intervals
     SE = SD / sqrt(N)
-    (LB, UB) = StatsBase.confint(OneSampleTTest(var,0),1-sig/100)
+    (LB, UB) = StatsAPI.confint(OneSampleTTest(var,0),1-sig/100)
 
     return TTReturn(title,
         ["Variable", "N", "Mean", "SD", "SE", string(sig,"% LB"), string(sig,"% UB")],
