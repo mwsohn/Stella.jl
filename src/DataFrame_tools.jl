@@ -506,7 +506,7 @@ function dfcompress!(df::DataFrame)
         # if Array is empty after all missings are dropped
         # drop it from the df
         if length(df[!,v]) == sum(ismissing.(df[!,v]))
-            delete!(df,v)
+            select!(df,Not(v))
             println(v, " was empty, now deleted")
             continue
         end
@@ -520,6 +520,7 @@ function dfcompress!(df::DataFrame)
         end
 
         # compress
+        println(v)
         df[!,v] = Stella.acompress(df[!,v])
 
         if eltype_old != nonmissingtype(eltype(df[!,v]))
@@ -537,7 +538,7 @@ function acompress(da::AbstractVector)
 
     # get the original eltype
     eltyp = eltype(da)
-    eltype_old = nonmissingtype(eltype(da))
+    eltype_old = nonmissingtype(eltyp)
     
     nomiss = true
     if eltyp == Union{Missing,eltype_old} && sum(ismissing.(da)) > 0
