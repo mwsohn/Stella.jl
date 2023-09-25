@@ -37,7 +37,7 @@ end
 function _tab1(na::NamedArray; decimals = 4, labels=labels)
  
     # rownames
-    rownames = [ Labels.vallabls(labels, na.dimnames[1], x) for x in names(na)[1] ]
+    rownames = [ Labels.vallab(labels, na.dimnames[1], x) for x in names(na)[1] ]
 
     # Total row label
     append!(rownames,"Total")
