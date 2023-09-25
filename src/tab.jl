@@ -102,10 +102,11 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing)
 
     pretty_table(d,
         row_labels = rownames2,
-        header=vcat( string(na.dimnames[1]," / ", na.dimnames[2]), colnames),
+        row_name_column_title=string(na.dimnames[1], " / ", na.dimnames[2]),
+        header=colnames, 
         max_num_of_rows = maxrows,
         max_num_of_columns = maxcols,
-            hlines=vcat([0, 1], [x * 3 + 1 for x in 1:(nrow+1)]))
+        hlines=vcat([0, 1], [x * 3 + 1 for x in 1:(nrow+1)]))
 
     (statistic, dof, pval) = Stella.chi2(na.array)
     println("Pearson chi-square = ", @sprintf("%.4f",statistic), " (", dof, "), p ", 
