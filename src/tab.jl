@@ -60,7 +60,8 @@ function _tab1(na::NamedArray; decimals = 4, labels=labels)
     PrettyTables.pretty_table(ar, 
         header=[na.dimnames[1],"Counts","Percent","Cum. Percent"],
         formatters = ft_round(decimals,[3,4]),
-        hlines=[0,1,length(rownames),length(rownames)+1])
+        hlines=[0,1,length(rownames),length(rownames)+1],
+        vlines=:none)
 end
 
 function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing)
