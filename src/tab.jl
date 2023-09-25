@@ -37,10 +37,10 @@ end
 function _tab1(na::NamedArray; decimals = 4, labels=labels)
  
     # rownames
-    rownames = names(na)[1]
+    rownames = [ Labels.vallabls(labels, na.dimnames[1], x) for x in names(na)[1] ]
 
     # Total row label
-    rownames = vcat(rownames,"Total")
+    append!(rownames,"Total")
 
     # counts
     counts = vcat(na.array,sum(na,dims=1))
@@ -56,7 +56,8 @@ function _tab1(na::NamedArray; decimals = 4, labels=labels)
     PrettyTables.pretty_table(ar, 
         header=[na.dimnames[1],"Counts","Percent","Cum. Percent"],
         formatters = ft_round(decimals,[3,4]),
-        hlines=[0,1,length(rownames),length(rownames)+1])
+        hlines=[0,1,length(rownames),
+        length(rownames)+1])
 end
 
 function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing)
