@@ -106,7 +106,8 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing)
         header=colnames, 
         max_num_of_rows = maxrows,
         max_num_of_columns = maxcols,
-        hlines=vcat([0, 1], [x * 3 + 1 for x in 1:(nrow+1)]))
+        hlines=vcat([0, 1], [x * 3 + 1 for x in 1:(nrow+1)]),
+        vlines = :none)
 
     (statistic, dof, pval) = Stella.chi2(na.array)
     println("Pearson chi-square = ", @sprintf("%.4f",statistic), " (", dof, "), p ", 
