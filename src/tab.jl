@@ -40,7 +40,7 @@ function _tab1(na::NamedArray; decimals = 4, labels=labels)
     rownames = [ Labels.vallab(labels, na.dimnames[1], x) for x in names(na)[1] ]
 
     # Total row label
-    append!(rownames,"Total")
+    rownames = vcat(rownames,"Total")
 
     # counts
     counts = vcat(na.array,sum(na,dims=1))
