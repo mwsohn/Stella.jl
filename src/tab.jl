@@ -37,7 +37,11 @@ end
 function _tab1(na::NamedArray; decimals = 4, labels=labels)
  
     # rownames
-    rownames = [ Labels.vallab(labels, na.dimnames[1], x) for x in names(na)[1] ]
+    if labels == nothing
+        rownames = names(na)[1]
+    else
+        rownames = [ Labels.vallab(labels, na.dimnames[1], x) for x in names(na)[1] ]
+    end
 
     # Total row label
     rownames = vcat(rownames,"Total")
@@ -62,11 +66,19 @@ end
 function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing)
     
     # rownames
-    rownames = [Labels.vallab(labels, na.dimnames[1], x) for x in names(na)[1]]
+    if labels == nothing
+        rownames = names(na)[1]
+    else
+        rownames = [Labels.vallab(labels, na.dimnames[1], x) for x in names(na)[1]]
+    end
     rownames = vcat(rownames,"Total")
 
     # colunm names
-    colnames = [Labels.vallab(labels, na.dimnames[2], x) for x in names(na)[2]]
+    if labels == nothing
+        colnames = names(na)[2]
+    else
+        colnames = [Labels.vallab(labels, na.dimnames[2], x) for x in names(na)[2]]
+    end
     colnames = vcat(colnames,"Total") 
 
     # counts
