@@ -155,7 +155,7 @@ function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, table = tru
         pretty_table(hcat(tt.array...)[:,2:end],
             header = tt.colnms[2:end],
             row_labels = labels == nothing ? tt.array[1] : [Labels.vallab(labels, by, x) for x in tt.array[1] ],
-            row_label_column_title = string(by), # tt.colnms[1],
+            row_label_column_title = labels == nothing ? string(by) : Labels.vavlab(labels, by),
             hlines = [0,1,3,4,5],
             vlines = [1],
             formatters = (ft_printf("%.0f",1), ft_printf("%.4f",[2,3,4,5])))
@@ -174,22 +174,22 @@ function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, table = tru
         return tt
     end
 end
-function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = false, welch = false)
+function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = false, welch = false, labels = nothing, table = true)
 
     if paired == true
         ba = completecases(df[!,[var1,var2]])
-        x = Vector(df[ba,var1])
-        y = Vector(df[ba,var2])
+        x = df[ba,var1]
+        y = df[ba,var2]
     else
-        x = Vector(dropna(df[!,var1]))
-        y = Vector(dropna(df[!,var2]))
+        x = collect(skipmissing(df[!,var1]))
+        y = collect(skipmissing(df[!,var2]))
     end
 
     length(x) > 0 && length(y) > 0 || error("One or both variables are empty")
 
-    return ttest(x,y,paired=paired,welch=welch,levels=[var1,var2])
+    return ttest(x,y,paired=paired,welch=welch,levels=[var1,var2], table = table, labels = labels)
 end
-function ttest(x::AbstractVector,y::AbstractVector; paired::Bool=false,welch::Bool=false,sig=95,levels=Any[:x,:y])
+function ttest(x::AbstractVector,y::AbstractVector; paired::Bool=false,welch::Bool=false,sig=95,levels=Any[:x,:y],labels=nothing, table=true)
 
     paired && length(x) != length(y) && error("Paired t test requires equal lengths in input vectors")
 
@@ -235,18 +235,39 @@ function ttest(x::AbstractVector,y::AbstractVector; paired::Bool=false,welch::Bo
     SE[4] = tt.stderr
     LB[4],UB[4] = StatsAPI.confint(tt)
 
-    return TTReturn(title,
-        ["Variable", "N", "Mean", "SD", "SE", string(sig,"% LB"), string(sig,"% UB")],
-        [vcat(levels,"combined","diff"),N,MEAN,SD,SE,LB,UB],
-        levels,
-        tt.μ0,
-        tt.t,
-        tt.df,
-        pvalue(tt, tail = :left),
-        pvalue(tt),
-        pvalue(tt, tail = :right),
-        paired,
-        welch)
+    if table
+        pretty_table([N MEAN SD SE LB UB]
+            header=["N", "Mean", "SD", "SE", string(sig, "% LB"), string(sig, "% UB")],
+            row_labels = levels,
+            row_label_column_title = "Variable",
+            hlines = [0,1,3,4,5],
+            vlines = [1])
+
+        println("diff = mean(", levels[1],") - mean(", levels[2], ")")
+        println("H₀: diff = 0")
+        println("t = ", tt.t, "(df =", tt.df, ")\n")
+
+        pretty_table([tt.p_left tt.p_both tt.p_right],
+            header = (["Hₐ: diff < 0     ","     Hₐ: diff != 0     ","     Hₐ: diff > 0"],
+                ["Pr(T < t)","Pr(|T| < |t|)",""Pr(T > t)"" ]),
+            formatters = (ft_printf("%.5f")),
+            alignment = [:l,:c,:r],
+            hlines = :none,
+            vlines = :none)
+    else
+        return TTReturn(title,
+            ["Variable", "N", "Mean", "SD", "SE", string(sig,"% LB"), string(sig,"% UB")],
+            [vcat(levels,"combined","diff"),N,MEAN,SD,SE,LB,UB],
+            levels,
+            tt.μ0,
+            tt.t,
+            tt.df,
+            pvalue(tt, tail = :left),
+            pvalue(tt),
+            pvalue(tt, tail = :right),
+            paired,
+            welch)
+    end
 end
 function ttest(df::DataFrame, varname::Symbol, μ0::Real; sig = 95)
     v = Vector(df[completecases(df[[varname]]),varname])
