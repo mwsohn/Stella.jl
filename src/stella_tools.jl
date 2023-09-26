@@ -497,7 +497,8 @@ function pwcorr(indf::DataFrame, args::Vector{Symbol}; decimals=4, html=false)
             header = colnames, 
             row_labels = vcat([[x,"",""] for x in colnames]...),
             formatters = (ft_nomissing, ft_printf(fmt),r_printf),
-            hlines = vcat([0, 1], [x*3 + 1 for x in 1:cols]))
+            hlines = vcat([0, 1], [x*3 + 1 for x in 1:cols]),
+	    vlines = [1])
     end
 end
 pwcorr(a::DataFrame, args::Symbol...; decimals = 4) = pwcorr2(a, [args...]; decimals = decimals)
