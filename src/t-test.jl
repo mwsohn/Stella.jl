@@ -178,8 +178,8 @@ function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = fal
 
     if paired == true
         ba = completecases(df[!,[var1,var2]])
-        x = df[ba,var1]
-        y = df[ba,var2]
+        x = collect(df[ba,var1])
+        y = collect(df[ba,var2])
     else
         x = collect(skipmissing(df[!,var1]))
         y = collect(skipmissing(df[!,var2]))
@@ -195,7 +195,7 @@ function ttest(x::AbstractVector,y::AbstractVector; paired::Bool=false,welch::Bo
 
     if paired == true
         title = "Paired t test"
-        tt = OneSampleTTest(x, y, 0.0)
+        tt = OneSampleTTest(x, y)
     elseif welch == false
         title = "Two-sample t test with equal variances"
         tt = EqualVarianceTTest(x, y)
