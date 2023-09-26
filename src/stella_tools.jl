@@ -494,6 +494,7 @@ function pwcorr(indf::DataFrame, args::Vector{Symbol}; decimals=4, html=false)
             formatters = (ft_nomissing, ft_printf(fmt),r_printf))
     else
         pretty_table(outmat,
+            crop = :none,
             header = colnames, 
             row_labels = vcat([[x,"",""] for x in colnames]...),
             formatters = (ft_nomissing, ft_printf(fmt),r_printf),
