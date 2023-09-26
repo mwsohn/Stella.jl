@@ -486,7 +486,7 @@ function pwcorr(indf::DataFrame, args::Vector{Symbol}; decimals=4, html=false)
     r_printf = (v,i,j) -> (mod(i,3) == 2 ? split(v,".")[1] : v)
 
     # pretty_table
-    if hmtl
+    if html
         pretty_table(outmat,
             backend=Val(:html),
             header = colnames, 
