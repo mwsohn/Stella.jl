@@ -240,7 +240,7 @@ function ttest(x::AbstractVector,y::AbstractVector; paired::Bool=false,welch::Bo
             header=["N", "Mean", "SD", "SE", string(sig, "% LB"), string(sig, "% UB")],
             row_labels = vcat(levels,"combined","diff"),
             row_label_column_title = "Variable",
-            formatters = (ft_printf("%.5f",[2,3,4,5,6])),
+            formatters = (ft_printf("%.5f",[2,3,4,5,6]),ft_printf("%.0f",[1])),
             hlines = [0,1,3,4,5],
             vlines = [1])
 
@@ -249,7 +249,7 @@ function ttest(x::AbstractVector,y::AbstractVector; paired::Bool=false,welch::Bo
         println("t = ", tt.t, "(df =", tt.df, ")\n")
 
         pretty_table([pvalue(tt, tail=:left) pvalue(tt) pvalue(tt, tail=:right)],
-            header = ["Hₐ: diff < 0     ","     Hₐ: diff != 0     ","     Hₐ: diff > 0"],
+            header = ["Hₐ: diff < 0       ","       Hₐ: diff != 0       ","       Hₐ: diff > 0"],
                 # ["Pr(T < t)","Pr(|T| < |t|)","Pr(T > t)" ]),
             formatters = (ft_printf("%.5f")),
             alignment = [:l,:c,:r],
