@@ -250,7 +250,7 @@ function ttest(x::AbstractVector,y::AbstractVector; paired::Bool=false,welch::Bo
 
         pretty_table([tt.p_left tt.p_both tt.p_right],
             header = (["Hₐ: diff < 0     ","     Hₐ: diff != 0     ","     Hₐ: diff > 0"],
-                ["Pr(T < t)","Pr(|T| < |t|)",""Pr(T > t)"" ]),
+                ["Pr(T < t)","Pr(|T| < |t|)","Pr(T > t)" ]),
             formatters = (ft_printf("%.5f")),
             alignment = [:l,:c,:r],
             hlines = :none,
