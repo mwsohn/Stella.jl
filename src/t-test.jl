@@ -246,7 +246,7 @@ function ttest(x::AbstractVector,y::AbstractVector; paired::Bool=false,welch::Bo
 
         println("diff = mean(", levels[1],") - mean(", levels[2], ")")
         println("H₀: diff = 0")
-        println("t = ", tt.t, "(df =", tt.df, ")\n")
+        println("t = ", tt.t, "(df = ", tt.df, ")\n")
 
         pretty_table([pvalue(tt, tail=:left) pvalue(tt) pvalue(tt, tail=:right)],
             header = ["Hₐ: diff < 0       ","       Hₐ: diff != 0       ","       Hₐ: diff > 0"],
