@@ -177,9 +177,9 @@ end
 function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = false, welch = false, labels = nothing, table = true)
 
     if paired == true
-        ba = completecases(df[!,[var1,var2]])
-        x = convert(Vector{nonmissingtype(eltype(df[!, var1]))}, df[ba, var1])
-        y = convert(Vector{nonmissingtype(eltype(df[!, var2]))}, df[ba, var2])
+        df2 = dropmissing(df[:,[var1,var2]])
+        x = df2[:, var1]
+        y = df2[:, var2])
     else
         x = collect(skipmissing(df[!,var1]))
         y = collect(skipmissing(df[!,var2]))
