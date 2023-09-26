@@ -486,7 +486,7 @@ function pwcorr(indf::DataFrame, args::Vector{Symbol}; decimals=4, html=false)
     r_printf = (v,i,j) -> (mod(i,3) == 2 ? split(v,".")[1] : v)
 
     # pretty_table
-    if hmtl
+    if html
         pretty_table(outmat,
             backend=Val(:html),
             header = colnames, 
@@ -498,7 +498,8 @@ function pwcorr(indf::DataFrame, args::Vector{Symbol}; decimals=4, html=false)
             header = colnames, 
             row_labels = vcat([[x,"",""] for x in colnames]...),
             formatters = (ft_nomissing, ft_printf(fmt),r_printf),
-            hlines = vcat([0, 1], [x*3 + 1 for x in 1:cols]))
+            hlines = vcat([0, 1], [x*3 + 1 for x in 1:cols]),
+	    vlines = [1])
     end
 end
 pwcorr(a::DataFrame, args::Symbol...; decimals = 4) = pwcorr2(a, [args...]; decimals = decimals)
