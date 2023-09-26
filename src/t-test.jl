@@ -177,7 +177,7 @@ end
 function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = false, welch = false, labels = nothing, table = true)
 
     if paired == true
-        df2 = dropmissing(df[:,[var1,var2]])
+        df2 = DataFrames.dropmissing(df[:,[var1,var2]])
         x = df2[:, var1]
         y = df2[:, var2])
     else
