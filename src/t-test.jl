@@ -236,7 +236,7 @@ function ttest(x::AbstractVector,y::AbstractVector; paired::Bool=false,welch::Bo
     LB[4],UB[4] = StatsAPI.confint(tt)
 
     if table
-        pretty_table([N MEAN SD SE LB UB]
+        pretty_table([N MEAN SD SE LB UB],
             header=["N", "Mean", "SD", "SE", string(sig, "% LB"), string(sig, "% UB")],
             row_labels = levels,
             row_label_column_title = "Variable",
