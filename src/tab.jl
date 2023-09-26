@@ -103,7 +103,7 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing)
 
     pretty_table(d,
         row_labels = rownames2,
-        row_name_column_title=string(na.dimnames[1], " / ", na.dimnames[2]),
+        row_label_column_title=string(na.dimnames[1], " / ", na.dimnames[2]),
         header=colnames, 
         max_num_of_rows = maxrows,
         max_num_of_columns = maxcols,
