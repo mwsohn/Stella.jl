@@ -238,7 +238,7 @@ function ttest(x::AbstractVector,y::AbstractVector; paired::Bool=false,welch::Bo
     if table
         pretty_table([N MEAN SD SE LB UB],
             header=["N", "Mean", "SD", "SE", string(sig, "% LB"), string(sig, "% UB")],
-            row_labels = levels,
+            row_labels = vcat(levels,"combined","diff"),
             row_label_column_title = "Variable",
             formatters = (ft_printf("%.5f",[2,3,4,5,6])),
             hlines = [0,1,3,4,5],
