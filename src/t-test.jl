@@ -130,7 +130,7 @@ Pr(T < t) = 0.0837         Pr(|T| > |t|) = 0.1673         Pr(T > t) = 0.9163
 ```
 
 """
-function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, table = true, sig = 95, welch = false)
+function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, table = true, sig = 95, welch = false, labels = nothing)
     if by == nothing
         error("`by` is required.")
     end
@@ -152,27 +152,27 @@ function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, table = tru
 
     if table
 
-    pretty_table(hcat(tt.array...)[:,2:end],
-        header = tt.colnms[2:end],
-        row_labels = [Labels.vallab(labels, by, x) for x in tt.array[1] ],
-        row_label_column_title = tt.colnms[1],
-        hlines = [0,1,3,4,5],
-        vlines = [1],
-        formatters = (ft_printf("%.0f",1), ft_printf("%.4f",[2,3,4,5])))
+        pretty_table(hcat(tt.array...)[:,2:end],
+            header = tt.colnms[2:end],
+            row_labels = labels == nothing ? tt.array[1] : [Labels.vallab(labels, by, x) for x in tt.array[1] ],
+            row_label_column_title = tt.colnms[1],
+            hlines = [0,1,3,4,5],
+            vlines = [1],
+            formatters = (ft_printf("%.0f",1), ft_printf("%.4f",[2,3,4,5])))
 
-    println("\ndiff = mean(",lev[1],") - mean(",lev[2],")")
-    println("H₀: diff = 0")
-    println("t = ",tt.t," df = ",tt.dof,"\n")
+        println("\ndiff = mean(",lev[1],") - mean(",lev[2],")")
+        println("H₀: diff = 0")
+        println("t = ",tt.t," df = ",tt.dof,"\n")
 
-    pretty_table([tt.p_left tt.p_both tt.p_right],
-        header = ["Hₐ: diff < 0       ","       Hₐ: diff != 0       ","       Hₐ: diff > 0"],
-        formatters = (ft_printf("%.5f")),
-        alignment = [:l,:c,:r],
-        hlines = :none,
-        vlines = :none)
-    end    
-        
-    return tt
+        pretty_table([tt.p_left tt.p_both tt.p_right],
+            header = ["Hₐ: diff < 0       ","       Hₐ: diff != 0       ","       Hₐ: diff > 0"],
+            formatters = (ft_printf("%.5f")),
+            alignment = [:l,:c,:r],
+            hlines = :none,
+            vlines = :none)
+    else    
+        return tt
+    end
 end
 function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = false, welch = false)
 
