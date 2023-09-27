@@ -458,7 +458,7 @@ function pwcorr(indf::DataFrame, args::Vector{Symbol}; decimals=4, html=false)
         for i = j:cols
             var2 = colnames[i]
             if i != j
-                b = dropmissing(a[:,[var1, var2]) # a[completecases(indf[!,[var1,var2]]), [var1, var2]]
+                b = dropmissing(a[:,[var1, var2]]) # a[completecases(indf[!,[var1,var2]]), [var1, var2]]
                 if size(b,1) == 0
                     error("No usable common observations in ", colnames[i], " and ", colnames[j])
                 end
