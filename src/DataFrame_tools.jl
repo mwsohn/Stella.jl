@@ -669,7 +669,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
         # variable name
         varstr = string(v)
 
-	# Array Type
+	    # Array Type
         dfv[i,:ArrayType] = atype(df,v)
 
         # Eltype
