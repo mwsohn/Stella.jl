@@ -194,7 +194,7 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
             numvlabels += 1
         end
     end
-
+    println(valuelables)
     # variable labels
     skip(fh,37) # </value_label_names><variable_labels>
     varlabels = Vector{String}(undef,nvar)
