@@ -786,7 +786,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
     	dfv[!,:Missing] = Vector{String}(undef,size(dfv,1))
     end
 
-    if length(colmetadatakeys(df,"label") ) > 0
+    if length(colmetadatakeys(df) ) > 0
         dfv[!,:Lblname] = Vector{Union{Missing,String}}(undef,size(dfv,1))
         dfv[!,:Description] = Vector{Union{Missing,String}}(undef,size(dfv,1))
         varlabel = Stella.col_label(df)
