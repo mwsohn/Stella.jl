@@ -94,6 +94,12 @@ function set_value_label!(_df::AbstractDataFrame, varname::Union{Symbol,String},
     colmetadata!(_df,varnum,"lblname",vlabname)
     return nothing
 end
+function set_value_label!(_df::AbstractDataFrame,lblnames::Dict)
+    for v in keys(lblnames)
+        colmetadata!(_df,v,"lblname",lblnames[v])
+    end
+    return nothing
+end
 
 function value_label(_df::AbstractDataFrame, varname::Union{Symbol,String})
     if "lblname" in colmetadatakeys(_df)
