@@ -264,56 +264,56 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
         error("Wrong position")
     end
 
-	if read_labels == true
+    # read value labels
+    # loop through all value labels
+    # define a Dict first
 
-		# read value labels
-    	# loop through all value labels
-    	# define a Dict first
+    value_labels = Dict()
 
-    	value_labels = Dict()
+    # numvlabels is defined above at the header section
+    for i in 1:numvlabels
 
-    	# numvlabels is defined above at the header section
-    	for i in 1:numvlabels
+        skipstr = String(read(fh,5))
+        if skipstr != "<lbl>"
+            break
+        end
+        len = read(fh,Int32)
+        labname = Symbol(strtonull(String(read(fh,len_labelname))))
 
-			skipstr = String(read(fh,5))
-			if skipstr != "<lbl>"
-				break
-			end
-        	len = read(fh,Int32)
-        	labname = Symbol(strtonull(String(read(fh,len_labelname))))
+        skip(fh,3) # padding
+        numvalues = read(fh,Int32) # number of entries
+        txtlen = read(fh,Int32) # length of value label text
+        value_labels[labname] = Dict()
 
-        	skip(fh,3) # padding
-	        numvalues = read(fh,Int32) # number of entries
-	        txtlen = read(fh,Int32) # length of value label text
-	        value_labels[labname] = Dict()
+        #
+        offset = Vector{Int32}(undef,numvalues)
+        read!(fh,offset) # offset
+        values = Vector{Int32}(undef,numvalues)
+        read!(fh,values) # values
+        valtext = String(read(fh,txtlen)) # text table
 
-	        #
-	        offset = Vector{Int32}(undef,numvalues)
-			read!(fh,offset) # offset
-			values = Vector{Int32}(undef,numvalues)
-	        read!(fh,values) # values
-	        valtext = String(read(fh,txtlen)) # text table
+        for k in 1:numvalues
+            if k == numvalues
+                offset_end = txtlen
+            else
+                offset_end = offset[k+1]
+            end
+            if values[k] != ""
+                value_labels[labname][values[k]] = strtonull(valtext[offset[k]+1:offset_end])
+            end
+        end
+        skip(fh,6) # </lbl>
+    end
 
-	        for k in 1:numvalues
-	            if k == numvalues
-	                offset_end = txtlen
-	            else
-	                offset_end = offset[k+1]
-	            end
-	            if values[k] != ""
-	                value_labels[labname][values[k]] = strtonull(valtext[offset[k]+1:offset_end])
-	            end
-	        end
-	        skip(fh,6) # </lbl>
-	    end
+    variable_dict = Dict()
+    lblname_dict = Dict()
+    for i in 1:nvar
+        variable_dict[varlist[i]] = varlabels[i]
+        lblname_dict[varlist[i]] = Symbol(valuelabels[i])
+    end
 
-		variable_dict = Dict()
-		lblname_dict = Dict()
-	    for i in 1:nvar
-	        variable_dict[varlist[i]] = varlabels[i]
-	        lblname_dict[varlist[i]] = Symbol(valuelabels[i])
-	    end
-
+    # end the program here after returning Label dictionary if read_labels is set to `true`
+    if read_labels
 		return Label(variable_dict,value_labels,lblname_dict)
 	end
 
