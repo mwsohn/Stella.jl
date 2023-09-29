@@ -311,10 +311,8 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
         if length(varlabels[i]) > 0
             variable_dict[varlist[i]] = varlabels[i]
         end
-        println(valuelabels)
 
         if valuelabels[i] != ""
-            println("============================================================================")
             lblname_dict[varlist[i]] = Symbol(valuelabels[i])
         end
     end
@@ -726,9 +724,9 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
     #     select!(dfv,Not(:ArrayType))
     # end
 
-    if nmissing(dfv.Lblname) == size(dfv,1)
-        select!(dfv,Not(:Lblname))
-    end
+    # if nmissing(dfv.Lblname) == size(dfv,1)
+    #     select!(dfv,Not(:Lblname))
+    # end
 
     header = ["Variable", "Eltype"]
     alignment = [:l,:l]
