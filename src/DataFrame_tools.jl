@@ -194,13 +194,6 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
             numvlabels += 1
         end
     end
-    println(valuelables)
-    println("============================================================================")
-    println("============================================================================")
-    println("============================================================================")
-    println("============================================================================")
-    println("============================================================================")
-    println("============================================================================")
 
     # variable labels
     skip(fh,37) # </value_label_names><variable_labels>
@@ -315,14 +308,11 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
 
     variable_dict = Dict()
     lblname_dict = Dict()
-    println(valuelables)
     for i in 1:nvar
         if length(varlabels[i]) > 0
             variable_dict[varlist[i]] = varlabels[i]
         end
-        println(i)
-        if length(valuelabels[i]) > 0 # != ""
-            println(varlist[i], " => ", valuelabels[i])
+        if valuelabels[i] != ""
             lblname_dict[varlist[i]] = Symbol(valuelabels[i])
         end
     end
