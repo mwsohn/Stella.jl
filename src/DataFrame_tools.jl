@@ -160,7 +160,6 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
     skip(fh,22) # </map><variable_types>
     typelist = Vector{UInt16}(undef,nvar)
     read!(fh,typelist)
-    #print(Int.(typelist))
 
     # variable names
     skip(fh,27)
@@ -350,8 +349,18 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
 	# close the file
 	close(fh)
 
-	# free memory
-	# GC.gc()
+    # attach labels
+    # data label
+    if length(dslabel) > 0
+        set_data_label(rdf,dslabel)
+    end
+
+    # variable labels
+    for i in 1:nvar
+        set_col_label(rdf,Symbol(varlist[i]),varlabels[i])
+    end
+
+    # value labels`
 
 	return rdf
 end
@@ -601,11 +610,10 @@ function atype(df::DataFrame,v::Symbol)
     #      return "DA"
     elseif isdefined(Main,:PooledArrays) && typeof(df[!,v]) <: PooledArray
          return string("PA (", replace(string(eltype(df[!,v].refs)),"UInt" => ""), ")")
-    elseif isa(eltype(df[!,v]),Union)
-        return "UV" # Union Vector
-    else
-        return "VC"
+    # elseif isa(eltype(df[!,v]),Union)
+    #     return "UV" # Union Vector
     end
+    return ""
 end
 
 function etype(df::DataFrame,v::Symbol)
@@ -621,6 +629,8 @@ function etype(df::DataFrame,v::Symbol)
             eltyp = string("Str",getmaxwidth(df[!,v]))
         elseif eltyp == "Dates.Date"
             eltyp = "Date"
+        elseif eltyp == "Dates.DateTime"
+            eltyp = "DateTime"
         end
     end
 
@@ -633,6 +643,121 @@ function eltype2(df::DataFrame,v::Symbol)
     end
     return nonmissingtype(eltype(df[!,v]))
 end
+
+"""
+This is a section for attaching labels to a DataFrame using metadata and colmetadata.
+The following functions will be named with "data_label", "col_label", 
+"""
+
+"""
+    set_data_label(df::AbstractDataFrame,label::String)
+
+Saves a `label` to the `df` DataFrame. It does not return anything nor generates any
+message.
+"""
+function set_data_label(df::AbstractDataFrame,label::String)
+    metadata!(_df,"description",label,style=:default)
+    return nothing
+end
+
+"""
+    data_label(df::AbstractDataFrame)
+
+Extracts the data label saved in the `df` DataFrame and returns it.
+"""
+function data_label(_df::AbstractDataFrame)
+    metadata(_df,"description")
+    return nothing
+end
+
+"""
+    delete_data_label(df::AbstractDataFrame)
+
+Deletes the data label from the `df` DataFrame
+"""
+function delete_data_label(_df::AbstractDataFrame)
+    if "description" in metadatakeys(_df)
+        deletemetadata!(_df,"description")
+    end
+    return nothing
+end
+
+"""
+    set_fmtlib(df::AbstractDataFrame,path::String)
+
+Saves the path to the format library file. A format file contains a dictionary whose keys are
+format names in Symbols and values are a dictionary of value-description pairs. For example,
+`race` variable has the following values: 1 for non-Hispanic Whites, 2 for non-Hispanic Blacks,
+3 for Hispanics, and 4 for Other. Then one entry in this format libary may be:
+
+fmtlib = Dict(
+    :racelab = Dict(1 => "NH Whites", 2 => "NH Blacks", 3 => "Hispanics", 4 => "Other"),
+    :agecat = Dict(1 => "< 40y", 2 => "40 - 64y", 3 => "65 - 74y", 4 => "75y or older")
+)
+
+Save this dictionary into a JLD2 file using
+
+using JLD2
+JLD2.save_object("fmtlib.jld2", fmtlib)
+
+The location as a full or relative path for this file should be used as
+the value for the `path` argument.
+"""
+function set_fmtlib(_df::AbstractDataFrame,path::String)
+    metadata!(_df,"fmtlib",path)
+    return nothing
+end
+
+"""
+    delete_fmtlib(df::AbstractDataFrame)
+
+Deletes the fmtlib path from the `df` DataFrame.
+"""
+function delete_fmtlib(_df::AbstractDataFrame)
+    if "fmtlib" in metadatakeys(_df)
+        deletemetadata!(_df,"fmtlib")
+    end
+    return nothing
+end
+
+
+function set_col_labels!(_df::DataFrame,labels::Dict)
+    colnames = names(_df)
+    for (key,val) in labels
+        if string(key) in colnames
+            colmetadata!(_df,key,"label",val, style=:note)
+        end
+    end
+    return nothing
+end
+function set_col_labels!(_df::AbstractDataFrame,varname::Union{String,Symbol},label::String)
+    colmetadata!(_df,varname,"label",label,style=:note)
+    return nothing
+end
+
+
+function col_labels(_df::AbstractDataFrame)
+    label = Dict()
+    for v in propertynames(_df)
+        if "label" in colmetadatakeys(_df,v)
+            label[v] = colmetadata(_df,v,"label")
+        end
+    end
+    return label
+end
+function col_labels(_df::AbstractDataFrame,varname::Union{String,Symbol})
+    if "label" in colmetadatakeys(_df,varname)
+        return colmetadata(_df,varname,"label")
+    end
+end
+
+
+function delete_col_label(_df::AbstractDataFrame,varname::Union{String,Symbol})
+    deletecolmetadata!(_df,varname,"label")
+    return nothing
+end
+
+
 
 """
     desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=nothing, dfout::Bool = false, nmiss::Bool = false)
