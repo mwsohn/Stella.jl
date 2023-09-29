@@ -352,12 +352,12 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
     # attach labels
     # data label
     if length(dslabel) > 0
-        set_data_label(rdf,dslabel)
+        set_data_label!(rdf,dslabel)
     end
 
     # variable labels
     for i in 1:nvar
-        set_col_label(rdf,Symbol(varlist[i]),varlabels[i])
+        set_col_label!(rdf,Symbol(varlist[i]),varlabels[i])
     end
 
     # value labels
