@@ -666,7 +666,7 @@ if an optional `labels` is specified. It mimics Stata's `describe` command.
 `labels` is automatically converted from a stata file by `read_stata` function. Or one can
 be easily created as described in [Labels](https://github.com/mwsohn/Labels.jl).
 """
-function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=nothing, dfout::Bool = false, nmiss::Bool = true)
+function desc(df::DataFrame,varnames::Symbol...; dfout::Bool = false, nmiss::Bool = true)
 
     if length(varnames) == 0
         varnames = propertynames(df)
