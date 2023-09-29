@@ -839,6 +839,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
             alignment=alignment,
             header=header,
             crop=:none,
+            vlines = :none,
             show_row_number = true)
     end
 end
