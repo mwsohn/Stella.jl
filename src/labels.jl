@@ -91,12 +91,13 @@ function delete_col_label!(_df::AbstractDataFrame,varname::Union{String,Symbol})
 end
 
 function set_value_label!(_df::AbstractDataFrame, varname::Union{Symbol,String}, vlabname::Symbol)
-    colmetadata!(_df,varnum,"lblname",vlabname)
+    colmetadata!(_df,varname,"lblname",vlabname)
     return nothing
 end
 function set_value_label!(_df::AbstractDataFrame,lblnames::Dict)
     for v in keys(lblnames)
-        colmetadata!(_df,v,"lblname",lblnames[v])
+        set_value_label!(_df,v,lblnames[v])
+        #colmetadata!(_df,v,"lblname",lblnames[v])
     end
     return nothing
 end
