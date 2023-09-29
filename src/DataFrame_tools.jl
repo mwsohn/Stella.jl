@@ -308,8 +308,12 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
     variable_dict = Dict()
     lblname_dict = Dict()
     for i in 1:nvar
-        variable_dict[varlist[i]] = varlabels[i]
-        lblname_dict[varlist[i]] = Symbol(valuelabels[i])
+        if length(varlabels[i]) > 0
+            variable_dict[varlist[i]] = varlabels[i]
+        end
+        if valuelabels[i] != ""
+            lblname_dict[varlist[i]] = Symbol(valuelabels[i])
+        end
     end
 
     # end the program here after returning Label dictionary if read_labels is set to `true`
