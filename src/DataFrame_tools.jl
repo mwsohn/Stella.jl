@@ -789,6 +789,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
     if length(colmetadatakeys(df) ) > 0
         dfv[!,:Lblname] = Vector{String}(undef,size(dfv,1))
         dfv[!,:Description] = Vector{String}(undef,size(dfv,1))
+        varlabel = Stella.col_label(df)
     end
 
     for (i,v) in enumerate(collect(varnames))
@@ -812,7 +813,6 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
             dfv[i,:Lblname] = lblname(labels,v) == nothing ? "" : string(lblname(labels,v))
         end
 
-        varlabel = Stella.col_label(df)
         if length(varlabel) > 0
             dfv[i,:Description] = varlabel[v]
         end
@@ -821,8 +821,8 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
     header = ["Variable","Atype","Eltype"]
     alignment = [:l,:l,:l]
     if nmiss
-	header = vcat(header,"% Miss")
-	alignment = vcat(alignment,:r)
+	    header = vcat(header,"% Miss")
+	    alignment = vcat(alignment,:r)
     end
     if length(varlabel) > 0
     	header = vcat(header,["Lbl Name","Description"])
