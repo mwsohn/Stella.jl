@@ -613,7 +613,7 @@ function atype(df::DataFrame,v::Symbol)
     # elseif isa(eltype(df[!,v]),Union)
     #     return "UV" # Union Vector
     end
-    return ""
+    return missing
 end
 
 function etype(df::DataFrame,v::Symbol)
@@ -780,7 +780,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
 
     # output dataframe
     dfv = DataFrame(Variable = varnames)
-    dfv[!,:ArrayType] = Vector{String}(undef,size(dfv,1))
+    dfv[!,:ArrayType] = Vector{String}(missing,size(dfv,1))
     dfv[!,:Eltype] = Vector{String}(undef,size(dfv,1))
     if nmiss
     	dfv[!,:Missing] = Vector{String}(undef,size(dfv,1))
@@ -822,7 +822,11 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
         select!(dfv,Not(:ArrayType))
     end
 					
-    header = ["Variable","Atype","Eltype"]
+    if nmissing(dfv.Lblname) == size(dfv, 1)
+        select!(dfv, Not(:Lblname))
+    end
+
+    header = ["Variable", "Atype", "Eltype"]
     alignment = [:l,:l,:l]
     if nmiss
 	    header = vcat(header,"% Miss")
