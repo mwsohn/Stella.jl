@@ -308,6 +308,7 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
 
     variable_dict = Dict()
     lblname_dict = Dict()
+    println(valuelables)
     for i in 1:nvar
         if length(varlabels[i]) > 0
             variable_dict[varlist[i]] = varlabels[i]
