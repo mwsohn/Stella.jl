@@ -817,6 +817,10 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
             dfv[i,:Description] = varlabel[v]
         end
     end
+
+    if nmissing(dfv.ArrayType) == size(dfv,1)
+        select!(dfv,Not(:ArrayType))
+    end
 					
     header = ["Variable","Atype","Eltype"]
     alignment = [:l,:l,:l]
