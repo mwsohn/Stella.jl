@@ -613,7 +613,7 @@ function atype(df::DataFrame,v::Symbol)
     # elseif isa(eltype(df[!,v]),Union)
     #     return "UV" # Union Vector
     end
-    return ""
+    return missing
 end
 
 function etype(df::DataFrame,v::Symbol)
@@ -780,21 +780,21 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
 
     # output dataframe
     dfv = DataFrame(Variable = varnames)
-    dfv[!,:ArrayType] = Vector{String}(undef,size(dfv,1))
+    dfv[!,:ArrayType] = Vector{Union{Missing,String}}(missing,size(dfv,1))
     dfv[!,:Eltype] = Vector{String}(undef,size(dfv,1))
     if nmiss
     	dfv[!,:Missing] = Vector{String}(undef,size(dfv,1))
     end
 
-    # if length(colmetadatakeys(df,"label") ) > 0
-    #     dfv[!,:Lblname] = Vector{String}(undef,size(dfv,1))
-    #     dfv[!,:Description] = Vector{String}(undef,size(dfv,1))
-    #     varlabel = Stella.col_label(df)
-    # end
+    if length(colmetadatakeys(df,"label") ) > 0
+        dfv[!,:Lblname] = Vector{Union{Missing,String}}(undef,size(dfv,1))
+        dfv[!,:Description] = Vector{Union{Missing,String}}(undef,size(dfv,1))
+        varlabel = Stella.col_label(df)
+    end
 
-    # if length(colmetadatakeys(df, "format")) > 0
-    #     dfv[!, :Lblname] = Vector{String}(undef, size(dfv, 1))
-    # end
+    if length(colmetadatakeys(df, "format")) > 0
+        dfv[!, :Lblname] = Vector{Union{Missing,String}}(missing, size(dfv, 1))
+    end
 
     for (i,v) in enumerate(collect(varnames))
 
@@ -821,6 +821,14 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
         if length(varlabel) > 0
             dfv[i,:Description] = varlabel[v]
         end
+    end
+
+    if nmissing(dfv.ArrayType) == size(dfv,1)
+        select!(dfv,Not(:ArrayType))
+    end
+
+    if nmissing(dfv.Lblname) == size(dfv,1)
+        select!(dfv,Not(:Lblname))
     end
 
     header = ["Variable", "Atype", "Eltype"]
