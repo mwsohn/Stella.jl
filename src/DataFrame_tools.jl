@@ -786,10 +786,14 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
     	dfv[!,:Missing] = Vector{String}(undef,size(dfv,1))
     end
 
-    if length(colmetadatakeys(df) ) > 0
+    if length(colmetadatakeys(df,"label") ) > 0
         dfv[!,:Lblname] = Vector{String}(undef,size(dfv,1))
         dfv[!,:Description] = Vector{String}(undef,size(dfv,1))
         varlabel = Stella.col_label(df)
+    end
+
+    if length(colmetadatakeys(df, "format")) > 0
+        dfv[!, :Lblname] = Vector{String}(undef, size(dfv, 1))
     end
 
     for (i,v) in enumerate(collect(varnames))
@@ -812,7 +816,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
         # if labels != nothing
         #     dfv[i,:Lblname] = lblname(labels,v) == nothing ? "" : string(lblname(labels,v))
         # end
-        dfv[i,:Lblname] = missing
+        dfv[i,:Lblname] = ""
 
         if length(varlabel) > 0
             dfv[i,:Description] = varlabel[v]
@@ -823,10 +827,6 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
         select!(dfv,Not(:ArrayType))
     end
 					
-    if nmissing(dfv.Lblname) == size(dfv, 1)
-        select!(dfv, Not(:Lblname))
-    end
-
     header = ["Variable", "Atype", "Eltype"]
     alignment = [:l,:l,:l]
     if nmiss
