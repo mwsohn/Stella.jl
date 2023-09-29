@@ -613,7 +613,7 @@ function atype(df::DataFrame,v::Symbol)
     # elseif isa(eltype(df[!,v]),Union)
     #     return "UV" # Union Vector
     end
-    return missing
+    return ""
 end
 
 function etype(df::DataFrame,v::Symbol)
@@ -823,10 +823,6 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
         end
     end
 
-    if nmissing(dfv.ArrayType) == size(dfv,1)
-        select!(dfv,Not(:ArrayType))
-    end
-					
     header = ["Variable", "Atype", "Eltype"]
     alignment = [:l,:l,:l]
     if nmiss
