@@ -792,9 +792,9 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
         varlabel = Stella.col_label(df)
     end
 
-    if length(colmetadatakeys(df, "format")) > 0
-        dfv[!, :Lblname] = Vector{Union{Missing,String}}(missing, size(dfv, 1))
-    end
+    # if length(colmetadatakeys(df, "format")) > 0
+         dfv[!, :Lblname] = Vector{Union{Missing,String}}(missing, size(dfv, 1))
+    # end
 
     for (i,v) in enumerate(collect(varnames))
 
