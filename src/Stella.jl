@@ -59,15 +59,13 @@ export  read_stata,  # read stata 13 and 14 files into DF
         ds,         # filenames according to type, length, or regex
         # getmaxwidth, # maximum length of a string variable
         eltype2,
-        nulldeviance,  # nulldeviance for GLM models
+        # nulldeviance,  # nulldeviance for GLM models
         rowpct, colpct, cellpct, chi2, # freqtable functions
         categorical!, uncategorical!, uncategorize, # functions to create CategoricalArrays or reverse them to their original values
         identify_condition, identify_condition2 # used to identify conditions in claims files
 
 abstract type Link end
 abstract type Formula end
-abstract type DictEncoding end
-
 
 ##############################################################################
 ##
@@ -76,10 +74,11 @@ abstract type DictEncoding end
 ##############################################################################
 include("stella_tools.jl")
 include("DataFrame_tools.jl")
+include("labels.jl")
 include("tab.jl")
 include("t-test.jl")
 include("anova.jl")
-# include("show.jl")
+include("show.jl")
 include("other.jl")
 
 end
