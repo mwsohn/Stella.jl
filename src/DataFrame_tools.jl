@@ -702,13 +702,13 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
         # percent missing
         if nmiss
             _nmiss = nmissing(df[!,v])
-                dfv[i,:Missing] = string(round(100 * _nmiss/size(df,1),digits=1),"%")
+            dfv[i,:Missing] = string(round(100 * _nmiss/size(df,1),digits=1),"%")
         end
 
         # if labels != nothing
         #     dfv[i,:Lblname] = lblname(labels,v) == nothing ? "" : string(lblname(labels,v))
         # end
-        dfv[i,:Lblname] = ""
+        dfv[i,:Lblname] = value_label(df,v)
 
         if length(varlabel) > 0
             dfv[i,:Description] = varlabel[v]
