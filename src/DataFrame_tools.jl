@@ -352,12 +352,12 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
     # attach labels
     # data label
     if length(dslabel) > 0
-        set_data_label!(rdf,dslabel)
+        Stella.set_data_label!(rdf,dslabel)
     end
 
     # variable labels
     for i in 1:nvar
-        set_col_label!(rdf,Symbol(varlist[i]),varlabels[i])
+        Stella.set_col_label!(rdf,Symbol(varlist[i]),varlabels[i])
     end
 
     # value labels
@@ -655,7 +655,7 @@ The following functions will be named with "data_label", "col_label",
 Saves a `label` to the `df` DataFrame. It does not return anything nor generates any
 message.
 """
-function set_data_label(_df::AbstractDataFrame,label::String)
+function set_data_label!(_df::AbstractDataFrame,label::String)
     metadata!(_df,"description",label,style=:default)
     return nothing
 end
@@ -675,7 +675,7 @@ end
 
 Deletes the data label from the `df` DataFrame
 """
-function delete_data_label(_df::AbstractDataFrame)
+function delete_data_label!(_df::AbstractDataFrame)
     if "description" in metadatakeys(_df)
         deletemetadata!(_df,"description")
     end
@@ -703,7 +703,7 @@ JLD2.save_object("fmtlib.jld2", fmtlib)
 The location as a full or relative path for this file should be used as
 the value for the `path` argument.
 """
-function set_fmtlib(_df::AbstractDataFrame,path::String)
+function set_fmtlib!(_df::AbstractDataFrame,path::String)
     metadata!(_df,"fmtlib",path)
     return nothing
 end
@@ -713,7 +713,7 @@ end
 
 Deletes the fmtlib path from the `df` DataFrame.
 """
-function delete_fmtlib(_df::AbstractDataFrame)
+function delete_fmtlib!(_df::AbstractDataFrame)
     if "fmtlib" in metadatakeys(_df)
         deletemetadata!(_df,"fmtlib")
     end
@@ -751,7 +751,7 @@ function col_label(_df::AbstractDataFrame,varname::Union{String,Symbol})
     end
 end
 
-function delete_col_label(_df::AbstractDataFrame,varname::Union{String,Symbol})
+function delete_col_label!(_df::AbstractDataFrame,varname::Union{String,Symbol})
     if "label" in colmetadatakeys(_df,varname)
         deletecolmetadata!(_df,varname,"label")
     end
