@@ -832,7 +832,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
     if dfout 
     	return dfv
     else
-        if "description" in metadatakeys(df)
+        if data_label(df) != nothing
             println(data_label(df))
         end
         pretty_table(dfv,
