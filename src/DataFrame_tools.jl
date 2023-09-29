@@ -812,7 +812,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
             dfv[i,:Lblname] = lblname(labels,v) == nothing ? "" : string(lblname(labels,v))
         end
 
-        varlabel = col_label(df)
+        varlabel = Stella.col_label(df)
         if length(varlabel) > 0
             dfv[i,:Description] = varlabel[v]
         end
