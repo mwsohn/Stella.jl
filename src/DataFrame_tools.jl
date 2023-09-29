@@ -754,6 +754,7 @@ end
 function delete_col_label(_df::AbstractDataFrame,varname::Union{String,Symbol})
     if "label" in colmetadatakeys(_df,varname)
         deletecolmetadata!(_df,varname,"label")
+    end
     return nothing
 end
 
