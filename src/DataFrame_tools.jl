@@ -769,7 +769,7 @@ if an optional `labels` is specified. It mimics Stata's `describe` command.
 `labels` is automatically converted from a stata file by `read_stata` function. Or one can
 be easily created as described in [Labels](https://github.com/mwsohn/Labels.jl).
 """
-function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=nothing, dfout::Bool = false, nmiss::Bool = false)
+function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=nothing, dfout::Bool = false, nmiss::Bool = true)
 
     if length(varnames) == 0
         varnames = propertynames(df)
@@ -802,15 +802,18 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
         dfv[i,:Eltype] = etype(df,v)
 
         # percent missing
-	if nmiss
-	    _nmiss = nmissing(df[!,v])
-            dfv[i,:Missing] = string(round(100 * _nmiss/size(df,1),digits=1),"%")
-	end
-					
+        if nmiss
+            _nmiss = nmissing(df[!,v])
+                dfv[i,:Missing] = string(round(100 * _nmiss/size(df,1),digits=1),"%")
+        end
+
         if labels != nothing
             dfv[i,:Lblname] = lblname(labels,v) == nothing ? "" : string(lblname(labels,v))
-            dfv[i,:Description] = varlab(labels,v)
-            # print(dfv[i,:Description])
+        end
+
+        varlabel = col_label(df)
+        if length(varlabel) > 0
+            dfv[i,:Description] = varlabel[v]
         end
     end
 					
@@ -820,14 +823,17 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
 	header = vcat(header,"% Miss")
 	alignment = vcat(alignment,:r)
     end
-    if labels != nothing
+    if length(varlabel) > 0
     	header = vcat(header,["Lbl Name","Description"])
-	alignment = vcat(alignment,[:l,:l])
+	    alignment = vcat(alignment,[:l,:l])
     end
 
     if dfout 
     	return dfv
     else
+        if "description" in metadatakeys(df)
+            println(data_label(df))
+        end
         pretty_table(dfv,
             alignment=alignment,
             header=header,
