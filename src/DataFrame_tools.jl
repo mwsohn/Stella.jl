@@ -823,16 +823,16 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
         end
     end
 
-    if nmissing(dfv.ArrayType) == size(dfv,1)
-        select!(dfv,Not(:ArrayType))
-    end
+    # if nmissing(dfv.ArrayType) == size(dfv,1)
+    #     select!(dfv,Not(:ArrayType))
+    # end
 
     if nmissing(dfv.Lblname) == size(dfv,1)
         select!(dfv,Not(:Lblname))
     end
 
-    header = ["Variable", "Atype", "Eltype"]
-    alignment = [:l,:l,:l]
+    header = ["Variable", "Eltype"]
+    alignment = [:l,:l]
     if nmiss
 	    header = vcat(header,"% Miss")
 	    alignment = vcat(alignment,:r)
