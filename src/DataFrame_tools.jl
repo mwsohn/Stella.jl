@@ -785,9 +785,10 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
     if nmiss
     	dfv[!,:Missing] = Vector{String}(undef,size(dfv,1))
     end
-    if labels != nothing
-    	dfv[!,:Lblname] = Vector{String}(undef,size(dfv,1))
-    	dfv[!,:Description] = Vector{String}(undef,size(dfv,1))
+
+    if length(colmetadatakeys(df) ) > 0
+        dfv[!,:Lblname] = Vector{String}(undef,size(dfv,1))
+        dfv[!,:Description] = Vector{String}(undef,size(dfv,1))
     end
 
     for (i,v) in enumerate(collect(varnames))
