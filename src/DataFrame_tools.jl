@@ -360,7 +360,7 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
         set_col_label(rdf,Symbol(varlist[i]),varlabels[i])
     end
 
-    # value labels`
+    # value labels
 
 	return rdf
 end
@@ -655,7 +655,7 @@ The following functions will be named with "data_label", "col_label",
 Saves a `label` to the `df` DataFrame. It does not return anything nor generates any
 message.
 """
-function set_data_label(df::AbstractDataFrame,label::String)
+function set_data_label(_df::AbstractDataFrame,label::String)
     metadata!(_df,"description",label,style=:default)
     return nothing
 end
