@@ -721,7 +721,7 @@ function delete_fmtlib(_df::AbstractDataFrame)
 end
 
 
-function set_col_labels!(_df::DataFrame,labels::Dict)
+function set_col_label!(_df::DataFrame,labels::Dict)
     colnames = names(_df)
     for (key,val) in labels
         if string(key) in colnames
@@ -730,13 +730,13 @@ function set_col_labels!(_df::DataFrame,labels::Dict)
     end
     return nothing
 end
-function set_col_labels!(_df::AbstractDataFrame,varname::Union{String,Symbol},label::String)
+function set_col_label!(_df::AbstractDataFrame,varname::Union{String,Symbol},label::String)
     colmetadata!(_df,varname,"label",label,style=:note)
     return nothing
 end
 
 
-function col_labels(_df::AbstractDataFrame)
+function col_label(_df::AbstractDataFrame)
     label = Dict()
     for v in propertynames(_df)
         if "label" in colmetadatakeys(_df,v)
@@ -745,15 +745,15 @@ function col_labels(_df::AbstractDataFrame)
     end
     return label
 end
-function col_labels(_df::AbstractDataFrame,varname::Union{String,Symbol})
+function col_label(_df::AbstractDataFrame,varname::Union{String,Symbol})
     if "label" in colmetadatakeys(_df,varname)
         return colmetadata(_df,varname,"label")
     end
 end
 
-
 function delete_col_label(_df::AbstractDataFrame,varname::Union{String,Symbol})
-    deletecolmetadata!(_df,varname,"label")
+    if "label" in colmetadatakeys(_df,varname)
+        deletecolmetadata!(_df,varname,"label")
     return nothing
 end
 
