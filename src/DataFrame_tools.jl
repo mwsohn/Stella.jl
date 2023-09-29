@@ -780,7 +780,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
 
     # output dataframe
     dfv = DataFrame(Variable = varnames)
-    dfv[!,:ArrayType] = Vector{String}("",size(dfv,1))
+    dfv[!,:ArrayType] = Vector{String}(undef,size(dfv,1))
     dfv[!,:Eltype] = Vector{String}(undef,size(dfv,1))
     if nmiss
     	dfv[!,:Missing] = Vector{String}(undef,size(dfv,1))
@@ -809,9 +809,10 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=no
                 dfv[i,:Missing] = string(round(100 * _nmiss/size(df,1),digits=1),"%")
         end
 
-        if labels != nothing
-            dfv[i,:Lblname] = lblname(labels,v) == nothing ? "" : string(lblname(labels,v))
-        end
+        # if labels != nothing
+        #     dfv[i,:Lblname] = lblname(labels,v) == nothing ? "" : string(lblname(labels,v))
+        # end
+        dfv[i,:Lblname] = missing
 
         if length(varlabel) > 0
             dfv[i,:Description] = varlabel[v]
