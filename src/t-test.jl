@@ -153,11 +153,11 @@ function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, table = tru
     if table
 
         varlabel = col_label(df, by)
-        labels = vallab(df,by)        
-
+        vlab = vallab(df, by)
+        
         pretty_table(hcat(tt.array...)[:,2:end],
             header = tt.colnms[2:end],
-            row_labels = labels == nothing ? tt.array[1] : [labels[by][x] for x in tt.array[1] ],
+            row_labels = vlab == nothing ? tt.array[1] : [ vlab[by][x] for x in tt.array[1] ],
             row_label_column_title = varlabel == nothing ? string(by) : varlabel,
             hlines = [0,1,3,4,5],
             vlines = [1],
@@ -167,12 +167,12 @@ function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, table = tru
         println("H₀: diff = 0")
         println("t = ",tt.t," df = ",tt.dof,"\n")
 
-        # pretty_table([tt.p_left tt.p_both tt.p_right],
-        #     header = ["Hₐ: diff < 0     ","     Hₐ: diff != 0     ","     Hₐ: diff > 0"],
-        #     formatters = (ft_printf("%.5f")),
-        #     alignment = [:l,:c,:r],
-        #     hlines = :none,
-        #     vlines = :none)
+        pretty_table([tt.p_left tt.p_both tt.p_right],
+            header = ["Hₐ: diff < 0     ","     Hₐ: diff != 0     ","     Hₐ: diff > 0"],
+            formatters = (ft_printf("%.5f")),
+            alignment = [:l,:c,:r],
+            hlines = :none,
+            vlines = :none)
     else    
         return tt
     end
