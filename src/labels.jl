@@ -1,7 +1,8 @@
 export set_data_label!, data_label, delete_data_label!,
     set_col_label!, col_label, delete_col_label!,
     set_lblname!, lblname, delete_lblname!,
-    set_value_dict!, value_dict, delete_value_dict!
+    set_value_dict!, value_dict, delete_value_dict!,
+    vallab
 
 """
     set_data_label!(df::AbstractDataFrame,label::String)
@@ -146,7 +147,7 @@ function vallab(_df::AbstractDataFrame, varname::Union{Symbol,String})
     end
     return nothing
 end
-function vallab(_df::AbstractDataFrame, varname::AbstractVector{Union{Symbol,String}})
+function vallab(_df::AbstractDataFrame, varname::AbstractVector)
     valdict = value_dict(_df) 
     lname = lblname(_df,varname)
     if length(valdict) == 0 || length(lname) == 0
