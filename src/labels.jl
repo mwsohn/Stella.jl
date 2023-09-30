@@ -96,8 +96,8 @@ function set_value_label!(_df::AbstractDataFrame, varname::Union{Symbol,String},
 end
 function set_value_label!(_df::AbstractDataFrame,lblnames::Dict)
     for v in keys(lblnames)
-        set_value_label!(_df,v,lblnames[v])
-        #colmetadata!(_df,v,"lblname",lblnames[v])
+        # set_value_label!(_df,v,lblnames[v])
+        colmetadata!(_df,v,"lblname",lblnames[v])
     end
     return nothing
 end
