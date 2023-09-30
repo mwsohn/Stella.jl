@@ -25,11 +25,11 @@ function tab(indf,var::Union{Symbol,String}; decimals=3)
     _tab1(freqtable(indf,var); decimals=decimals, labels = vallab(indf,var))
 end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows = -1, maxcols = 20)
-    _tab2(freqtable(indf,var1,var2); maxrows=maxrows, maxcols = maxcols)
+    _tab2(freqtable(indf,var1,var2); maxrows=maxrows, maxcols = maxcols, labels = vallab(indf,[var1,var2]))
 end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String},var3::Union{Symbol,String};
     maxrows=-1, maxcols=20)
-    _tab3(freqtable(indf,var1,var2,var3); maxrows=maxrows, maxcols=maxcols)
+    _tab3(freqtable(indf, var1, var2, var3); maxrows=maxrows, maxcols=maxcols, labels=vallab(indf, [var1, var2, var3]))
 end
 
 function _tab1(na::NamedArray; decimals = 4, labels = nothing)
@@ -64,7 +64,7 @@ end
 
 function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing)
     
-    if labels == nothing
+    if labels == nothing && haskey(labels, na.dimnames[1]) == false
         rownames = names(na)[1]
     else
         rownames = [labels[na.dimnames[1]][x] for x in names(na)[1]]
@@ -72,7 +72,7 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing)
     rownames = vcat(rownames,"Total")
 
     # colunm names
-    if labels == nothing
+    if labels == nothing && haskey(labels, na.dimnames[2]) == false
         colnames = names(na)[2]
     else
         colnames = [labels[na.dimnames[1]][x] for x in names(na)[2]]
