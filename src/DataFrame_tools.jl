@@ -731,7 +731,7 @@ function desc(df::DataFrame,varnames::Symbol...; dfout::Bool = false, nmiss::Boo
             println(data_label(df))
         end
         println("Number of observations: ",@sprintf("%10.0f",nrow(df)))
-        println("Number of variables: ",@sprintf("%10.0f",ncol(df)),"\n")
+        println("Number of variables:    ",@sprintf("%10.0f",ncol(df)))
 
         pretty_table(dfv,
             alignment=alignment,
