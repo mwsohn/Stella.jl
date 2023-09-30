@@ -366,7 +366,7 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
     end
 
     # value labels
-    if @isdefined(lblname_dict) && length(lblname_dict) > 0
+    if length(lblname_dict) > 0
         println(lblname_dict)
         set_value_label!(rdf, lblname_dict)
     end
