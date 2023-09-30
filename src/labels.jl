@@ -102,11 +102,11 @@ function set_lblname!(_df::AbstractDataFrame,lblnames::Dict)
     return nothing
 end
 
-function lblname(_df::AbstractDataFrame, varname::Union{Symbol,String})
-    if haskey(colmetadata(_df,varname),"lblname")
-        return colmetadata(_df,varname,"lblname")
-    end
-end
+# function lblname(_df::AbstractDataFrame, varname::Union{Symbol,String})
+#     if haskey(colmetadata(_df,varname),"lblname")
+#         return colmetadata(_df,varname,"lblname")
+#     end
+# end
 function lblname(_df::AbstractDataFrame, varnames::AbstractVector{Union{Symbol,String}})
     ldict = Dict()
     for v in varnames
@@ -139,14 +139,14 @@ function delete_lblname!(_df::AbstractDataFrame, varname::Union{Symbol,String})
     return nothing
 end
 
-function vallab(_df::AbstractDataFrame, varname::Union{Symbol,String})
-    valdict = value_dict(_df)
-    lname = lblname(_df,varname)
-    if length(valdict) > 0 && haskey(valdict,lname)
-        return Dict(varname => valdict[lname])
-    end
-    return nothing
-end
+# function vallab(_df::AbstractDataFrame, varname::Union{Symbol,String})
+#     valdict = value_dict(_df)
+#     lname = lblname(_df,varname)
+#     if length(valdict) > 0 && haskey(valdict,lname)
+#         return Dict(varname => valdict[lname])
+#     end
+#     return nothing
+# end
 function vallab(_df::AbstractDataFrame, varnames::AbstractVector{Union{Symbol,String}})
     valdict = value_dict(_df) 
     lname = lblname(_df,varnames)
