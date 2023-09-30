@@ -126,3 +126,11 @@ function delete_lblname!(_df::AbstractDataFrame, varname::Union{Symbol,String})
     return nothing
 end
 
+function vallab(_df::AbstractDataFrame, varname::Union{Symbol,String})
+    valdict = value_dict(_df)
+    lname = lblname(_df,varname)
+    if length(valdict) > 0 && haskey(valdict,lname)
+        return valdict[lname]
+    end
+    return nothing
+end
