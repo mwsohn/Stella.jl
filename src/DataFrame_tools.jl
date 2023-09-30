@@ -677,7 +677,6 @@ function desc(df::DataFrame,varnames::Symbol...; dfout::Bool = false, nmiss::Boo
 
     # output dataframe
     dfv = DataFrame(Variable = varnames)
-    # dfv[!,:ArrayType] = Vector{Union{Missing,String}}(missing,size(dfv,1))
     dfv[!,:Eltype] = Vector{String}(undef,size(dfv,1))
     if nmiss
     	dfv[!,:Missing] = Vector{String}(undef,size(dfv,1))
@@ -689,17 +688,12 @@ function desc(df::DataFrame,varnames::Symbol...; dfout::Bool = false, nmiss::Boo
         varlabel = Stella.col_label(df)
     end
 
-    # if length(colmetadatakeys(df, "format")) > 0
-         dfv[!, :Lblname] = Vector{Union{Missing,Symbol}}(missing, size(dfv, 1))
-    # end
+    dfv[!, :Lblname] = Vector{Union{Missing,Symbol}}(missing, size(dfv, 1))
 
     for (i,v) in enumerate(collect(varnames))
 
         # variable name
         varstr = string(v)
-
-	    # Array Type
-        # dfv[i,:ArrayType] = atype(df,v)
 
         # Eltype
         dfv[i,:Eltype] = etype(df,v)
@@ -710,9 +704,6 @@ function desc(df::DataFrame,varnames::Symbol...; dfout::Bool = false, nmiss::Boo
             dfv[i,:Missing] = string(round(100 * _nmiss/size(df,1),digits=1),"%")
         end
 
-        # if labels != nothing
-        #     dfv[i,:Lblname] = lblname(labels,v) == nothing ? "" : string(lblname(labels,v))
-        # end
         if lblname(df,v) != nothing
             dfv[i,:Lblname] = lblname(df,v)
         end
@@ -722,14 +713,6 @@ function desc(df::DataFrame,varnames::Symbol...; dfout::Bool = false, nmiss::Boo
         end
     end
 
-    # if nmissing(dfv.ArrayType) == size(dfv,1)
-    #     select!(dfv,Not(:ArrayType))
-    # end
-
-    # if nmissing(dfv.Lblname) == size(dfv,1)
-    #     select!(dfv,Not(:Lblname))
-    # end
-
     header = ["Variable", "Eltype"]
     alignment = [:l,:l]
     if nmiss
@@ -737,7 +720,7 @@ function desc(df::DataFrame,varnames::Symbol...; dfout::Bool = false, nmiss::Boo
 	    alignment = vcat(alignment,:r)
     end
     if length(varlabel) > 0
-    	header = vcat(header,["Lbl Name","Description"])
+    	header = vcat(header,["Lblname","Description"])
 	    alignment = vcat(alignment,[:l,:l])
     end
 
