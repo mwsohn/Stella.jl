@@ -82,6 +82,7 @@ function col_label(_df::AbstractDataFrame,varname::Union{String,Symbol})
     if "label" in colmetadatakeys(_df,varname)
         return colmetadata(_df,varname,"label")
     end
+    return nothing
 end
 
 function delete_col_label!(_df::AbstractDataFrame,varname::Union{String,Symbol})
@@ -153,7 +154,11 @@ function vallab(_df::AbstractDataFrame, varnames::AbstractVector)
     if length(valdict) == 0 || length(lname) == 0
         return nothing
     end
-    return Dict(x => valdict[lname[x]] for x in keys(lname))
+    vdict = Dict(x => valdict[lname[x]] for x in keys(lname))
+    if length(vdict) > 0
+        return vdict
+    end
+    return nothing
 end
 
 
