@@ -153,7 +153,7 @@ function vallab(_df::AbstractDataFrame, varnames::AbstractVector)
     if length(valdict) == 0 || length(lname) == 0
         return nothing
     end
-    return Dict(map(x->x => valdict[lname[x]], keys(lname)))
+    return Dict(x => valdict[lname[x]] for x in keys(lname))
 end
 
 
