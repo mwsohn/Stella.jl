@@ -367,6 +367,7 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
 
     # value labels
     if @isdefined(lblname_dict) && length(lblname_dict) > 0
+        println(lblname_dict)
         set_value_label!(rdf, lblname_dict)
     end
 
@@ -713,7 +714,7 @@ function desc(df::DataFrame,varnames::Symbol...; dfout::Bool = false, nmiss::Boo
         # if labels != nothing
         #     dfv[i,:Lblname] = lblname(labels,v) == nothing ? "" : string(lblname(labels,v))
         # end
-        if value_lable(df,v) != nothing
+        if value_label(df,v) != nothing
             dfv[i,:Lblname] = value_label(df,v)
         end
 
