@@ -140,7 +140,7 @@ function vallab(_df::AbstractDataFrame, varname::Vector{Symbol,String})
     if length(valdict) == 0 || length(lname) == 0
         return nothing
     end
-    return Dict(map(x -> lname[x] => valdict[x], keys(lname)))
+    return Dict(map(x->x => valdict[lname[x]], keys(lname)))
 end
 
 
