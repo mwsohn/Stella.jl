@@ -106,6 +106,18 @@ function lblname(_df::AbstractDataFrame, varname::Union{Symbol,String})
         return colmetadata(_df,varname,"lblname")
     end
 end
+function lblname(_df::AbstractDataFrame, varname::AbstractVector{Union{Symbol,String}})
+    ldict = Dict()
+    for v in varname
+        if haskey(colmetadata(_df,v),"lblname")
+            ldict[v] = colmetadata(_df,v,"lblname")
+        end
+    end
+    if length(ldict) > 0
+        return ldict
+    end
+    return nothing
+end
 function lblname(_df::AbstractDataFrame)
     valdict = Dict()
     for v in propertynames(_df)
@@ -134,7 +146,7 @@ function vallab(_df::AbstractDataFrame, varname::Union{Symbol,String})
     end
     return nothing
 end
-function vallab(_df::AbstractDataFrame, varname::AbstractVector)
+function vallab(_df::AbstractDataFrame, varname::AbstractVector{Union{Symbol,String}})
     valdict = value_dict(_df) 
     lname = lblname(_df,varname)
     if length(valdict) == 0 || length(lname) == 0
