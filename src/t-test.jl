@@ -182,10 +182,10 @@ function ttest(x::AbstractVector,y::AbstractVector;
     end
 
     # compute standard errors and confidence intervals
-    N = Vector{Int64}(undef, 4)
-    MEAN = Vector{Union{Missing,Float64}}(undef, 4)
-    SD = Vector{Float64}(undef, 4)
-    SE = Vector{Union{Missing,Float64}}(undef, 4)
+    N = Vector{Union{Missing,Int64}}(undef, 4)
+    MEAN = Vector{Float64}(undef, 4)
+    SD = Vector{Union{Missing,Float64}}(undef, 4)
+    SE = Vector{Float64}(undef, 4)
     LB = Vector{Float64}(undef, 4)
     UB = Vector{Float64}(undef, 4)
 
@@ -216,7 +216,7 @@ function ttest(x::AbstractVector,y::AbstractVector;
 
         println(title)
         N[4] = missing
-        SE[4] = missing
+        SD[4] = missing
 
         pretty_table([N MEAN SD SE LB UB],
             header=["N", "Mean", "SD", "SE", string(sig, "% LB"), string(sig, "% UB")],
