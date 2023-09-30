@@ -714,7 +714,7 @@ function desc(df::DataFrame,varnames::Symbol...; dfout::Bool = false, nmiss::Boo
         #     dfv[i,:Lblname] = lblname(labels,v) == nothing ? "" : string(lblname(labels,v))
         # end
         if lblname(df,v) != nothing
-            dfv[i,:Lblname] = lblname(df,v)
+            dfv[i,:Lblname] = string(lblname(df,v))
         end
 
         if length(varlabel) > 0
