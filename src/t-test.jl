@@ -221,7 +221,7 @@ function ttest(x::AbstractVector,y::AbstractVector;
         pretty_table([N MEAN SD SE LB UB],
             header=["N", "Mean", "SD", "SE", string(sig, "% LB"), string(sig, "% UB")],
             row_labels = vcat(labels == nothing ? levels : [labels[x] for x in levels],"combined","diff"),
-            row_label_column_title = byvar == nothing ? "Variable" byvar,
+            row_label_column_title = byvar == nothing ? "Variable" : byvar,
             formatters = (ft_printf("%.5f",[2,3,4,5,6]),ft_printf("%.0f",[1]), ft_nomissing),
             hlines = [0,1,3,4,5],
             vlines = [1])
