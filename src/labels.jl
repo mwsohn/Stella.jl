@@ -147,7 +147,7 @@ end
 #     end
 #     return nothing
 # end
-function vallab(_df::AbstractDataFrame, varnames::AbstractVector{Union{Symbol,String}})
+function vallab(_df::AbstractDataFrame, varnames::AbstractVector)
     valdict = value_dict(_df) 
     lname = lblname(_df,varnames)
     if length(valdict) == 0 || length(lname) == 0
