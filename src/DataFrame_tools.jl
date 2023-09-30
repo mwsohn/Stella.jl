@@ -367,7 +367,6 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
 
     # value labels
     if length(lblname_dict) > 0
-        println(lblname_dict)
         set_value_label!(rdf, lblname_dict)
     end
 
@@ -691,7 +690,7 @@ function desc(df::DataFrame,varnames::Symbol...; dfout::Bool = false, nmiss::Boo
     end
 
     # if length(colmetadatakeys(df, "format")) > 0
-         dfv[!, :Lblname] = Vector{Union{Missing,String}}(missing, size(dfv, 1))
+         dfv[!, :Lblname] = Vector{Union{Missing,String}}("", size(dfv, 1))
     # end
 
     for (i,v) in enumerate(collect(varnames))
