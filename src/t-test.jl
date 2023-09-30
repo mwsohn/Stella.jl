@@ -130,7 +130,7 @@ Pr(T < t) = 0.0837         Pr(|T| > |t|) = 0.1673         Pr(T > t) = 0.9163
 ```
 
 """
-function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, table = true, sig = 95, welch = false, labels = nothing)
+function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, table = true, sig = 95, welch = false)
     if by == nothing
         error("`by` is required.")
     end
@@ -152,10 +152,13 @@ function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, table = tru
 
     if table
 
+        varlabel = col_label(df,varname)
+        labels = vallab(df,by)        
+
         pretty_table(hcat(tt.array...)[:,2:end],
             header = tt.colnms[2:end],
-            row_labels = labels == nothing ? tt.array[1] : [Labels.vallab(labels, by, x) for x in tt.array[1] ],
-            row_label_column_title = labels == nothing ? string(by) : Labels.vavlab(labels, by),
+            row_labels = labels == nothing ? tt.array[1] : [labels[by][x] for x in tt.array[1] ],
+            row_label_column_title = varlabel == nothing ? string(by) : varlabel,
             hlines = [0,1,3,4,5],
             vlines = [1],
             formatters = (ft_printf("%.0f",1), ft_printf("%.4f",[2,3,4,5])))
