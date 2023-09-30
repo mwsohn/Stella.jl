@@ -152,7 +152,7 @@ function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, table = tru
 
     if table
 
-        varlabel = col_label(df,varname)
+        varlabel = col_label(df, by)
         labels = vallab(df,by)        
 
         pretty_table(hcat(tt.array...)[:,2:end],
