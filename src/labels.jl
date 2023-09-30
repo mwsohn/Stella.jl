@@ -1,6 +1,6 @@
 export set_data_label!, data_label, delete_data_label!,
     set_col_label!, col_label, delete_col_label!,
-    set_value_label!, value_label, delete_value_label!,
+    set_lblname!, lblname, delete_lblname!,
     set_value_dict!, value_dict, delete_value_dict!
 
 """
@@ -90,37 +90,37 @@ function delete_col_label!(_df::AbstractDataFrame,varname::Union{String,Symbol})
     return nothing
 end
 
-function set_value_label!(_df::AbstractDataFrame, varname::Union{Symbol,String}, vlabname::Symbol)
+function set_lblname!(_df::AbstractDataFrame, varname::Union{Symbol,String}, vlabname::Symbol)
     colmetadata!(_df,varname,"lblname",vlabname)
     return nothing
 end
-function set_value_label!(_df::AbstractDataFrame,lblnames::Dict)
+function set_lblname!(_df::AbstractDataFrame,lblnames::Dict)
     for v in keys(lblnames)
-        colmetadata!(_df,v,"lblname",lblnames[v])
+        colmetadata!(_df, v, "lblname", lblnames[v])
     end
     return nothing
 end
 
-function value_label(_df::AbstractDataFrame, varname::Union{Symbol,String})
-    if "lblname" in colmetadatakeys(_df)
+function lblname(_df::AbstractDataFrame, varname::Union{Symbol,String})
+    if haskey(colmetadata(_df,varname),"lblname")
         return colmetadata(_df,varname,"lblname")
     end
 end
-function value_label(_df::AbstractDataFrame)
+function lblname(_df::AbstractDataFrame)
     valdict = Dict()
-    if "lblname" in colmetadatakeys(_df)
-        for v in propertynames(_df)
-            lblname = colmetadata(_df,v,"lblname")
+    for v in propertynames(_df)
+        if haskey(colmetadata(_df, varname), "lblname")
+            lblname = colmetadata(_df, v, "lblname")
             if lblname != ""
                 valdict[v] = lblname
             end
         end
-        return valdict
     end
+    return valdict
 end
 
-function delete_value_label!(_df::AbstractDataFrame, varname::Union{Symbol,String})
-    if "lblname" in colmetadatakeys(_df)
+function delete_lblname!(_df::AbstractDataFrame, varname::Union{Symbol,String})
+    if haskey(colmetadata(_df, varname), "lblname")
         return deletecolmetadata(_df, varname, "lblname")
     end
     return nothing
