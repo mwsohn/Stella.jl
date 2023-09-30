@@ -64,18 +64,18 @@ end
 
 function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing)
     
-    if labels == nothing && haskey(labels, na.dimnames[1]) == false
-        rownames = names(na)[1]
-    else
+    if labels != nothing && haskey(labels, na.dimnames[1])
         rownames = [labels[na.dimnames[1]][x] for x in names(na)[1]]
+    else
+        rownames = names(na)[1]
     end
     rownames = vcat(rownames,"Total")
 
     # colunm names
-    if labels == nothing && haskey(labels, na.dimnames[2]) == false
-        colnames = names(na)[2]
+    if labels != nothing && haskey(labels, na.dimnames[2])
+        colnames = [labels[na.dimnames[2]][x] for x in names(na)[2]]
     else
-        colnames = [labels[na.dimnames[1]][x] for x in names(na)[2]]
+        colnames = names(na)[2]
     end
     colnames = vcat(colnames,"Total") 
 
