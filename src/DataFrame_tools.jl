@@ -690,7 +690,7 @@ function desc(df::DataFrame,varnames::Symbol...; dfout::Bool = false, nmiss::Boo
     end
 
     # if length(colmetadatakeys(df, "format")) > 0
-         dfv[!, :Lblname] = Vector{Union{Missing,String}}(missing, size(dfv, 1))
+         dfv[!, :Lblname] = Vector{Union{Missing,Symbol}}(missing, size(dfv, 1))
     # end
 
     for (i,v) in enumerate(collect(varnames))
@@ -714,7 +714,7 @@ function desc(df::DataFrame,varnames::Symbol...; dfout::Bool = false, nmiss::Boo
         #     dfv[i,:Lblname] = lblname(labels,v) == nothing ? "" : string(lblname(labels,v))
         # end
         if lblname(df,v) != nothing
-            dfv[i,:Lblname] = string(lblname(df,v))
+            dfv[i,:Lblname] = lblname(df,v)
         end
 
         if length(varlabel) > 0
