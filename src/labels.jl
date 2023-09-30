@@ -109,7 +109,7 @@ end
 function lblname(_df::AbstractDataFrame)
     valdict = Dict()
     for v in propertynames(_df)
-        if haskey(colmetadata(_df, varname), "lblname")
+        if haskey(colmetadata(_df, v), "lblname")
             lblname = colmetadata(_df, v, "lblname")
             if lblname != ""
                 valdict[v] = lblname
