@@ -69,7 +69,7 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing)
     if labels == nothing
         rownames = names(na)[1]
     else
-        vallabs = labels[na.dimnames[1]]]
+        vallabs = labels[na.dimnames[1]]
         rownames = [vallabs[x] for x in names(na)[1]]
     end
     rownames = vcat(rownames,"Total")
