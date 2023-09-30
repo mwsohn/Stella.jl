@@ -22,8 +22,7 @@ function tab(na::NamedArray)
     end
 end
 function tab(indf,var::Union{Symbol,String}; decimals=3)
-    vallab = col_label(indf,var)
-    _tab1(freqtable(indf,var); decimals=decimals, labels = vallab)
+    _tab1(freqtable(indf,var); decimals=decimals, labels = vallab(indf,var))
 end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; 
     maxrows = -1, maxcols = 20)
