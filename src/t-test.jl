@@ -157,7 +157,7 @@ function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, table = tru
         
         pretty_table(hcat(tt.array...)[:,2:end],
             header = tt.colnms[2:end],
-            row_labels = vlab == nothing ? tt.array[1] : [ vlab[by][x] for x in tt.array[1] ],
+            row_labels = tt.array[1], #vlab == nothing ? tt.array[1] : [ vlab[by][x] for x in tt.array[1] ],
             row_label_column_title = varlabel == nothing ? string(by) : varlabel,
             hlines = [0,1,3,4,5],
             vlines = [1],
