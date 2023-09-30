@@ -21,26 +21,27 @@ function tab(na::NamedArray)
         error("Crosstabs for more than 3 variables are not currently supported.")
     end
 end
-function tab(indf,var::Union{Symbol,String}; decimals=3, labels=nothing)
-    _tab1(freqtable(indf,var); decimals=decimals, labels=labels)
+function tab(indf,var::Union{Symbol,String}; decimals=3)
+    vallab = col_label(indf,var)
+    _tab1(freqtable(indf,var); decimals=decimals, labels = vallab)
 end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; 
-    maxrows = -1, maxcols = 20, labels=nothing)
-    _tab2(freqtable(indf,var1,var2); maxrows=maxrows, maxcols = maxcols, labels = labels)
+    maxrows = -1, maxcols = 20)
+    _tab2(freqtable(indf,var1,var2); maxrows=maxrows, maxcols = maxcols)
 end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String},var3::Union{Symbol,String};
-    maxrows = -1, maxcols = 20, labels=nothing)
-    _tab3(freqtable(indf,var1,var2,var3); maxrows=maxrows, maxcols=maxcols, labels=labels)
+    maxrows = -1, maxcols = 20)
+    _tab3(freqtable(indf,var1,var2,var3); maxrows=maxrows, maxcols=maxcols)
 end
 
 
-function _tab1(na::NamedArray; decimals = 4, labels=labels)
+function _tab1(na::NamedArray; decimals = 4, labels = nothing)
  
     # rownames
     if labels == nothing
         rownames = names(na)[1]
     else
-        rownames = [ Labels.vallab(labels, na.dimnames[1], x) for x in names(na)[1] ]
+        rownames = [ labels[x] for x in names(na)[1] ]
     end
 
     # Total row label
