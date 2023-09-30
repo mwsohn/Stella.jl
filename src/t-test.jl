@@ -147,35 +147,34 @@ function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, table = tru
     if length(val1) == 0 || length(val2) == 0
         error("On or both groups have zero observations")
     end
-    tt = ttest(val1,val2,paired=false,welch=welch,sig=sig,levels=lev)
-    # tt.colnms[1] = string(by)
+    ttest(val1,val2,paired=false,welch=welch,sig=sig,levels=lev,table=false, labels=vallab(df,by)[by])
 
-    if table
+    # if table
 
-        varlabel = col_label(df, by)
-        vlab = vallab(df, by)
-        
-        pretty_table(hcat(tt.array...)[:,2:end],
-            header = tt.colnms[2:end],
-            row_labels = tt.array[1], #vlab == nothing ? tt.array[1] : [ vlab[by][x] for x in tt.array[1] ],
-            row_label_column_title = string(by), # varlabel == nothing ? string(by) : varlabel,
-            hlines = [0,1,3,4,5],
-            vlines = [1],
-            formatters = (ft_printf("%.0f",1), ft_printf("%.4f",[2,3,4,5])))
+    #     varlabel = col_label(df, by)
+    #     vlab = vallab(df, by)
+   
+    #     pretty_table(hcat(tt.array...)[:,2:end],
+    #         header = tt.colnms[2:end],
+    #         row_labels = tt.array[1], #vlab == nothing ? tt.array[1] : [ vlab[by][x] for x in tt.array[1] ],
+    #         row_label_column_title = string(by), # varlabel == nothing ? string(by) : varlabel,
+    #         hlines = [0,1,3,4,5],
+    #         vlines = [1],
+    #         formatters = (ft_printf("%.0f",1), ft_printf("%.4f",[2,3,4,5])))
 
-        println("\ndiff = mean(",lev[1],") - mean(",lev[2],")")
-        println("H₀: diff = 0")
-        println("t = ",tt.t," df = ",tt.dof,"\n")
+    #     println("\ndiff = mean(",lev[1],") - mean(",lev[2],")")
+    #     println("H₀: diff = 0")
+    #     println("t = ",tt.t," df = ",tt.dof,"\n")
 
-        pretty_table([tt.p_left tt.p_both tt.p_right],
-            header = ["Hₐ: diff < 0     ","     Hₐ: diff != 0     ","     Hₐ: diff > 0"],
-            formatters = (ft_printf("%.5f")),
-            alignment = [:l,:c,:r],
-            hlines = :none,
-            vlines = :none)
-    else    
-        return tt
-    end
+    #     pretty_table([tt.p_left tt.p_both tt.p_right],
+    #         header = ["Hₐ: diff < 0     ","     Hₐ: diff != 0     ","     Hₐ: diff > 0"],
+    #         formatters = (ft_printf("%.5f")),
+    #         alignment = [:l,:c,:r],
+    #         hlines = :none,
+    #         vlines = :none)
+    # else    
+    #     return tt
+    # end
 end
 function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = false, welch = false, labels = nothing, table = true)
 
@@ -190,9 +189,9 @@ function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = fal
 
     length(x) > 0 && length(y) > 0 || error("One or both variables are empty")
 
-    return ttest(x,y,paired=paired,welch=welch,levels=[var1,var2], table = table, labels = labels)
+    return ttest(x,y,paired=paired,welch=welch,levels=[var1,var2], table = table, labels = nothing)
 end
-function ttest(x::AbstractVector,y::AbstractVector; paired::Bool=false,welch::Bool=false,sig=95,levels=Any[:x,:y],labels=nothing, table=true)
+function ttest(x::AbstractVector,y::AbstractVector; paired::Bool=false,welch::Bool=false,sig=95,levels=Any[:x,:y],table=true,labels=nothing)
 
     paired && length(x) != length(y) && error("Paired t test requires equal lengths in input vectors")
 
@@ -239,9 +238,13 @@ function ttest(x::AbstractVector,y::AbstractVector; paired::Bool=false,welch::Bo
     LB[4],UB[4] = StatsAPI.confint(tt)
 
     if table
+
+        println(title)
+        #valuenames = labels == nothing ? levels : [ vallab]
+
         pretty_table([N MEAN SD SE LB UB],
             header=["N", "Mean", "SD", "SE", string(sig, "% LB"), string(sig, "% UB")],
-            row_labels = vcat(levels,"combined","diff"),
+            row_labels = vcat(labels == nothing ? levels : [labels[x] for x in levels],"combined","diff"),
             row_label_column_title = "Variable",
             formatters = (ft_printf("%.5f",[2,3,4,5,6]),ft_printf("%.0f",[1])),
             hlines = [0,1,3,4,5],
