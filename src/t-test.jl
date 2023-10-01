@@ -253,14 +253,11 @@ function ttest(x::AbstractVector,y::AbstractVector;
             welch)
     end
 end
-function ttest(df::DataFrame, varname::Symbol, μ0::Real; sig = 95)
-    v = Vector(df[completecases(df[[varname]]),varname])
-
-    tt = ttest(v,μ0,sig=sig)
-    tt.array[1][1] = string(varname)
-    return tt
+function ttest(df::DataFrame, varname::Symbol, μ0::Real; sig = 95, table = true)
+    v = collect(skipmissing(df[!,varname]))
+    ttest(v,μ0,sig=sig, table = table)
 end
-function ttest(var::AbstractVector,μ0::Real = 0; sig = 95)
+function ttest(var::AbstractVector,μ0::Real = 0; sig = 95, table = true)
 
     N = length(var)
     if N == 0
@@ -276,16 +273,39 @@ function ttest(var::AbstractVector,μ0::Real = 0; sig = 95)
     SE = SD / sqrt(N)
     (LB, UB) = StatsAPI.confint(OneSampleTTest(var,0),1-sig/100)
 
-    return TTReturn(title,
-        ["Variable", "N", "Mean", "SD", "SE", string(sig,"% LB"), string(sig,"% UB")],
-        [["x"],[N],[MEAN],[SD],[SE],[LB],[UB]],
-        [],
-        tt.μ0,
-        tt.t,
-        tt.df,
-        pvalue(tt, tail = :left),
-        pvalue(tt),
-        pvalue(tt, tail = :right),
-        false,
-        false)
+    if table
+        println("One-sample T Test")
+
+        pretty_table([N MEAN SD SE LB UB],
+            header=["N", "Mean", "SD", "SE", string(sig, "% LB"), string(sig, "% UB")],
+            row_labels=string(varname),
+            row_label_column_title="Variable",
+            formatters=(ft_printf("%.5f", [2, 3, 4, 5, 6]), ft_printf("%.0f", [1])),
+            hlines=[0, 1, 3],
+            vlines=[1])
+
+        println("mean = mean(", varname, ")")
+        println("H₀: mean = ", μ0)
+        println("t = ", @sprintf("%.7f", tt.t), " (df = ", tt.df, ")\n")
+
+        pretty_table([pvalue(tt, tail=:left) pvalue(tt) pvalue(tt, tail=:right)],
+            header=["Hₐ: diff < 0       ", "       Hₐ: diff != 0       ", "       Hₐ: diff > 0"],
+            formatters=(ft_printf("%.5f")),
+            alignment=[:l, :c, :r],
+            hlines=:none,
+            vlines=:none)
+    else
+        return TTReturn(title,
+            ["Variable", "N", "Mean", "SD", "SE", string(sig,"% LB"), string(sig,"% UB")],
+            [["x"],[N],[MEAN],[SD],[SE],[LB],[UB]],
+            [],
+            tt.μ0,
+            tt.t,
+            tt.df,
+            pvalue(tt, tail = :left),
+            pvalue(tt),
+            pvalue(tt, tail = :right),
+            false,
+            false)
+    end
 end
