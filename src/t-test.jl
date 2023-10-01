@@ -217,16 +217,17 @@ function ttest(x::AbstractVector,y::AbstractVector;
         println(title)
         N[4] = missing
         SD[4] = missing
+        valuenames = labels == nothing ? levels : [labels[x] for x in levels]
 
         pretty_table([N MEAN SD SE LB UB],
             header=["N", "Mean", "SD", "SE", string(sig, "% LB"), string(sig, "% UB")],
-            row_labels = vcat(labels == nothing ? levels : [labels[x] for x in levels],"combined","diff"),
+            row_labels = vcat(valuenames,"combined","diff"),
             row_label_column_title = byvar == nothing ? "Variable" : string(byvar),
             formatters = (ft_printf("%.5f",[2,3,4,5,6]),ft_printf("%.0f",[1]), ft_nomissing),
             hlines = [0,1,3,4,5],
             vlines = [1])
 
-        println("diff = mean(", levels[1],") - mean(", levels[2], ")")
+        println("diff = mean(", valuenames[1],") - mean(", valuenames[2], ")")
         println("H₀: diff = 0")
         println("t = ", @sprintf("%.7f",tt.t), " (df = ", tt.df, ")\n")
 
