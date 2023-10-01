@@ -271,7 +271,7 @@ function ttest(var::AbstractVector,μ0::Real = 0; table = true)
 
     # compute standard errors and confidence intervals
     SE = SD / sqrt(N)
-    (LB, UB) = StatsAPI.confint(tt.t)
+    (LB, UB) = StatsAPI.confint(tt)
 
     if table
         println(title)
