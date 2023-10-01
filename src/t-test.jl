@@ -228,7 +228,7 @@ function ttest(x::AbstractVector,y::AbstractVector;
 
         println("diff = mean(", levels[1],") - mean(", levels[2], ")")
         println("H₀: diff = 0")
-        println("t = ", tt.t, "(df = ", tt.df, ")\n")
+        println("t = ", @sprintf("%.7f",tt.t), " (df = ", tt.df, ")\n")
 
         pretty_table([pvalue(tt, tail=:left) pvalue(tt) pvalue(tt, tail=:right)],
             header = ["Hₐ: diff < 0       ","       Hₐ: diff != 0       ","       Hₐ: diff > 0"],
