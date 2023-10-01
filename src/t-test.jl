@@ -281,7 +281,7 @@ function ttest(var::AbstractVector,μ0::Real = 0; table = true, varname = nothin
             row_labels= [varname == nothing ? "" : string(varname)],
             row_label_column_title="Variable",
             formatters=(ft_printf("%.5f", [2, 3, 4, 5, 6]), ft_printf("%.0f", [1])),
-            hlines=[0, 1, 3],
+            hlines=[0, 1, 2],
             vlines=[1])
 
         println("mean = mean(", varname, ")")
