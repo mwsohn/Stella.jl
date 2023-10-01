@@ -277,7 +277,7 @@ function ttest(var::AbstractVector,μ0::Real = 0; table = true)
         println(title)
 
         pretty_table([N MEAN SD SE LB UB],
-            header=["N", "Mean", "SD", "SE", string(sig, "% LB"), string(sig, "% UB")],
+            header=["N", "Mean", "SD", "SE", "95% LB", "95% UB"],
             row_labels=string(varname),
             row_label_column_title="Variable",
             formatters=(ft_printf("%.5f", [2, 3, 4, 5, 6]), ft_printf("%.0f", [1])),
