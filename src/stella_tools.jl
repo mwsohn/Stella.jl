@@ -103,7 +103,7 @@ function univ(v::AbstractVector)
     ]
 
     #@show output
-    pretty_table(output, header = ["Statistic","","Percentile",""],hlines=[0,1,10,16])
+    pretty_table(output, header = ["Statistic","","Percentile",""],hlines=[0,1,16],vlines=:none)
 
     return output
 
@@ -732,4 +732,7 @@ function humanReadableByteCountBin(bytes::Int64)
     end
     b = (b >> 20) / 0x1p40
     return @sprintf("%.1f EB", b)
+end
+function humansize(bytes::Int64)
+    return humanReadableByteCountbin(bytes)
 end
