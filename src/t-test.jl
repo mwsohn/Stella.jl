@@ -253,11 +253,11 @@ function ttest(x::AbstractVector,y::AbstractVector;
             welch)
     end
 end
-function ttest(df::DataFrame, varname::Symbol, μ0::Real; sig = 95, table = true)
+function ttest(df::DataFrame, varname::Symbol, μ0::Real; table = true)
     v = collect(skipmissing(df[!,varname]))
-    ttest(v,μ0,sig=sig, table = table)
+    ttest(v,μ0, table = table)
 end
-function ttest(var::AbstractVector,μ0::Real = 0; sig = 95, table = true)
+function ttest(var::AbstractVector,μ0::Real = 0; table = true)
 
     N = length(var)
     if N == 0
@@ -271,10 +271,10 @@ function ttest(var::AbstractVector,μ0::Real = 0; sig = 95, table = true)
 
     # compute standard errors and confidence intervals
     SE = SD / sqrt(N)
-    (LB, UB) = StatsAPI.confint(OneSampleTTest(var,0),1-sig/100)
+    (LB, UB) = StatsAPI.confint(tt.t)
 
     if table
-        println("One-sample T Test")
+        println(title)
 
         pretty_table([N MEAN SD SE LB UB],
             header=["N", "Mean", "SD", "SE", string(sig, "% LB"), string(sig, "% UB")],
