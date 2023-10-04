@@ -21,7 +21,10 @@ end
 Extracts the data label saved in the `df` DataFrame and returns it.
 """
 function data_label(_df::AbstractDataFrame)
-    return metadata(_df,"description")
+    if "description" in metadatakeys(_df)
+        return metadata(_df,"description")
+    end
+    return nothing
 end
 
 """
