@@ -140,6 +140,7 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
 	end
 
     # read the label
+    dslabel = ""
     if dslabel_len > 0
         dslabel = String(read(fh,dslabel_len))
     end
@@ -356,7 +357,7 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
 
     # attach labels
     # data label
-    if isdefined(dslabel) && length(dslabel) > 0
+    if length(dslabel) > 0
         Stella.set_data_label!(rdf,dslabel)
     end
 
