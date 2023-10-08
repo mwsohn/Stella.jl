@@ -1,18 +1,3 @@
-# function memory_saved(dt,n)
-
-#     # total size and levels
-#     tsize = sum([ismissing(x) ? 0 : length(x.value) for x in dt.data[n]])
-#     s = Set(dt.data[n][:].values)
-
-#     # for refs size
-#     refsize = length(s) < typemax(UInt8) ? 1 : length(s) < typemax(UInt16) ? 2 : 4
-
-#     # approximate size in categorical arrays
-#     rsize = sum(length.(collect(s))) + refsize*dt.rows
-
-#     return tsize*.8 > rsize ? true : false
-# end
-
 function get_numbytes(typelist,nvar)
     nb = Vector{UInt16}(undef,nvar)
     for i in 1:nvar
@@ -494,21 +479,6 @@ function _read_dta(io, release, rlen, len, nvar,varlist,typelist,fmtlist,numskip
 
 	return Stella.dfcompress(df)
 end
-
-# """
-#     df, label = read_stata(fn::String)
-
-# Converts a Stata datafile into a Julia DataFrame. It produces two memory objects (`df` and `label`).
-# The first is the dataframe. The second is a [Lables](https://github.com/mwsohn/Labels.jl) object
-# that provide functionality to attach variable and value labels.
-# """
-# function read_stata(fn::String)
-
-#     dt = ReadStat.read_dta(fn)
-#     df = readstat2dataframe(dt)
-
-#     return df,get_labels(dt)
-# end
 
 
 #############################################################################
