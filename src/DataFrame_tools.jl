@@ -343,17 +343,17 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
     # attach labels
     # data label
     if length(dslabel) > 0
-        Stella.set_data_label!(rdf,dslabel)
+        set_data_label!(rdf,dslabel)
     end
 
     # variable labels
     for i in 1:nvar
-        Stella.set_col_label!(rdf,Symbol(varlist[i]),varlabels[i])
+        set_col_label!(rdf,Symbol(varlist[i]),varlabels[i])
     end
 
     # value labels
     if length(lblname_dict) > 0
-        set_lblname!(rdf, lblname_dict)
+        set_value_key!(rdf, lblname_dict)
     end
 
     # value dictionary
@@ -656,7 +656,7 @@ function desc(df::DataFrame,varnames::Symbol...; dfout::Bool = false, nmiss::Boo
     if length(colmetadatakeys(df) ) > 0
         dfv[!,:Lblname] = Vector{Union{Missing,String}}(undef,size(dfv,1))
         dfv[!,:Description] = Vector{Union{Missing,String}}(undef,size(dfv,1))
-        varlabel = Stella.col_label(df)
+        varlabel = col_label(df)
     end
 
     dfv[!, :Lblname] = Vector{Union{Missing,Symbol}}(missing, size(dfv, 1))
@@ -675,8 +675,8 @@ function desc(df::DataFrame,varnames::Symbol...; dfout::Bool = false, nmiss::Boo
             dfv[i,:Missing] = string(round(100 * _nmiss/size(df,1),digits=1),"%")
         end
 
-        if lblname(df,v) != nothing
-            dfv[i,:Lblname] = lblname(df,v)
+        if value_key(df,v) != nothing
+            dfv[i,:Lblname] = value_key(df,v)
         end
 
         if length(varlabel) > 0
