@@ -22,14 +22,14 @@ function tab(na::NamedArray)
     end
 end
 function tab(indf,var::Union{Symbol,String}; decimals=3)
-    _tab1(freqtable(indf,var); decimals=decimals, labels = vallab(indf,var))
+    _tab1(freqtable(indf,var); decimals=decimals, labels = value_label(indf,var))
 end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows = -1, maxcols = 20)
-    _tab2(freqtable(indf,var1,var2); maxrows=maxrows, maxcols = maxcols, labels = vallab(indf,[var1,var2]))
+    _tab2(freqtable(indf,var1,var2); maxrows=maxrows, maxcols = maxcols, labels = value_label(indf,[var1,var2]))
 end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String},var3::Union{Symbol,String};
     maxrows=-1, maxcols=20)
-    _tab3(freqtable(indf, var1, var2, var3); maxrows=maxrows, maxcols=maxcols, labels=vallab(indf, [var1, var2, var3]))
+    _tab3(freqtable(indf, var1, var2, var3); maxrows=maxrows, maxcols=maxcols, labels=value_label(indf, [var1, var2, var3]))
 end
 
 function _tab1(na::NamedArray; decimals = 4, labels = nothing)
