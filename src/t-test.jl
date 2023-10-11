@@ -147,7 +147,7 @@ function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, table = tru
     if length(val1) == 0 || length(val2) == 0
         error("On or both groups have zero observations")
     end
-    ttest(val1,val2,paired=false,welch=welch,sig=sig,levels=lev,table=true, labels=vallab(df,by)[by],byvar = by)
+    ttest(val1,val2,paired=false,welch=welch,sig=sig,levels=lev,table=true, labels=value_label(df,by),byvar = by)
 end
 function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = false, welch = false, labels = nothing, table = true)
 
