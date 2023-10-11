@@ -66,7 +66,7 @@ end
 function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing)
     
     if labels != nothing && haskey(labels, na.dimnames[1])
-        rownames = [labels[na.dimnames[1]][x] for x in names(na)[1]]
+        rownames = [ismissing(x) ? missing : labels[na.dimnames[1]][x] for x in names(na)[1]]
     else
         rownames = names(na)[1]
     end
@@ -74,7 +74,7 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing)
 
     # colunm names
     if labels != nothing && haskey(labels, na.dimnames[2])
-        colnames = [labels[na.dimnames[2]][x] for x in names(na)[2]]
+        colnames = [ismissing(x) ? missing : labels[na.dimnames[2]][x] for x in names(na)[2]]
     else
         colnames = names(na)[2]
     end
