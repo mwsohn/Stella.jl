@@ -277,34 +277,44 @@ substat(df::DataFrame, varname::Symbol, groupvar::Symbol, func::Function) = subs
 #----------------------------------------------------------------------------
 # eform
 #----------------------------------------------------------------------------
-function eform(glmout::StatsModels.RegressionModel)
+# function eform(glmout::StatsModels.RegressionModel)
 
-    # family and link function
-    if isa(glmout.model,GeneralizedLinearModel)
-        distrib = glmout.model.rr.d
-        linkfun = GLM.Link(glmout.model.rr)
-    else
-        error("GLM model is required as the argument")
-    end
+#     # family and link function
+#     if isa(glmout.model,GeneralizedLinearModel)
+#         distrib = glmout.model.rr.d
+#         linkfun = GLM.Link(glmout.model.rr)
+#     else
+#         error("GLM model is required as the argument")
+#     end
 
-	coeftable2 = coeftable(glmout)
+# 	coeftable2 = coeftable(glmout)
 
-	# estimates
-	coeftable2.cols[1] = exp.(coeftable2.cols[1])
+# 	# estimates
+# 	coeftable2.cols[1] = exp.(coeftable2.cols[1])
 
-	# standard errors
-	coeftable2.cols[2] = coeftable2.cols[1] .* coeftable2.cols[2]
+# 	# standard errors
+# 	coeftable2.cols[2] = coeftable2.cols[1] .* coeftable2.cols[2]
 							
-	# 95% CI
-    	coeftable2.cols[5] = exp.(coeftable2.cols[5])
-    	coeftable2.cols[6] = exp.(coeftable2.cols[6])
+# 	# 95% CI
+#     	coeftable2.cols[5] = exp.(coeftable2.cols[5])
+#     	coeftable2.cols[6] = exp.(coeftable2.cols[6])
 
-	# rename column1 to OR
-    coeftable2.colnms[1] = coeflab(distrib,linkfun)
+# 	# rename column1 to OR
+#     coeftable2.colnms[1] = coeflab(distrib,linkfun)
 
-	return coeftable2
-end
-function eform(glmout::StatsModels.RegressionModel, labels::Label)
+# 	return coeftable2
+# end
+
+"""
+    eform(glmout::StatsModels.RegressionModel)
+
+Produces exponentiated estimates, their standard errors, and 95% confidence intervals.
+If you want to see odds ratios (ORs) or incidence rate ratios (IRRs)
+after a logsitic regression or a Poisson regression, use this function to obtain
+regression output instead of `coeftable`.
+
+"""
+function eform(glmout::StatsModels.RegressionModel, labels=nothing)
 
     # family and link function
     if isa(glmout.model,GeneralizedLinearModel)
@@ -323,40 +333,42 @@ function eform(glmout::StatsModels.RegressionModel, labels::Label)
 	coeftable2.cols[2] = coeftable2.cols[1] .* coeftable2.cols[2]
 
 	# 95% CI
-    	coeftable2.cols[5] = exp.(coeftable2.cols[5])
-    	coeftable2.cols[6] = exp.(coeftable2.cols[6])
+    coeftable2.cols[5] = exp.(coeftable2.cols[5])
+    coeftable2.cols[6] = exp.(coeftable2.cols[6])
 
 	# rename column1 to OR
 	coeftable2.colnms[1] = coeflab(distrib,linkfun)
 
-	# parse the row names and change variable names and values
-	for i in 2:length(coeftable2.rownms)
-		# parse row name and split into a tuple (varname, value)
-		if occursin(": ",coeftable2.rownms[i])
-			(varname,value) = split(coeftable2.rownms[i],": ")
-		else
-			(varname,value) = (coeftable2.rownms[i],"")
-		end
+    if labels != nothing
+        # parse the row names and change variable names and values
+        for i in 2:length(coeftable2.rownms)
+            # parse row name and split into a tuple (varname, value)
+            if occursin(": ",coeftable2.rownms[i])
+                (varname,value) = split(coeftable2.rownms[i],": ")
+            else
+                (varname,value) = (coeftable2.rownms[i],"")
+            end
 
-        # get variable label from the label dictionary
-		varlabel = varlab(labels,Symbol(varname))
-        if varlabel == ""
-            varlabel = varname
-        end
-        if value != ""
-		    vlabel = vallab(labels,Symbol(varname),parse(Int,value))
-        end
+            # get variable label from the label dictionary
+            varlabel = varlab(labels,Symbol(varname))
+            if varlabel == ""
+                varlabel = varname
+            end
+            if value != ""
+                vlabel = vallab(labels,Symbol(varname),parse(Int,value))
+            end
 
-        # If value is 1 and value label is Yes, it is a binary variable
-		# do not print
-		if value == 1 && ismatch(r"^ *yes *$"i,vlabel)
-			coeftable2.rownms[i] = varlabel
-		elseif value != ""
-			coeftable2.rownms[i] = string(varlabel, ": ", vlabel)
-        else
-            coeftable2.rownms[i] = varlabel
-		end
-	end
+            # If value is 1 and value label is Yes, it is a binary variable
+            # do not print
+            if value == 1 && ismatch(r"^ *yes *$"i,vlabel)
+                coeftable2.rownms[i] = varlabel
+            elseif value != ""
+                coeftable2.rownms[i] = string(varlabel, ": ", vlabel)
+            else
+                coeftable2.rownms[i] = varlabel
+            end
+        end
+    end
 
 	return coeftable2
 end
