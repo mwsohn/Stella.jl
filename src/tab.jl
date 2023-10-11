@@ -8,28 +8,28 @@ Use `skipmissing = true` to obtain frequencies that include `missing` values.
 The returned table is a `NamedArray`. Frequencies are in an n-dimensional array `na.array`
 where `na` is the returned NamedArray. 
 """
-function tab(na::NamedArray)
+function tab(na::NamedArray; skipmissing=true)
     
     len = length(na.dimnames)
     if len == 1
-        _tab1(na)
+        _tab1(na; skipmissing=skipmissing)
     elseif len == 2
-        _tab2(na) 
+        _tab2(na; skipmissing=skipmissing)
     elseif len == 3
-        _tab3(na)
+        _tab3(na; skipmissing=skipmissing)
     else
         error("Crosstabs for more than 3 variables are not currently supported.")
     end
 end
-function tab(indf,var::Union{Symbol,String}; decimals=3)
-    _tab1(freqtable(indf,var); decimals=decimals, labels = value_label(indf,var))
+function tab(indf,var::Union{Symbol,String}; decimals=4, skipmissing=true)
+    _tab1(freqtable(indf,var, skipmissing=skipmissing); decimals=decimals, labels = value_label(indf,var))
 end
-function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows = -1, maxcols = 20)
-    _tab2(freqtable(indf,var1,var2); maxrows=maxrows, maxcols = maxcols, labels = value_label(indf,[var1,var2]))
+function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows = -1, maxcols = 20, decimals=4, skipmissing=true)
+    _tab2(freqtable(indf, var1, var2, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, labels=value_label(indf, [var1, var2]), decimals=decimals)
 end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String},var3::Union{Symbol,String};
-    maxrows=-1, maxcols=20)
-    _tab3(freqtable(indf, var1, var2, var3); maxrows=maxrows, maxcols=maxcols, labels=value_label(indf, [var1, var2, var3]))
+    maxrows=-1, maxcols=20, decimals=4, skipmissing=true)
+    _tab3(freqtable(indf, var1, var2, var3, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, labels=value_label(indf, [var1, var2, var3]), decimals=decimals)
 end
 
 function _tab1(na::NamedArray; decimals = 4, labels = nothing)
@@ -63,7 +63,7 @@ function _tab1(na::NamedArray; decimals = 4, labels = nothing)
         vlines=[1])
 end
 
-function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing)
+function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing, decimals=4)
     
     if labels != nothing && haskey(labels, na.dimnames[1])
         rownames = [ismissing(x) ? missing : labels[na.dimnames[1]][x] for x in names(na)[1]]
@@ -96,9 +96,6 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing)
     # add two blank cells
     rownames2 = vcat([ [x, " ", " "] for x in rownames ]...)
 
-    # labels
-    # if labels != nothing && varlab(labels,na.dimnames[1]) != nothing
-
     pretty_table(d,
         row_labels = rownames2,
         row_label_column_title=string(na.dimnames[1], " / ", na.dimnames[2]),
@@ -114,7 +111,7 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing)
         pval < 0.0001 ? "< 0.0001" : string("= ",round(pval,sigdigits = 6)))
 end
 
-function _tab3(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing)
+function _tab3(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing, decimals=4)
 
     # stratify the var3 (na.dimnames[3])
     n3 = size(na,3)
@@ -123,7 +120,7 @@ function _tab3(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing)
     for i in 1:n3
         println("\n\n",na.dimnames[3], " = ", vals[i] ,"\n")
 
-        _tab2(na[:,:,i]; maxrows = maxrows, maxcols = maxcols, labels=labels)
+        _tab2(na[:,:,i]; maxrows = maxrows, maxcols = maxcols, labels=labels, decimals=decimals)
     end
 end
 
