@@ -655,7 +655,7 @@ function desc(df::DataFrame,varnames::Symbol...; dfout::Bool = false, nmiss::Boo
 
     if length(colmetadatakeys(df) ) > 0
         dfv[!,:Lblname] = Vector{Union{Missing,String}}(undef,size(dfv,1))
-        dfv[!,:Description] = Vector{Union{Missing,String}}(undef,size(dfv,1))
+        dfv[!,:Description] = Vector{Union{Missing,String}}(missing,size(dfv,1))
         varlabel = col_label(df)
     end
 
