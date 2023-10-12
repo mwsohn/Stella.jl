@@ -1,6 +1,7 @@
 Distributions
 FreqTables
 DataFrames
+DataAPI
 GLM
 StatsBase
 Glob
