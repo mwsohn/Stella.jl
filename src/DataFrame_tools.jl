@@ -680,7 +680,7 @@ function desc(df::DataFrame,varnames::Symbol...; dfout::Bool = false, nmiss::Boo
         end
 
         if length(varlabel) > 0
-            dfv[i,:Description] = varlabel[v]
+            dfv[i,:Description] = varlabel[value_key(df,v)]
         end
     end
 
