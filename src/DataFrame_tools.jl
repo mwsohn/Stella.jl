@@ -679,7 +679,7 @@ function desc(df::DataFrame,varnames::Symbol...; dfout::Bool = false, nmiss::Boo
             dfv[i,:Lblname] = value_key(df,v)
         end
 
-        if length(varlabel) > 0 && haskey(varlabel,v) != nothing
+        if length(varlabel) > 0 && haskey(varlabel,v)
             dfv[i,:Description] = varlabel[v]
         end
     end
