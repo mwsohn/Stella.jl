@@ -38,7 +38,7 @@ function _tab1(na::NamedArray; decimals = 4, labels = nothing)
     if labels == nothing
         rownames = names(na)[1]
     else
-        rownames = [ ismissing(x) ? missing : labels[na.dimnames[1]][x] for x in names(na)[1] ]
+        rownames = [ ismissing(x) ? missing : labels[x] for x in names(na)[1] ]
     end
 
     # Total row label
