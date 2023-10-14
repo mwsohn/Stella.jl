@@ -710,7 +710,8 @@ function desc(df::DataFrame,varnames::Symbol...; dfout::Bool = false, nmiss::Boo
             crop=:none,
             vlines = [1],
             formatters = (ft_nomissing),
-            show_row_number = true)
+            show_row_number = true,
+            row_number_column_title = "Column")
     end
 end
 
