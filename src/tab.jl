@@ -56,7 +56,7 @@ function _tab1(na::NamedArray; decimals = 4, labels = nothing)
     ar = hcat(rownames,counts, percents, cumpct)
 
     PrettyTables.pretty_table(ar, 
-        header=[na.dimnames[1],"Counts","Percent","Cum. Percent"],
+        header=[na.dimnames[1],"Counts"," Percent","Cum Percent"],
         formatters = ft_round(decimals,[3,4]),
         crop = :none,
         hlines=[0,1,length(rownames),length(rownames)+1],
