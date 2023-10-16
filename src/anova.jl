@@ -50,11 +50,16 @@ function anova(_df::DataFrame, dep::Symbol, cat::Symbol; pval = false)
         P=[pstr, missing, missing]
     )
 
-	if pval == false
+    if pval == false
     	println("\nOne-Way Analysis of Variance: ", dep, " by ", cat)
-    	pretty_table(outdf; formatters=(ft_nomissing, ft_printf("%.4f", [3, 4, 5])))
-	else
-		return pvalue
-	end
+    	pretty_table(outdf; 
+		formatters=(ft_nomissing, ft_printf("%.4f", [3, 4, 5])),
+		hlines=[0,1,4],
+		vlines=[1],
+		show_subheader = false
+	)
+    else
+	return pvalue
+    end
 
 end
