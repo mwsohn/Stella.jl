@@ -573,8 +573,8 @@ function acompress(da::AbstractVector)
             end
         end
     elseif eltype_old <: AbstractFloat
-        # first test if the floats are integer numbers
-        if all(collect(skipmissing(da)) .% 1 == 0) == true
+        # first test if the floats are actually integer numbers (all decimals are zeros)
+        if all([x - floor(x) > 0 ? false : true for x in da] .== true)
             if nomiss
                 return acompress(convert(Vector{Int64},da))
             else
