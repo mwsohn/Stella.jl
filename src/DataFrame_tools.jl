@@ -540,8 +540,8 @@ function acompress(da::AbstractVector)
     eltype_old = nonmissingtype(eltyp)
     
     nomiss = true
-    if eltyp == Union{Missing,eltype_old} && sum(ismissing.(da)) > 0
-        nomiss = false;
+    if eltyp == Union{Missing,eltype_old} && nmissing(da) > 0
+        nomiss = false
     end
 
     # string variable - do not compress
@@ -551,21 +551,23 @@ function acompress(da::AbstractVector)
 
     if  eltype_old <: Integer
 
-        varmin = minimum(collect(skipmissing(da)))
-        varmax = maximum(collect(skipmissing(da)))
-        if eltype_old != Int8 && varmin <= typemin(Int8) && varmax <= typemax(Int8)
+        varmin = minimum(skipmissing(da))
+        varmax = maximum(skipmissing(da))
+        if eltype_old != Int8 && varmin >= typemin(Int8) && varmax <= typemax(Int8)
             if nomiss
                 return convert(Vector{Int8},da)
             else
                 return convert(Vector{Union{Missing,Int8}},da)
             end
-        elseif eltype_old != Int16 && varmin <= typemin(Int16) && varmax <= typemax(Int16)
+        end
+        if eltype_old != Int16 && varmin >= typemin(Int16) && varmax <= typemax(Int16)
             if nomiss
                 return convert(Vector{Int16}, da)
             else
                 return convert(Vector{Union{Missing,Int16}}, da)
             end
-        elseif eltype_old != Int32 && varmin <= typemin(Int32) && varmax <= typemax(Int32)
+        end
+        if eltype_old != Int32 && varmin >= typemin(Int32) && varmax <= typemax(Int32)
             if nomiss
                 return convert(Vector{Int32}, da)
             else
@@ -576,7 +578,7 @@ function acompress(da::AbstractVector)
         # first test if the floats are actually integer numbers (all decimals are zeros)
         if all([x - floor(x) > 0 ? false : true for x in skipmissing(da)] .== true)
             if nomiss
-                return acompress(Int.(da))
+                return acompress(convert(Vector{Int64},da))
             else
                 return acompress(convert(Vector{Union{Missing,Int64}},da))
             end
