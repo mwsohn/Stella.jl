@@ -78,7 +78,7 @@ Computed statistics include `N Total` (number of rows in the input DataArray),
 `P25` (25th percentile), `Median` (median), `P75` (75th percentile), `Max` (maximum),
 `Skewness` (skewness), and `Kurtosis` (kurtosis).
 """
-function univ(v::AbstractVector)
+function univ(v::AbstractVector; table=true)
 
     v2 = convert(Vector{Float64},v[.!ismissing.(v)])
     S = smallest(v2)
@@ -103,13 +103,14 @@ function univ(v::AbstractVector)
     ]
 
     #@show output
-    pretty_table(output, header = ["Statistic","","Percentile",""],hlines=[0,1,16],vlines=:none)
-
+    if table
+        pretty_table(output, header = ["Statistic","","Percentile",""],hlines=[0,1,16],vlines=:none)
+        return nothing
+    end
     return output
-
 end
-function univ(df::DataFrame,s::Union{Symbol,String})
-    univ(df[!,s])
+function univ(df::DataFrame,s::Union{Symbol,String}; table=true)
+    univ(df[!,s]; table=table)
 end
 
 
