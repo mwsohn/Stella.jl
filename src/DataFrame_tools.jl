@@ -694,10 +694,10 @@ function desc(df::DataFrame,varnames::Symbol...; dfout::Bool = false, nmiss::Boo
 	    header = vcat(header,"% Miss")
 	    alignment = vcat(alignment,:r)
     end
-    if length(varlabel) > 0
+    # if length(varlabel) > 0
     	header = vcat(header,["Value Key","Description"])
 	    alignment = vcat(alignment,[:l,:l])
-    end
+    # end
 
     if dfout 
     	return dfv
