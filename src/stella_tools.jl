@@ -176,10 +176,11 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
 
     # value labels
     # valdesc = collect(values(value_label(indf,groupvar)))
+	valdesc = [v[1] for v in keys(gdf.keymap)]
 
     if table
         pretty_table(outdf[:, 2:end], 
-        row_labels = lev, #vallab == nothing ? lev : valdesc,
+        row_labels = valdesc, #vallab == nothing ? lev : valdesc,
         row_label_column_title = string(groupvar),
 		show_subheader = false,
 		vlines=[1])
