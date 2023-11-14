@@ -164,7 +164,7 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
     gdf = groupby(indf, groupvar, skipmissing = skipmissing)
 	
     # number of levels in the groupvar
-    lev = sort(collect(values(gdf.keymap)))
+    # lev = sort(collect(values(gdf.keymap)))
 
     # groupvar and N
     outdf = combine(gdf, groupvar => length => :N)
@@ -176,10 +176,11 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
 
     # value labels
     # valdesc = collect(values(value_label(indf,groupvar)))
+    sort!(outdf,outdf[:,groupvar])
 
     if table
         pretty_table(outdf[:, 2:end], 
-        row_labels = outdf[:,1], #vallab == nothing ? lev : valdesc,
+        row_labels = outdf[:,groupvar], #vallab == nothing ? lev : valdesc,
         row_label_column_title = string(groupvar),
 		show_subheader = false,
 		vlines=[1])
