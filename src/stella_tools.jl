@@ -63,12 +63,12 @@ function univariate(da::AbstractVector)
 			kurtosis(da2)]
 	)
 end
-univariate(df::DataFrame,var::Symbol) = univariate(df[!,var])
+univariate(df::AbstractDataFrame,var::Symbol) = univariate(df[!,var])
 
 
 """
     univ(vec::AbstractVector)
-    univ(df::DataFrame,varname::Union{Symbol,String})
+    univ(df::AbstractDataFrame,varname::Union{Symbol,String})
 
 Produce univariate statistics using `vec` or `df[!,varname]` and return
 a DataFrame with univariate statistics and percentile values.
@@ -109,7 +109,7 @@ function univ(v::AbstractVector; table=true)
     end
     return output
 end
-function univ(df::DataFrame,s::Union{Symbol,String}; table=true)
+function univ(df::AbstractDataFrame,s::Union{Symbol,String}; table=true)
     univ(df[!,s]; table=table)
 end
 
