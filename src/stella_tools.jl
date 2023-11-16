@@ -176,7 +176,7 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
 
     # value labels
     # valdesc = collect(values(value_label(indf,groupvar)))
-    sort!(outdf,outdf[:,groupvar])
+    sort!(outdf,groupvar)
 
     if table
         pretty_table(outdf[:, 2:end], 
