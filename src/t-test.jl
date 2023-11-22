@@ -10,7 +10,7 @@ struct TTReturn
     t::Float64
     dof::Float64 # for UnequalVarianceTTest
     p_left::Float64
-    p_both::Float64
+    p_twosided::Float64
     p_right::Float64
     paired::Bool
     welch::Bool
