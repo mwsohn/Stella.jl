@@ -147,7 +147,7 @@ function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, table = tru
     if length(val1) == 0 || length(val2) == 0
         error("On or both groups have zero observations")
     end
-    ttest(val1,val2,paired=false,welch=welch,sig=sig,levels=lev,table=true, labels=value_label(df,by), byvar = by)
+    ttest(val1,val2,paired=false,welch=welch,sig=sig,levels=lev,table=table, labels=value_label(df,by), byvar = by)
 end
 function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = false, welch = false, labels = nothing, table = true)
 
@@ -165,8 +165,13 @@ function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = fal
     return ttest(x,y,paired=paired,welch=welch,levels=[var1,var2], table = table, labels = nothing, byvar = by)
 end
 function ttest(x::AbstractVector,y::AbstractVector; 
-    paired::Bool=false,welch::Bool=false,sig=95,
-    levels=Any[:x,:y],table=true,labels=nothing,byvar = nothing)
+    paired::Bool=false,
+    welch::Bool=false,
+    sig=95,
+    levels=Any[:x,:y],
+    table=true,
+    labels=nothing,
+    byvar = nothing)
 
     paired && length(x) != length(y) && error("Paired t test requires equal lengths in input vectors")
 
@@ -212,7 +217,7 @@ function ttest(x::AbstractVector,y::AbstractVector;
     SE[4] = tt.stderr
     LB[4],UB[4] = StatsAPI.confint(tt)
 
-    if table
+    if table == true
 
         println(title)
         N[4] = missing
@@ -238,6 +243,8 @@ function ttest(x::AbstractVector,y::AbstractVector;
             alignment = [:l,:c,:r],
             hlines = :none,
             vlines = :none)
+
+        return nothing
     else
         return TTReturn(title,
             ["Variable", "N", "Mean", "SD", "SE", string(sig,"% LB"), string(sig,"% UB")],
