@@ -650,11 +650,8 @@ be easily created as described in [Labels](https://github.com/mwsohn/Labels.jl).
 function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label} = nothing, dfout::Bool = false, nmiss::Bool = true)
 
     # labels
-    if labels == nothing && "Labels" in metadatakeys(df)
-        fn = metadata(df,"Labels")
-        if file_exists(fn)
-            labels = load_object(fn)
-        end
+    if labels == nothing
+        labels = load_labels(df)
     end
 
     if length(varnames) == 0
