@@ -651,7 +651,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label} = 
 
     # labels
     if labels == nothing && "Labels" in metadatakeys(df)
-        labels = load_object(metadata(indf,"Labels"))
+        labels = load_object(metadata(df,"Labels"))
     end
 
     if length(varnames) == 0
