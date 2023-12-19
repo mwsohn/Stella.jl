@@ -22,14 +22,14 @@ function tab(na::NamedArray; skipmissing=true)
     end
 end
 function tab(indf,var::Union{Symbol,String}; decimals=4, skipmissing=true)
-    _tab1(freqtable(indf,var, skipmissing=skipmissing); decimals=decimals, labels = value_label(indf,var))
+    _tab1(freqtable(indf,var, skipmissing=skipmissing); decimals=decimals, labels = vallab(indf,var))
 end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows = -1, maxcols = 20, decimals=4, skipmissing=true)
-    _tab2(freqtable(indf, var1, var2, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, labels=value_label(indf, [var1, var2]), decimals=decimals)
+    _tab2(freqtable(indf, var1, var2, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, labels=vallab(indf, [var1, var2]), decimals=decimals)
 end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String},var3::Union{Symbol,String};
     maxrows=-1, maxcols=20, decimals=4, skipmissing=true)
-    _tab3(freqtable(indf, var1, var2, var3, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, labels=value_label(indf, [var1, var2, var3]), decimals=decimals)
+    _tab3(freqtable(indf, var1, var2, var3, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, labels=vallab(indf, [var1, var2, var3]), decimals=decimals)
 end
 
 function _tab1(na::NamedArray; decimals = 4, labels = nothing)
