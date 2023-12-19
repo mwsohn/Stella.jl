@@ -673,7 +673,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label} = 
     if labels != nothing
         varlabel = varlabs(labels,propertynames(df))
     else
-	    varlabel = Dict()
+	    varlabel = names(df)
     end
 
     dfv[!, :Lblname] = Vector{Union{Missing,Symbol}}(missing, size(dfv, 1))
@@ -696,8 +696,8 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label} = 
             dfv[i,:Valfmt] = valfmt(labels,v)
         end
 
-        if length(varlabel) > 0 && haskey(varlabel,v)
-            dfv[i,:Description] = varlabel[v]
+        if length(varlabel) > 0 && in(v,varlabel)
+            dfv[i,:Description] = varlabel[i]
         end
     end
 
