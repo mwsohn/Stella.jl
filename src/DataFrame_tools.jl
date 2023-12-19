@@ -649,6 +649,11 @@ be easily created as described in [Labels](https://github.com/mwsohn/Labels.jl).
 """
 function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label} = nothing, dfout::Bool = false, nmiss::Bool = true)
 
+    # labels
+    if labels == nothing && "Labels" in metadatakeys(df)
+        labels = load_object(metadata(indf,"Labels"))
+    end
+
     if length(varnames) == 0
         varnames = propertynames(df)
     end
@@ -698,14 +703,14 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label} = 
 
     header = ["Variable", "Eltype"]
     alignment = [:l,:l]
+
     if nmiss
 	    header = vcat(header,"% Miss")
 	    alignment = vcat(alignment,:r)
     end
-    # if length(varlabel) > 0
-    	header = vcat(header,["Value Fmt","Description"])
-	    alignment = vcat(alignment,[:l,:l])
-    # end
+
+    header = vcat(header,["Value Fmt","Description"])
+	alignment = vcat(alignment,[:l,:l])
 
     if dfout 
     	return dfv
@@ -715,6 +720,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label} = 
         end
         println("Number of observations: ", @sprintf("%12.0f",nrow(df)))
         println("Number of variables:    ", @sprintf("%12.0f",ncol(df)))
+        println(dfv)
 
         pretty_table(dfv,
             alignment=alignment,
