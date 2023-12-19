@@ -151,7 +151,15 @@ of the `varname` column in the `df`. The following are computed: `N` (total non-
 `median` (median), `p75` (75th percentile), and `max` (maximum). If `table` is set to `false`,
 the output will be returned as a DataFrame.
 """
-function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Function} = [mean,sd,minimum,p25,median,p75,maximum], skipmissing = false, table = true)
+function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; 
+    s::Vector{Function} = [mean,sd,minimum,p25,median,p75,maximum], 
+    skipmissing = false, 
+    table = true,
+    labels::Label = nothing)
+
+    if labels == nothing && "Labels" in metadatakeys(df)
+        labels = load_object(metadata(indf,"Labels"))
+    end
 
     if length(s) == 0
         error("No statistic functions were specified.")
@@ -175,12 +183,12 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; s::Vector{Func
     end
 
     # value labels
-    # valdesc = collect(values(value_label(indf,groupvar)))
+    valdesc = collect(values(vallab(indf,groupvar)))
     sort!(outdf,groupvar)
 
     if table
         pretty_table(outdf[:, 2:end], 
-        row_labels = outdf[:,groupvar], #vallab == nothing ? lev : valdesc,
+        row_labels = vallab == nothing ? outdf[:,groupvar] : valdesc,
         row_label_column_title = string(groupvar),
 		show_subheader = false,
 		vlines=[1])
