@@ -305,7 +305,7 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
 
     # end the program here after returning Label dictionary if read_labels is set to `true`
     if read_labels
-		return Label(variable_dict,value_labels,lblname_dict)
+		return Label(dslabel, variable_dict,value_labels,lblname_dict)
 	end
 
 	# read data now
@@ -342,24 +342,32 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
 
     # attach labels
     # data label
-    if length(dslabel) > 0
-        set_data_label!(rdf,dslabel)
-    end
+    # if length(dslabel) > 0
+    #     set_data_label!(rdf,dslabel)
+    # end
 
-    # variable labels
-    for i in 1:nvar
-        set_col_label!(rdf,Symbol(varlist[i]),varlabels[i])
-    end
+    # # variable labels
+    # for i in 1:nvar
+    #     set_col_label!(rdf,Symbol(varlist[i]),varlabels[i])
+    # end
 
-    # value labels
-    if length(lblname_dict) > 0
-        set_value_key!(rdf, lblname_dict)
-    end
+    # # value labels
+    # if length(lblname_dict) > 0
+    #     set_value_key!(rdf, lblname_dict)
+    # end
 
-    # value dictionary
-    if length(value_labels) > 0
-        set_value_dict!(rdf, value_labels)
-    end
+    # # value dictionary
+    # if length(value_labels) > 0
+    #     set_value_dict!(rdf, value_labels)
+    # end
+
+    # save labels into a file
+    # format file name 
+    jlfmt = replace(fn, ".dta" => ".jlfmt")
+    save_object(jlfmt,Label(dslabel, variable_dict, value_labels, lblname_dict))
+
+    # set the format file name onto the dataframe with the key "Labels"
+    metadata!(rdf, "Labels", jlfmt, style=:note)    
 
 	return rdf
 end
@@ -639,7 +647,7 @@ if an optional `labels` is specified. It mimics Stata's `describe` command.
 `labels` is automatically converted from a stata file by `read_stata` function. Or one can
 be easily created as described in [Labels](https://github.com/mwsohn/Labels.jl).
 """
-function desc(df::DataFrame,varnames::Symbol...; dfout::Bool = false, nmiss::Bool = true)
+function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label} = nothing, dfout::Bool = false, nmiss::Bool = true)
 
     if length(varnames) == 0
         varnames = propertynames(df)
@@ -655,12 +663,12 @@ function desc(df::DataFrame,varnames::Symbol...; dfout::Bool = false, nmiss::Boo
     	dfv[!,:Missing] = Vector{String}(undef,size(dfv,1))
     end
 
-    dfv[!,:Lblname] = Vector{Union{Missing,String}}(undef,size(dfv,1))
+    dfv[!,:Valfmt] = Vector{Union{Missing,String}}(undef,size(dfv,1))
     dfv[!,:Description] = Vector{Union{Missing,String}}(missing,size(dfv,1))
-    if length(colmetadatakeys(df) ) > 0
-        varlabel = col_label(df)
+    if labels != nothing
+        varlabel = varlabs(labels,propertynames(df))
     else
-	varlabel = Dict()
+	    varlabel = Dict()
     end
 
     dfv[!, :Lblname] = Vector{Union{Missing,Symbol}}(missing, size(dfv, 1))
@@ -679,8 +687,8 @@ function desc(df::DataFrame,varnames::Symbol...; dfout::Bool = false, nmiss::Boo
             dfv[i,:Missing] = string(round(100 * _nmiss/size(df,1),digits=1),"%")
         end
 
-        if value_key(df,v) != nothing
-            dfv[i,:Lblname] = value_key(df,v)
+        if labels != nothing
+            dfv[i,:Valfmt] = valfmt(labels,v)
         end
 
         if length(varlabel) > 0 && haskey(varlabel,v)
@@ -695,7 +703,7 @@ function desc(df::DataFrame,varnames::Symbol...; dfout::Bool = false, nmiss::Boo
 	    alignment = vcat(alignment,:r)
     end
     # if length(varlabel) > 0
-    	header = vcat(header,["Value Key","Description"])
+    	header = vcat(header,["Value Fmt","Description"])
 	    alignment = vcat(alignment,[:l,:l])
     # end
 
