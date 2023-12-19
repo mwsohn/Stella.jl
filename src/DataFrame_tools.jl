@@ -710,8 +710,8 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label} = 
     if dfout 
     	return dfv
     else
-        if data_label(df) != nothing
-            println(data_label(df))
+        if datalab(df) != nothing
+            println(datalab(df))
         end
         println("Number of observations: ", @sprintf("%12.0f",nrow(df)))
         println("Number of variables:    ", @sprintf("%12.0f",ncol(df)))
