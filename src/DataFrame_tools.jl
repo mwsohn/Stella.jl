@@ -669,14 +669,14 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label} = 
     end
 
     dfv[!,:Valfmt] = Vector{Union{Missing,String}}(undef,size(dfv,1))
-    dfv[!,:Description] = Vector{Union{Missing,String}}(missing,size(dfv,1))
+    dfv[!,:Description] = Vector{Union{Missing,String}}("",size(dfv,1))
     if labels != nothing
         varlabel = varlabs(labels,propertynames(df))
     else
 	    varlabel = names(df)
     end
 
-    dfv[!, :Lblname] = Vector{Union{Missing,Symbol}}(missing, size(dfv, 1))
+    #dfv[!, :Lblname] = Vector{Union{Missing,Symbol}}(missing, size(dfv, 1))
 
     for (i,v) in enumerate(collect(varnames))
 
@@ -720,8 +720,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label} = 
         end
         println("Number of observations: ", @sprintf("%12.0f",nrow(df)))
         println("Number of variables:    ", @sprintf("%12.0f",ncol(df)))
-        println(dfv)
-
+        
         pretty_table(dfv,
             alignment=alignment,
             header=header,
