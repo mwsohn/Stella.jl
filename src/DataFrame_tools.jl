@@ -693,7 +693,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label} = 
         end
 
         if labels != nothing
-            dfv[i,:Valfmt] = valfmt(labels.valfmt,v)
+            dfv[i,:Valfmt] = valfmt(labels,v) == nothing ? "" : string(valfmt(labels,v))
         end
 
         if length(varlabel) > 0 && in(v,varlabel)
