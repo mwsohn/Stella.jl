@@ -21,6 +21,15 @@ end
 function eq(a::Real, b::Real)
     return a == b
 end
+function eq(a::Missing, b::AbstractString)
+    return false
+end
+function eq(a::AbstractString, b::Missing)
+    return false
+end
+function eq(a::AbstractString, b::AbstractString)
+    return a == b
+end
 
 function lt(a::Missing, b::Real)
     return false
