@@ -650,8 +650,8 @@ be easily created as described in [Labels](https://github.com/mwsohn/Labels.jl).
 function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label} = nothing, dfout::Bool = false, nmiss::Bool = true)
 
     # labels
-    if labels == nothing && "Labels" in metadatakeys(df)
-        labels = load_object(metadata(df,"Labels"))
+    if labels == nothing
+        labels = load_labels(df)
     end
 
     if length(varnames) == 0
@@ -668,7 +668,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label} = 
     	dfv[!,:Missing] = Vector{String}(undef,size(dfv,1))
     end
 
-    dfv[!,:Valfmt] = Vector{Union{Missing,String}}(undef,size(dfv,1))
+    dfv[!,:Valfmt] = Vector{Union{Missing,String}}(missing,size(dfv,1))
     dfv[!,:Description] = Vector{Union{Missing,String}}(missing,size(dfv,1))
     if labels != nothing
         varlabel = varlabs(labels,propertynames(df))
