@@ -366,10 +366,10 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
     if read_labels
         jlfmt = replace(fn, ".dta" => ".jlfmt")
         save_object(jlfmt,Label(dslabel, variable_dict, value_labels, lblname_dict))
+    
+        # set the format file name onto the dataframe with the key "Labels"
+        metadata!(rdf, "Labels", jlfmt, style=:note)
     end
-
-    # set the format file name onto the dataframe with the key "Labels"
-    metadata!(rdf, "Labels", jlfmt, style=:note)    
 
 	return rdf
 end
