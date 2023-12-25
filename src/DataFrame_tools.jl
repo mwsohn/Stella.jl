@@ -299,7 +299,7 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
         end
 
         if valuelabels[i] != ""
-            lblname_dict[varlist[i]] = Symbol(valuelabels[i])
+            lblname_dict[varlist[i]] = Symbol(value_labels[i])
         end
     end
 
