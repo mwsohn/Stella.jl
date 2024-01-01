@@ -23,6 +23,7 @@ export  read_stata,  # read stata 13 and 14 files into DF
         desc,        # list variables with Stata labels and value labels
         ci,          # produce column index from column names
         nmissing,    # returns the number of missing values in an AbstractArray
+        lift,        # converts missing values to false in a Boolean array
         eq, lt, le, gt, ge, # alternative opreator functions that takes care of missing values
         dflist,      # list
         dfmerge,     # merge two dataframes
