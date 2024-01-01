@@ -9,6 +9,17 @@
 # used as function until user-defined infix
 # operators are allowed in Julia.
 #-----------------------------------------------
+
+"""
+    lift(a::AbstractArray{Union{Bool,Missing}})
+
+Takes boolean array with missing values and returns
+a boolean array that replaces missing values to `false`.
+"""
+function lift(a::AbstractArray{Union{Bool,Missing}})
+    return coalesce.(a, false)
+end
+
 function eq(a::Missing, b::Real)
     return false
 end
