@@ -22,17 +22,20 @@ function tab(na::NamedArray; skipmissing=true)
     end
 end
 function tab(indf,var::Union{Symbol,String}; decimals=4, skipmissing=true)
-    if in(string(var),names(indf))
-        error(var," is not found in the input DataFrame.")
+    if in(string(var),names(indf)) == false
+        warn(var," is not found in the input DataFrame.")
+        return nothing
     end
     _tab1(freqtable(indf,var, skipmissing=skipmissing); decimals=decimals, labels = vallab(indf,var))
 end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows = -1, maxcols = 20, decimals=4, skipmissing=true)
-    if in(string(var1),names(indf))
-        error(var1," is not found in the input DataFrame.")
+    if in(string(var1),names(indf)) == false
+        warn(var1," is not found in the input DataFrame.")
+        return nothing
     end
-    if in(string(var2), names(indf))
-        error(var2, " is not found in the input DataFrame.")
+    if in(string(var2), names(indf)) == false
+        warn(var2, " is not found in the input DataFrame.")
+        return nothing
     end
     _tab2(freqtable(indf, var1, var2, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, labels=vallab(indf, [var1, var2]), decimals=decimals)
 end
@@ -40,7 +43,8 @@ function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String},var3::Un
     maxrows=-1, maxcols=20, decimals=4, skipmissing=true)
     for v in (var1,var2,var3)
         if in(string(v), names(indf))
-            error(v, " is not found in the input DataFrame.")
+            warn(v, " is not found in the input DataFrame.")
+            return nothing
         end
     end
     _tab3(freqtable(indf, var1, var2, var3, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, labels=vallab(indf, [var1, var2, var3]), decimals=decimals)
