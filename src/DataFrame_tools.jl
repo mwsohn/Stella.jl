@@ -304,9 +304,9 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
     end
 
     # end the program here after returning Label dictionary if read_labels is set to `true`
-    if read_labels
-		return Label(dslabel, variable_dict,value_labels,lblname_dict)
-	end
+    # if read_labels
+	# 	return Label(dslabel, variable_dict,value_labels,lblname_dict)
+	# end
 
 	# read data now
 	seek(fh,data_pos)
