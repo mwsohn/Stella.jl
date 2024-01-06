@@ -75,7 +75,7 @@ converts a stata datafile `fn` to Julia DataFrame. The original data file bigger
 to save memory. If `read_labels` is set to `true`, it will not convert the data but will extract labels (both variable labels
 and value labels) from the stata data file and convert them to Julia [Lables](https://github.com/mwsohn/Labels.jl).
 """
-function read_stata(fn::String; chunks::Int=10, read_labels=false)
+function read_stata(fn::String; chunks::Int=10, read_labels=true)
 
     fh = open(fn,"r")
 
@@ -374,9 +374,9 @@ function read_stata(fn::String; chunks::Int=10, read_labels=false)
 	return rdf
 end
 
-function read_labels(fn::String)
-	return read_stata(fn,read_labels=true)
-end
+# function read_labels(fn::String)
+# 	return read_stata(fn,read_labels=true)
+# end
 
 function _read_dta(io, release, rlen, len, nvar,varlist,typelist,fmtlist,numskip,strls)
 
@@ -660,9 +660,6 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label} = 
         varnames = propertynames(df)
     end
 
-    # number of variables
-    numvar = length(varnames)
-
     # output dataframe
     dfv = DataFrame(Variable = varnames)
     dfv[!,:Eltype] = Vector{String}(undef,size(dfv,1))
@@ -670,7 +667,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label} = 
     	dfv[!,:Missing] = Vector{String}(undef,size(dfv,1))
     end
 
-    dfv[!,:Valfmt] = Vector{Union{Missing,String}}(missing,size(dfv,1))
+    dfv[!,:Valfmt] = Vector{Union{Missing,String}}(undef,size(dfv,1))
     dfv[!,:Description] = Vector{Union{Missing,String}}(missing,size(dfv,1))
     if labels != nothing
         varlabel = varlabs(labels,propertynames(df))
@@ -678,12 +675,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label} = 
 	    varlabel = names(df)
     end
 
-    #dfv[!, :Lblname] = Vector{Union{Missing,Symbol}}(missing, size(dfv, 1))
-
-    for (i,v) in enumerate(collect(varnames))
-
-        # variable name
-        varstr = string(v)
+    for (i,v) in enumerate(varnames)
 
         # Eltype
         dfv[i,:Eltype] = etype(df,v)
@@ -694,6 +686,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label} = 
             dfv[i,:Missing] = string(round(100 * _nmiss/size(df,1),digits=1),"%")
         end
 
+        # Value Format Name
         if labels != nothing
             dfv[i,:Valfmt] = valfmt(labels,v) == nothing ? "" : string(valfmt(labels,v))
         end
