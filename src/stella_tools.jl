@@ -151,7 +151,9 @@ of the `varname` column in the `df`. The following are computed: `N` (total non-
 `median` (median), `p75` (75th percentile), and `max` (maximum). If `table` is set to `false`,
 the output will be returned as a DataFrame.
 """
-function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol; 
+function tabstat(indf::AbstractDataFrame, 
+    var1::Union{String,Symbol}, 
+    groupvar::Union{String,Symbol};
     s::Vector{Function} = [mean,sd,minimum,p25,median,p75,maximum], 
     skipmissing = false, 
     table = true,
