@@ -32,7 +32,6 @@ export  read_stata,  # read stata 13 and 14 files into DF
         tabstat,     # unviariate statistics by subgroups
         substat,     # attach univariate stat to original DF by subgroups
         xtile,       # create variable that classify a column into percentiles
-        rowsum,      # create variable that sums rows
         strval,      # convert floats or ints to strings
         chi2test, chi2,    # compute chisquare statistics from na.array
         prepend_spaces, append_spaces, # create fixed length strings
