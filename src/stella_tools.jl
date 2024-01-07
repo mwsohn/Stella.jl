@@ -157,7 +157,7 @@ function tabstat(indf::DataFrame, var1::Symbol, groupvar::Symbol;
     table = true,
     labels::Label = nothing)
 
-    if labels == nothing && "Labels" in metadatakeys(df)
+    if labels == nothing && "Labels" in metadatakeys(indf)
         labels = load_object(metadata(indf,"Labels"))
     end
 
