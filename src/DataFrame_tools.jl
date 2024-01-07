@@ -1241,51 +1241,6 @@ function destring!(df::DataFrame,strvars; newvars::Vector{Symbol} = [], force=tr
     end
 end
 
-# """
-#     rowsum(df::DataFrame)
-#
-# Creates a DataArray that contains the row total of all values on the same row of `df`.
-# If one of the columns contain an NA value on a row, an NA value will be returned for that
-# row. This function emulates Stata's `egen rowsum = rowtotal(var1 - var3)`.
-#
-# ```
-# julia>df[:rowsum] = df[[:var1,:var2,:var3]]
-# ```
-#
-# If the position numbers for `:var1` (e.g., 4), `:var2` (5), `:var3` (6) are known and consecutive,
-# you can specify them as follows:
-#
-# ```
-# julia>df[:rowsum] = df[collect(4:6)]
-# ```
-# """
-# function rowsum(df::DataFrame)
-#
-#     isfloat = false
-#     for i in 1:size(df,2)
-#         if eltype(df[i]) <: AbstractFloat
-#             isfloat = true
-#         end
-#     end
-#
-#     if isfloat
-#         da = zeros(Union{Missing,Float64},size(df,1))
-#     else
-#         da = zeros(Union{Missing,Int64},size(df,1))
-#     end
-#
-#     ba = completecases(df)
-#     for i = 1:size(df,1)
-#         if ba[i] == false
-#             da[i] = missing
-#         else
-#             for j = 1:size(df,2)
-#                 da[i] += df[i,j]
-#             end
-#         end
-#     end
-#     return da
-# end
 
 """
     rowstat(df::DataFrame,func::Function)
