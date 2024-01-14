@@ -157,7 +157,7 @@ function tabstat(indf::AbstractDataFrame,
     s::Vector{Function} = [mean,sd,minimum,p25,median,p75,maximum], 
     skipmissing = false, 
     table = true,
-    labels::Label = nothing)
+    labels::Labels.Label = nothing)
 
     if labels == nothing && "Labels" in metadatakeys(indf)
         labels = load_object(metadata(indf,"Labels"))
