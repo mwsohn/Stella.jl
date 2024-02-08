@@ -156,12 +156,11 @@ function tabstat(indf::AbstractDataFrame,
     groupvar::Union{String,Symbol};
     s::Vector{Function} = [mean,sd,minimum,p25,median,p75,maximum], 
     skipmissing = false, 
-    table = true,
-    labels::Labels.Label = nothing)
+    table = true) # ,labels::Labels.Label = nothing)
 
-    if labels == nothing && "Labels" in metadatakeys(indf)
-        labels = load_object(metadata(indf,"Labels"))
-    end
+    # if labels == nothing && "Labels" in metadatakeys(indf)
+    #     labels = load_object(metadata(indf,"Labels"))
+    # end
 
     if length(s) == 0
         error("No statistic functions were specified.")
@@ -185,12 +184,12 @@ function tabstat(indf::AbstractDataFrame,
     end
 
     # value labels
-    valdesc = collect(values(vallab(indf,groupvar)))
+    # valdesc = collect(values(vallab(indf,groupvar)))
     sort!(outdf,groupvar)
 
     if table
         pretty_table(outdf[:, 2:end], 
-        row_labels = vallab == nothing ? outdf[:,groupvar] : valdesc,
+        row_labels = outdf[: groupvar], # vallab == nothing ? outdf[:,groupvar] : valdesc,
         row_label_column_title = string(groupvar),
 		show_subheader = false,
 		vlines=[1])
