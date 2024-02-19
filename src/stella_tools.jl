@@ -156,11 +156,8 @@ function tabstat(indf::AbstractDataFrame,
     groupvar::Union{String,Symbol};
     s::Vector{Function} = [mean,sd,minimum,p25,median,p75,maximum], 
     skipmissing = false, 
-    table = true) # ,labels::Labels.Label = nothing)
-
-    # if labels == nothing && "Labels" in metadatakeys(indf)
-    #     labels = load_object(metadata(indf,"Labels"))
-    # end
+    table = true,
+    labels::Labels.Label = nothing)
 
     if length(s) == 0
         error("No statistic functions were specified.")
@@ -169,27 +166,31 @@ function tabstat(indf::AbstractDataFrame,
     # strip prepended "Stella." from the function list
     namevec = [Symbol(replace(string(x),r"(Stella|Statistics)\." => "")) for x in s]
 
+    # missing values in var1
+    indf = indf[ismissing.(indf[!,var1]) .== false, :]]
+
     # grouped df
     gdf = groupby(indf, groupvar, skipmissing = skipmissing)
-	
-    # number of levels in the groupvar
-    # lev = sort(collect(values(gdf.keymap)))
 
     # groupvar and N
-    outdf = combine(gdf, groupvar => length => :N)
+    outdf = combine(gdf, nrow => :n)
 
-    # stats 
+    # stats
     for j = 1:length(namevec) 
-        outdf[!,namevec[j]] = [s[j](DataFrames.skipmissing(x[!,var1])) for x in gdf]
+        outdf[!,namevec[j]] = [s[j](DataFrames.skipmissing(x[!,var1])) for x in gdf] #combine(gdf, var1 => s[i] => :x )[:,:x] 
     end
 
-    # value labels
-    # valdesc = collect(values(vallab(indf,groupvar)))
-    sort!(outdf,groupvar)
+    # value labels 
+    if labels == nothing # look up if there is a labels file stored in the indf
+        if "Labels" in metadatakeys(indf)
+            labels = load_labels(indf)
+        end
+    end
+    valdesc = vallab(labels,groupvar, outdf[:,groupvar])))
 
     if table
         pretty_table(outdf[:, 2:end], 
-        row_labels = outdf[: groupvar], # vallab == nothing ? outdf[:,groupvar] : valdesc,
+        row_labels = valdesc
         row_label_column_title = string(groupvar),
 		show_subheader = false,
 		vlines=[1])
