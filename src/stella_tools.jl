@@ -186,11 +186,13 @@ function tabstat(indf::AbstractDataFrame,
             labels = load_labels(indf)
         end
     end
-    if labels == nothing
-        valdesc = outdf[:,groupvar]
-    else
+    if labels <: Labels.Label
         valdesc = vallabs(labels,groupvar, outdf[:,groupvar])
+    else
+        valdesc = outdf[:,groupvar]
     end
+
+    return outdf
 
     if table
         pretty_table(outdf[:, 2:end], 
