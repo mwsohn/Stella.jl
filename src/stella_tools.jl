@@ -167,7 +167,7 @@ function tabstat(indf::AbstractDataFrame,
     namevec = [Symbol(replace(string(x),r"(Stella|Statistics)\." => "")) for x in s]
 
     # missing values in var1
-    # indf = indf[ismissing.(indf[!,var1]) .== false, :]
+    indf = indf[ismissing.(indf[!,var1]) .== false, :]
 
     # grouped df
     gdf = groupby(indf, groupvar, skipmissing = skipmissing)
@@ -177,7 +177,7 @@ function tabstat(indf::AbstractDataFrame,
 
     # stats
     for j = 1:length(namevec) 
-        outdf[!,namevec[j]] = [s[j](DataFrames.skipmissing(x[!,var1])) for x in gdf] #combine(gdf, var1 => s[i] => :x )[:,:x] 
+        outdf[!,namevec[j]] = [s[j](x[!,var1]) for x in gdf] #combine(gdf, var1 => s[i] => :x )[:,:x] 
     end
 
     # value labels 
