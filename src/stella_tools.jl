@@ -157,7 +157,7 @@ function tabstat(indf::AbstractDataFrame,
     s = Function[mean,sd,minimum,p25,median,p75,maximum], 
     skipmissing = false, 
     table = true,
-    labels::Labels.Label = nothing)
+    labels = nothing)
 
     if length(s) == 0
         error("No statistic functions were specified.")
