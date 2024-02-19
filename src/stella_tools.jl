@@ -154,7 +154,7 @@ the output will be returned as a DataFrame.
 function tabstat(indf::AbstractDataFrame, 
     var1::Union{String,Symbol}, 
     groupvar::Union{String,Symbol};
-    s::Vector{Function} = [mean,sd,minimum,p25,median,p75,maximum], 
+    s = Function[mean,sd,minimum,p25,median,p75,maximum], 
     skipmissing = false, 
     table = true,
     labels::Labels.Label = nothing)
