@@ -7,8 +7,9 @@ module Stella
 ################################################################################
 
 using DataFrames, DataAPI, Distributions, StatsBase, StatsAPI, GLM, NamedArrays, HypothesisTests,
-        DataStructures, FreqTables, ReadStat, Labels, LinearAlgebra, Printf, 
-        Glob, Dates, Arrow, CategoricalArrays, PooledArrays, PrettyTables, JLD2
+        DataStructures, FreqTables, ReadStat, LinearAlgebra, Printf, 
+        Glob, Dates, Arrow, CategoricalArrays, PooledArrays, PrettyTables, JLD2, TableMetadataTools
+
 
 ##############################################################################
 ##
@@ -76,7 +77,7 @@ abstract type Formula end
 include("alt_operators.jl")
 include("stella_tools.jl")
 include("DataFrame_tools.jl")
-#include("labels.jl")
+include("labels.jl")
 include("tab.jl")
 include("t-test.jl")
 include("anova.jl")
