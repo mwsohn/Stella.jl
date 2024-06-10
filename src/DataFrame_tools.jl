@@ -649,8 +649,11 @@ It mimics Stata's `describe` command.
 function desc(df::DataFrame,varnames::Symbol...; nmiss::Bool = true)
 
     if length(varnames) == 0
-        varnames = propertynames(df)
+        error("No variables in the input dataframe\n")
     end
+
+    # get variable names
+    varnames = propertynames(df)
 
     # output dataframe
     dfv = DataFrame(Variable = varnames)
@@ -682,8 +685,8 @@ function desc(df::DataFrame,varnames::Symbol...; nmiss::Bool = true)
 	    alignment = vcat(alignment,:r)
     end
 
-    header = vcat(header,["Description"])
-	alignment = vcat(alignment,[:l])
+    header = vcat(header,"Description")
+	alignment = vcat(alignment,:l)
 
     # if dfout 
     # 	return dfv
@@ -702,7 +705,7 @@ function desc(df::DataFrame,varnames::Symbol...; nmiss::Bool = true)
             formatters = (ft_nomissing),
             show_row_number = true,
             row_number_column_title = "Column")
-    end
+    # end
 end
 
 function nmissing(s::AbstractArray)
