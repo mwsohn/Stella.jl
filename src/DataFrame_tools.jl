@@ -648,12 +648,11 @@ It mimics Stata's `describe` command.
 """
 function desc(df::DataFrame,varnames::Symbol...; nmiss::Bool = true)
 
+    # get variable names
+    varnames = propertynames(df)
     if length(varnames) == 0
         error("No variables in the input dataframe\n")
     end
-
-    # get variable names
-    varnames = propertynames(df)
 
     # output dataframe
     dfv = DataFrame(Variable = varnames)
