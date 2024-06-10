@@ -407,41 +407,41 @@ function coeflab(d,l)
     end
 end
 
-import GLM.coeftable
-function GLM.coeftable(r::StatsModels.RegressionModel,labels::Label)
-    coeftable2 = coeftable(r)
+# import GLM.coeftable
+# function GLM.coeftable(r::StatsModels.RegressionModel)
+#     coeftable2 = coeftable(r)
 
-    # parse the row names and change variable names and values
-	for i in 2:length(coeftable2.rownms)
-		# parse row name and split into a tuple (varname, value)
-		if occursin(": ",coeftable2.rownms[i])
-			(varname,value) = split(coeftable2.rownms[i],": ")
-		else
-			(varname,value) = (coeftable2.rownms[i],"")
-		end
+#     # parse the row names and change variable names and values
+# 	for i in 2:length(coeftable2.rownms)
+# 		# parse row name and split into a tuple (varname, value)
+# 		if occursin(": ",coeftable2.rownms[i])
+# 			(varname,value) = split(coeftable2.rownms[i],": ")
+# 		else
+# 			(varname,value) = (coeftable2.rownms[i],"")
+# 		end
 
-        # get variable label from the label dictionary
-		varlabel = varlab(labels,Symbol(varname))
-        if varlabel == ""
-            varlabel = varname
-        end
-        if value != ""
-		    vlabel = vallab(labels,Symbol(varname),parse(Int,value))
-        end
+#         # get variable label from the label dictionary
+# 		varlabel = varlab(labels,Symbol(varname))
+#         if varlabel == ""
+#             varlabel = varname
+#         end
+#         if value != ""
+# 		    vlabel = vallab(labels,Symbol(varname),parse(Int,value))
+#         end
 
-        # If value is 1 and value label is Yes, it is a binary variable
-		# do not print
-		if value == 1 && ismatch(r"^ *yes *$"i,vlabel)
-			coeftable2.rownms[i] = varlabel
-		elseif value != ""
-			coeftable2.rownms[i] = string(varlabel, ": ", vlabel)
-        else
-            coeftable2.rownms[i] = varlabel
-		end
-	end
+#         # If value is 1 and value label is Yes, it is a binary variable
+# 		# do not print
+# 		if value == 1 && ismatch(r"^ *yes *$"i,vlabel)
+# 			coeftable2.rownms[i] = varlabel
+# 		elseif value != ""
+# 			coeftable2.rownms[i] = string(varlabel, ": ", vlabel)
+#         else
+#             coeftable2.rownms[i] = varlabel
+# 		end
+# 	end
 
-	return coeftable2
-end
+# 	return coeftable2
+# end
 
 
 #--------------------------------------------------------------------------
