@@ -641,20 +641,12 @@ function eltype2(df::DataFrame,v::Symbol)
 end
 
 """
-    desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label}=nothing, dfout::Bool = false, nmiss::Bool = false)
+    desc(df::DataFrame,varnames::Symbol...; nmiss::Bool = false)
 
-Displays variables in a dataframe much like `showcols`. It can display additional
-attributes such as variable labels, value labels and display formats (not used in Julia)
-if an optional `labels` is specified. It mimics Stata's `describe` command.
-`labels` is automatically converted from a stata file by `read_stata` function. Or one can
-be easily created as described in [Labels](https://github.com/mwsohn/Labels.jl).
+Displays variables in a dataframe much like `showcols`. It can display variable labels and value labels.
+It mimics Stata's `describe` command. 
 """
-function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label} = nothing, dfout::Bool = false, nmiss::Bool = true)
-
-    # labels
-    if labels == nothing
-        labels = load_labels(df)
-    end
+function desc(df::DataFrame,varnames::Symbol...; nmiss::Bool = true)
 
     if length(varnames) == 0
         varnames = propertynames(df)
@@ -667,13 +659,7 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label} = 
     	dfv[!,:Missing] = Vector{String}(undef,size(dfv,1))
     end
 
-    dfv[!,:Valfmt] = Vector{Union{Missing,String}}(undef,size(dfv,1))
-    dfv[!,:Description] = Vector{Union{Missing,String}}(missing,size(dfv,1))
-    if labels != nothing
-        varlabel = varlabs(labels,propertynames(df))
-    else
-	    varlabel = names(df)
-    end
+    dfv[!,:Description] = label(df)
 
     for (i,v) in enumerate(varnames)
 
@@ -686,14 +672,6 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label} = 
             dfv[i,:Missing] = string(round(100 * _nmiss/size(df,1),digits=1),"%")
         end
 
-        # Value Format Name
-        if labels != nothing
-            dfv[i,:Valfmt] = valfmt(labels,v) == nothing ? "" : string(valfmt(labels,v))
-        end
-
-        if length(varlabel) > 0 && in(v,varlabel)
-            dfv[i,:Description] = ismissing(varlabel[i]) ? "" : varlabel[i]
-        end
     end
 
     header = ["Variable", "Eltype"]
@@ -704,15 +682,15 @@ function desc(df::DataFrame,varnames::Symbol...; labels::Union{Nothing,Label} = 
 	    alignment = vcat(alignment,:r)
     end
 
-    header = vcat(header,["Value Fmt","Description"])
-	alignment = vcat(alignment,[:l,:l])
+    header = vcat(header,["Description"])
+	alignment = vcat(alignment,[:l])
 
-    if dfout 
-    	return dfv
-    else
-        if datalab(df) != nothing
-            println(datalab(df))
-        end
+    # if dfout 
+    # 	return dfv
+    # else
+        # if datalab(df) != nothing
+        #     println(datalab(df))
+        # end
         println("Number of observations: ", @sprintf("%12.0f",nrow(df)))
         println("Number of variables:    ", @sprintf("%12.0f",ncol(df)))
         
