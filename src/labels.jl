@@ -1,4 +1,4 @@
-using Reexport
+using Reexport, TableMetadataTools
 @reexport import TableMetadataTools
 
 function labels!(df::DataFrame,dd::Dict)
