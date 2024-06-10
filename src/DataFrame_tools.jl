@@ -661,7 +661,7 @@ function desc(df::DataFrame,varnames::Symbol...; nmiss::Bool = true)
     	dfv[!,:Missing] = Vector{String}(undef,size(dfv,1))
     end
 
-    dfv[!,:Description] = label(df)
+    dfv[!,:Description] = labels(df)
 
     for (i,v) in enumerate(varnames)
 
