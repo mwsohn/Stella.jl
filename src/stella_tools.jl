@@ -156,8 +156,7 @@ function tabstat(indf::AbstractDataFrame,
     groupvar::Union{String,Symbol};
     s = Function[mean,sd,minimum,p25,median,p75,maximum], 
     skipmissing = false, 
-    table = true,
-    labels = nothing)
+    table = true)
 
     if length(s) == 0
         error("No statistic functions were specified.")
@@ -180,22 +179,10 @@ function tabstat(indf::AbstractDataFrame,
         outdf[!,namevec[j]] = [s[j](x[!,var1]) for x in gdf] #combine(gdf, var1 => s[i] => :x )[:,:x] 
     end
 
-    # value labels 
-    if labels == nothing # look up if there is a labels file stored in the indf
-        if "Labels" in metadatakeys(indf)
-            labels = load_labels(indf)
-        end
-    end
-    if labels == nothing
-        valdesc = outdf[:,groupvar]
-    else
-        valdesc = vallabs(labels,groupvar, outdf[:,groupvar])
-    end
-
     if table
         pretty_table(outdf[:, 2:end], 
-        row_labels = valdesc,
-        row_label_column_title = string(groupvar),
+        row_labels = outdf[:,groupvar],
+        row_label_column_title = label(indf,groupvar),
 		show_subheader = false,
 		vlines=[1])
     else
@@ -336,7 +323,7 @@ after a logsitic regression or a Poisson regression, use this function to obtain
 regression output instead of `coeftable`.
 
 """
-function eform(glmout::StatsModels.RegressionModel, labels=nothing)
+function eform(glmout::StatsModels.RegressionModel)
 
     # family and link function
     if isa(glmout.model,GeneralizedLinearModel)
@@ -361,37 +348,26 @@ function eform(glmout::StatsModels.RegressionModel, labels=nothing)
 	# rename column1 to OR
 	coeftable2.colnms[1] = coeflab(distrib,linkfun)
 
-    if labels != nothing
-        # parse the row names and change variable names and values
-        for i in 2:length(coeftable2.rownms)
-            # parse row name and split into a tuple (varname, value)
-            if occursin(": ",coeftable2.rownms[i])
-                (varname,value) = split(coeftable2.rownms[i],": ")
-            else
-                (varname,value) = (coeftable2.rownms[i],"")
-            end
-
-            # get variable label from the label dictionary
-            varlabel = varlab(labels,Symbol(varname))
-            if varlabel == ""
-                varlabel = varname
-            end
-            if value != ""
-                vlabel = vallab(labels,Symbol(varname),parse(Int,value))
-            end
-
-            # If value is 1 and value label is Yes, it is a binary variable
-            # do not print
-            if value == 1 && ismatch(r"^ *yes *$"i,vlabel)
-                coeftable2.rownms[i] = varlabel
-            elseif value != ""
-                coeftable2.rownms[i] = string(varlabel, ": ", vlabel)
-            else
-                coeftable2.rownms[i] = varlabel
-            end
+    # parse the row names and change variable names and values
+    for i in 2:length(coeftable2.rownms)
+        # parse row name and split into a tuple (varname, value)
+        if occursin(": ",coeftable2.rownms[i])
+            (varname,value) = split(coeftable2.rownms[i],": ")
+        else
+            (varname,value) = (coeftable2.rownms[i],"")
         end
-    end
 
+        # If value is 1 and value label is Yes, it is a binary variable
+        # do not print
+    #     if value == 1 && ismatch(r"^ *yes *$"i,vlabel)
+    #         coeftable2.rownms[i] = varlabel
+    #     elseif value != ""
+    #         coeftable2.rownms[i] = string(varlabel, ": ", vlabel)
+    #     else
+    #         coeftable2.rownms[i] = varlabel
+    #     end
+    end
+    
 	return coeftable2
 end
 
