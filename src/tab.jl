@@ -26,7 +26,7 @@ function tab(indf,var::Union{Symbol,String}; decimals=4, skipmissing=true)
         println("$var is not found in the input DataFrame.")
         return nothing
     end
-    _tab1(freqtable(indf,var, skipmissing=skipmissing); decimals=decimals, labels = vallab(indf,var))
+    _tab1(freqtable(indf,var, skipmissing=skipmissing); decimals=decimals)
 end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows = -1, maxcols = 20, decimals=4, skipmissing=true)
     if in(string(var1),names(indf)) == false
@@ -37,7 +37,7 @@ function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows
         println("$var2 is not found in the input DataFrame.")
         return nothing
     end
-    _tab2(freqtable(indf, var1, var2, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, labels=vallab(indf, [var1, var2]), decimals=decimals)
+    _tab2(freqtable(indf, var1, var2, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, decimals=decimals)
 end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String},var3::Union{Symbol,String};
     maxrows=-1, maxcols=20, decimals=4, skipmissing=true)
@@ -47,20 +47,13 @@ function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String},var3::Un
             return nothing
         end
     end
-    _tab3(freqtable(indf, var1, var2, var3, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, labels=vallab(indf, [var1, var2, var3]), decimals=decimals)
+    _tab3(freqtable(indf, var1, var2, var3, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, decimals=decimals)
 end
 
-function _tab1(na::NamedArray; decimals = 4, labels = nothing)
+function _tab1(na::NamedArray; decimals = 4)
  
-    # rownames
-    if labels == nothing
-        rownames = names(na)[1]
-    else
-        rownames = [ ismissing(x) ? missing : labels[x] for x in names(na)[1] ]
-    end
-
-    # Total row label
-    rownames = vcat(rownames,"Total")
+    # value labels and "Total"
+    rownames = vcat(names(na)[1],"Total")
 
     # counts
     counts = vcat(na.array,sum(na,dims=1))
@@ -81,22 +74,13 @@ function _tab1(na::NamedArray; decimals = 4, labels = nothing)
         vlines=[1])
 end
 
-function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing, decimals=4)
+function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
     
-    if labels != nothing && haskey(labels, na.dimnames[1])
-        rownames = [ismissing(x) ? missing : labels[na.dimnames[1]][x] for x in names(na)[1]]
-    else
-        rownames = names(na)[1]
-    end
-    rownames = vcat(rownames,"Total")
+    # value labels and "Total"
+    rownames = vcat(names(na)[1], "Total")
 
     # colunm names
-    if labels != nothing && haskey(labels, na.dimnames[2])
-        colnames = [ismissing(x) ? missing : labels[na.dimnames[2]][x] for x in names(na)[2]]
-    else
-        colnames = names(na)[2]
-    end
-    colnames = vcat(colnames,"Total") 
+    colnames = vcat(names(na)[2], "Total")
 
     # counts
     counts = na.array
@@ -129,7 +113,7 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing, decim
         pval < 0.0001 ? "< 0.0001" : string("= ",round(pval,sigdigits = 6)))
 end
 
-function _tab3(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing, decimals=4)
+function _tab3(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
 
     # stratify the var3 (na.dimnames[3])
     n3 = size(na,3)
@@ -138,7 +122,7 @@ function _tab3(na::NamedArray; maxrows = -1, maxcols = 20, labels=nothing, decim
     for i in 1:n3
         println("\n\n",na.dimnames[3], " = ", vals[i] ,"\n")
 
-        _tab2(na[:,:,i]; maxrows = maxrows, maxcols = maxcols, labels=labels, decimals=decimals)
+        _tab2(na[:,:,i]; maxrows = maxrows, maxcols = maxcols, decimals=decimals)
     end
 end
 
