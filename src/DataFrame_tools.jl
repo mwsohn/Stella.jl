@@ -69,13 +69,12 @@ function alloc_array(vtype,vfmt,nobs::Int64)
 end
 
 """
-	read_stata(fn::String; chunks::Int=10, read_labels=false)
+	read_stata(fn::String; chunks::Int=10)
 
 converts a stata datafile `fn` to Julia DataFrame. The original data file bigger than 100MB will be read in `chunks` (default = 10)
-to save memory. If `read_labels` is set to `true`, it will not convert the data but will extract labels (both variable labels
-and value labels) from the stata data file and convert them to Julia [Lables](https://github.com/mwsohn/Labels.jl).
+to save memory. 
 """
-function read_stata(fn::String; chunks::Int=10, read_labels=true)
+function read_stata(fn::String; chunks::Int=10)
 
     fh = open(fn,"r")
 
@@ -318,7 +317,7 @@ function read_stata(fn::String; chunks::Int=10, read_labels=true)
 	if rlen*nobs < 100_000_000
 		write(io,read(fh,rlen*nobs))
 		seek(io,0)
-		rdf = _read_dta(io,release,rlen,nobs,nvar,varlist,typelist,fmtlist,numskip,strls)
+		rdf = _read_dta(io,release,rlen,nobs,nvar,varlist,variable_dict,typelist,fmtlist,lblname_dict,value_labels,numskip,strls)
 	else
 		len = max(100000,ceil(Int,nobs/chunks))
 		totlen = nobs
@@ -333,7 +332,7 @@ function read_stata(fn::String; chunks::Int=10, read_labels=true)
 			write(io,read(fh,rlen*len))
 			seek(io,0)
 
-			rdf = vcat(rdf,_read_dta(io,release,rlen,len,nvar,varlist,typelist,fmtlist,numskip,strls))
+			rdf = vcat(rdf,_read_dta(io,release,rlen,len,nvar,varlist,variable_dict,typelist,fmtlist,lblname_dict,value_labels,numskip,strls))
 		end
 	end
 
@@ -363,13 +362,13 @@ function read_stata(fn::String; chunks::Int=10, read_labels=true)
 
     # save labels into a file
     # format file name 
-    if read_labels
-        jlfmt = replace(fn, ".dta" => ".jlfmt")
-        save_object(jlfmt,Label(dslabel, variable_dict, value_labels, lblname_dict))
+    # if read_labels
+    #     jlfmt = replace(fn, ".dta" => ".jlfmt")
+    #     save_object(jlfmt,Label(dslabel, variable_dict, value_labels, lblname_dict))
     
-        # set the format file name onto the dataframe with the key "Labels"
-        metadata!(rdf, "Labels", jlfmt, style=:note)
-    end
+    #     # set the format file name onto the dataframe with the key "Labels"
+    #     metadata!(rdf, "Labels", jlfmt, style=:note)
+    # end
 
 	return rdf
 end
@@ -377,8 +376,7 @@ end
 # function read_labels(fn::String)
 # 	return read_stata(fn,read_labels=true)
 # end
-
-function _read_dta(io, release, rlen, len, nvar,varlist,typelist,fmtlist,numskip,strls)
+function _read_dta(io, release, rlen, len, nvar,varlist,varlabels,typelist,fmtlist,lblname,vallabels,numskip,strls)
 
 	df = DataFrame()
 
@@ -480,6 +478,15 @@ function _read_dta(io, release, rlen, len, nvar,varlist,typelist,fmtlist,numskip
 		if typelist[j] == 32768
 			categorical!(df,varlist[j])
 		end
+
+        # for integer variables that have formats
+        # convert them into CategoricalArrays with the appropriate value labels
+        if typelist[j] in (65528,65529,65530) && haskey(lblname,varlist[j])
+            values!(df,varlist[j],vallabels[lblname[varlist[j]]])
+        end
+
+        # variable label
+        label!(df,varlist[j],varlabels[varlist[j]])
 
         # for vectors without missing values, convert the vector to an appropirate type
         if sum(ismissing.(df[!,varlist[j]])) == 0
