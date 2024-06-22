@@ -11,85 +11,41 @@
 #-----------------------------------------------
 
 """
-    lift(a::AbstractArray{Union{Bool,Missing}})
+    lift(a::AbstractArray)
 
 Takes boolean array with missing values and returns
 a boolean array that replaces missing values to `false`.
 """
-function lift(a::AbstractArray{Union{Bool,Missing}})
+function lift(a::AbstractArray)
     return coalesce.(a, false)
 end
 
-function eq(a::Missing, b::Real)
-    return false
-end
-function eq(a::Real, b::Missing)
-    return false
-end
-function eq(a::Missing, b::Missing)
-    return false
-end
-function eq(a::Real, b::Real)
-    return a == b
-end
-function eq(a::Missing, b::AbstractString)
-    return false
-end
-function eq(a::AbstractString, b::Missing)
-    return false
-end
-function eq(a::AbstractString, b::AbstractString)
-    return a == b
-end
+# alternative operators
+==(a::Missing, b::Real) = false
+==(a::Real, b::Missing) = false
+==(a::Missing, b::Missing) = false
+==(a::Real, b::Real) = a == b
+==(a::Missing, b::AbstractString) = false
+==(a::AbstractString, b::Missing) = false
+==(a::AbstractString, b::AbstractString) = a == b
 
-function lt(a::Missing, b::Real)
-    return false
-end
-function lt(a::Real, b::Missing)
-    return false
-end
-function lt(a::Missing, b::Missing)
-    return false
-end
-function lt(a::Real, b::Real)
-    return a < b
-end
+<(a::Missing, b::Real) = false
+<(a::Real, b::Missing) = false
+<(a::Missing, b::Missing) = false
+<(a::Real, b::Real) = a < b
 
-function le(a::Missing, b::Real)
-    return false
-end
-function le(a::Real, b::Missing)
-    return false
-end
-function le(a::Missing, b::Missing)
-    return false
-end
-function le(a::Real, b::Real)
-    return a <= b
-end
+<=(a::Missing, b::Real) = false
+<=(a::Real, b::Missing) = false
+<=(a::Missing, b::Missing) = false
+<=(a::Real, b::Real) = a <= b
 
-function gt(a::Missing, b::Real)
-    return false
-end
-function gt(a::Real, b::Missing)
-    return false
-end
-function gt(a::Missing, b::Missing)
-    return false
-end
-function gt(a::Real, b::Real)
-    return a > b
-end
+>(a::Missing, b::Real) = false
+>(a::Real, b::Missing) = false
+>(a::Missing, b::Missing) = false
+>(a::Real, b::Real) = a > b
 
-function ge(a::Missing, b::Real)
-    return false
-end
-function ge(a::Real, b::Missing)
-    return false
-end
-function ge(a::Missing, b::Missing)
-    return false
-end
-function ge(a::Real, b::Real)
-    return a >= b
-end
+>=(a::Missing, b::Real) = false
+>=(a::Real, b::Missing) = false
+>=(a::Missing, b::Missing) = false
+>=(a::Real, b::Real) = a >= b
+
