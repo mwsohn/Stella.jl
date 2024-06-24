@@ -21,31 +21,31 @@ function lift(a::AbstractArray)
 end
 
 # alternative operators
-==(a::Missing, b::Real) = false
-==(a::Real, b::Missing) = false
-==(a::Missing, b::Missing) = false
-==(a::Real, b::Real) = a == b
-==(a::Missing, b::AbstractString) = false
-==(a::AbstractString, b::Missing) = false
-==(a::AbstractString, b::AbstractString) = a == b
+eq(a::Missing, b::Real) = false
+eq(a::Real, b::Missing) = false
+eq(a::Missing, b::Missing) = false
+eq(a::Real, b::Real) = a == b
+eq(a::Missing, b::AbstractString) = false
+eq(a::AbstractString, b::Missing) = false
+eq(a::AbstractString, b::AbstractString) = a == b
 
-<(a::Missing, b::Real) = false
-<(a::Real, b::Missing) = false
-<(a::Missing, b::Missing) = false
-<(a::Real, b::Real) = a < b
+lt(a::Missing, b::Real) = false
+lt(a::Real, b::Missing) = false
+lt(a::Missing, b::Missing) = false
+lt(a::Real, b::Real) = a < b
 
-<=(a::Missing, b::Real) = false
-<=(a::Real, b::Missing) = false
-<=(a::Missing, b::Missing) = false
-<=(a::Real, b::Real) = a <= b
+le(a::Missing, b::Real) = false
+le(a::Real, b::Missing) = false
+le(a::Missing, b::Missing) = false
+le(a::Real, b::Real) = a <= b
 
->(a::Missing, b::Real) = false
->(a::Real, b::Missing) = false
->(a::Missing, b::Missing) = false
->(a::Real, b::Real) = a > b
+gt(a::Missing, b::Real) = false
+gt(a::Real, b::Missing) = false
+gt(a::Missing, b::Missing) = false
+gt(a::Real, b::Real) = a > b
 
->=(a::Missing, b::Real) = false
->=(a::Real, b::Missing) = false
->=(a::Missing, b::Missing) = false
->=(a::Real, b::Real) = a >= b
+ge(a::Missing, b::Real) = false
+ge(a::Real, b::Missing) = false
+ge(a::Missing, b::Missing) = false
+ge(a::Real, b::Real) = a >= b
 
