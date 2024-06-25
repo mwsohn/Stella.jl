@@ -8,7 +8,7 @@ end
 
 function values!(df::DataFrame,v::Union{Symbol,String},valdict::Dict)
     if nonmissingtype(eltype(df[:,v])) <: Integer
-        vv = categorical(df,v)
+        vv = categorical(df[!,v])
         df[!,v] = recode(vv,valdict...)
     end
 end
