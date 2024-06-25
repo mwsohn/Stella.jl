@@ -486,7 +486,9 @@ function _read_dta(io, release, rlen, len, nvar,varlist,varlabels,typelist,fmtli
         end
 
         # variable label
-        label!(df,varlist[j],varlabels[varlist[j]])
+        if haskey(varlabels,varlist[j])
+            label!(df,varlist[j],varlabels[varlist[j]])
+        end
 
         # for vectors without missing values, convert the vector to an appropirate type
         if sum(ismissing.(df[!,varlist[j]])) == 0
