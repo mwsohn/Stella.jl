@@ -1206,7 +1206,7 @@ function destring(da::AbstractArray; force=true)
     end
 
     T = isfloat ? Float64 : Int64
-    da2 = [ismissing(x) ? missing : parse(T,x) for x in da]
+    da2 = [ismissing(x) || "" ? missing : parse(T,x) for x in da]
 
     return acompress(da2)
 end
