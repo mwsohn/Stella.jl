@@ -6,10 +6,10 @@ function labels!(df::DataFrame,dd::Dict)
     end
 end
 
-function values!(df::DataFrame,v::Union{Symbol,String},valdict::Dict)
+function values!(df::DataFrame,v::Union{Symbol,String},val::Union{Dict,NamedTuple})
     if nonmissingtype(eltype(df[:,v])) <: Integer
         vv = categorical(df[!,v])
-        df[!,v] = recode(vv,valdict...)
-        levels!(df[!,v], last.(sort(collect(valdict))))
+        df[!,v] = recode(vv,val...)
+        levels!(df[!,v], last.(sort(collect(val))))
     end
 end
