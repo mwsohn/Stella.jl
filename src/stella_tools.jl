@@ -185,8 +185,8 @@ function tabstat(indf::AbstractDataFrame,
         row_label_column_title = label(indf,groupvar),
 		show_subheader = false,
 		vlines=[1])
-        anov = 
-        println("One-way ANOVA: F(",")")
+        anov = anova(indf,var1,groupvar, pval=true)
+        println("One-way ANOVA: F(",anov[1],anov[2],") = ",anov[3],", P-Value ",anov[4])
     else
         return outdf
     end
