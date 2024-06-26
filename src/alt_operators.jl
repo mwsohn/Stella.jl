@@ -21,13 +21,16 @@ function lift(a::AbstractArray)
 end
 
 # alternative operators
-eq(a::Missing, b::Real) = false
-eq(a::Real, b::Missing) = false
-eq(a::Missing, b::Missing) = false
-eq(a::Real, b::Real) = a == b
-eq(a::Missing, b::AbstractString) = false
-eq(a::AbstractString, b::Missing) = false
+eq(missing, b) = false
+eq(a, missing) = false
+eq(missing, missing) = false
+eq(a::Real, b::Real) = ==(a, b)
+eq(missing, b::AbstractString) = false
+eq(missing, b::Union{Missing,AbstractString}) = false
+eq(a::AbstractString, missing) = false
+eq(a::Union{Missing,AbstractString}, missing) = false
 eq(a::AbstractString, b::AbstractString) = a == b
+eq(a::Union{Missing,AbstractString}, b::Union{Missing,AbstractString}) = a == b
 
 lt(a::Missing, b::Real) = false
 lt(a::Real, b::Missing) = false
