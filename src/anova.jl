@@ -59,7 +59,7 @@ function anova(_df::DataFrame, dep::Symbol, cat::Symbol; pval = false)
 		show_subheader = false
 	)
     else
-	return pvalue
+	    return (dfbetween, dfwithin, F, pvalue)
     end
 
 end
