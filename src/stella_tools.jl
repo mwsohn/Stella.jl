@@ -185,6 +185,8 @@ function tabstat(indf::AbstractDataFrame,
         row_label_column_title = label(indf,groupvar),
 		show_subheader = false,
 		vlines=[1])
+        anov = 
+        println("One-way ANOVA: F(",")")
     else
         return outdf
     end
