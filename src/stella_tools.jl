@@ -186,7 +186,7 @@ function tabstat(indf::AbstractDataFrame,
 		show_subheader = false,
 		vlines=[1])
         anov = anova(indf,var1,groupvar, pval=true)
-        println("One-way ANOVA: F(",anov[1],", ",anov[2],") = ",@sprintf("%.5f",anov[3]),", P-Value ",@sprintf("%.5f",anov[4]))
+        println("One-way ANOVA: F(",anov[1],", ",anov[2],") = ",@sprintf("%.5f",anov[3]),", P-Value ", anov[4] < 0.0001 ? 0.0001 : @sprintf("%.5f",anov[4]))
     else
         return outdf
     end
