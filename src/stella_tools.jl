@@ -748,3 +748,12 @@ end
 function humansize(bytes::Int64)
     return humanReadableByteCountbin(bytes)
 end
+
+"""
+	juliadate(::AbstractArray)
+
+converts SAS or stata date values to Julia Dates values.
+"""
+function juliadate(sasdt::AbstractArray)
+    return Dates.Date.(Dates.UTD.(convert.(Int64,sasdt) .+ Dates.value(Date(1959,12,31))))
+end
