@@ -886,11 +886,11 @@ function duplicates(df::DataFrame, args::Union{Symbol,String}... ; cmd::Symbol =
     end
 
     # substract 1 from :x in dfx (we are reporting 0 for unique observations)
-    dfx[:__dups__] .-= 1
+    dfx[!,:__dups__] .-= 1
     df = leftjoin(df, dfx, on = collect(args))
 
     if cmd == :tag
-        return df[:__dups__]
+        return df[!,:__dups__]
     end
 
     # if cmd == :drop
