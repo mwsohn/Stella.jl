@@ -64,7 +64,8 @@ export  read_stata,  # read stata 13 and 14 files into DF
         # nulldeviance,  # nulldeviance for GLM models
         rowpct, colpct, cellpct, chi2, # freqtable functions
         categorical!, uncategorical!, uncategorize, # functions to create CategoricalArrays or reverse them to their original values
-        identify_condition, identify_condition2 # used to identify conditions in claims files
+        identify_condition, identify_condition2, # used to identify conditions in claims files
+        rowtotal # mimics Stata's rowtotal
 
 abstract type Link end
 abstract type Formula end
