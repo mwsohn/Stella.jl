@@ -1379,4 +1379,12 @@ function uncategorize(v::CategoricalArray)
     return [x == 0 ? missing : v.pool.levels[x] for x in v.refs]
 end
 
+"""
+	rowtotal(::AbstractDataFrame,::AbstractArray)
 
+produces an array that contains the sum of values in all variables in the AbstractArray. This is
+an implementation of Stata egen function "rowtotal".
+"""
+function rowtotal(df::AbstractDataFrame,vars::AbstractArray)
+    return sum.(eachrow(df[:,vars]))
+end
