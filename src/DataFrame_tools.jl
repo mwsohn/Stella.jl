@@ -1380,11 +1380,65 @@ function uncategorize(v::CategoricalArray)
 end
 
 """
-	rowtotal(::AbstractDataFrame,::AbstractArray)
+    rowfirst(df::AbstractDataFrame,vars::AbstractArray)
+    rowlast(df::AbstractDataFrame,vars::AbstractArray)
+    rowmax(df::AbstractDataFrame,vars::AbstractArray)
+    rowmin(df::AbstractDataFrame,vars::AbstractArray)
+    rowmean(df::AbstractDataFrame,vars::AbstractArray)
+    rowmedian(df::AbstractDataFrame,vars::AbstractArray)
+    rowmiss(df::AbstractDataFrame,vars::AbstractArray)
+    rownonmiss(df::AbstractDataFrame,vars::AbstractArray)
+    rowpctile(df::AbstractDataFrame,vars::AbstractArray,pct )
+    rowsd(df::AbstractDataFrame,vars::AbstractArray)
+	rowtotal(df::AbstractDataFrame,vars::AbstractArray)
 
-produces an array that contains the sum of values in all variables in the AbstractArray. This is
-an implementation of Stata egen function "rowtotal".
+produces an array that contains the statistics based on all variables in the AbstractArray. This is
+an implementation of Stata egen "row" functions.
 """
-function rowtotal(df::AbstractDataFrame,vars::AbstractArray)
-    return sum.(eachrow(df[:,vars]))
+function rowfirst(df::AbstractDataFrame,vars::AbstractArray)
+    return [collect(skipmissing(x))[1] for x in eachrow(df[:,vars])]
 end
+
+function rowlast(df::AbstractDataFrame, vars::AbstractArray)
+    return [collect(skipmissing(x))[end] for x in eachrow(df[:, vars])]
+end
+
+function rowmax(df::AbstractDataFrame, vars::AbstractArray)
+    return maximum.(eachrow(df[:, vars]))
+end
+
+function rowmin(df::AbstractDataFrame, vars::AbstractArray)
+    return minimum.(collect(skipmissing(eachrow(df[:, vars]))))
+end
+
+function rowmean(df::AbstractDataFrame, vars::AbstractArray)
+    return mean.(collect(skipmissing(eachrow(df[:, vars]))))
+end
+
+function rowmedian(df::AbstractDataFrame, vars::AbstractArray)
+    return median.(collect(skipmissing(eachrow(df[:, vars]))))
+end
+
+function rowmmiss(df::AbstractDataFrame, vars::AbstractArray)
+    return sum.(ismissing.(eachrow(df[:, vars])))
+end
+
+function rownonmiss(df::AbstractDataFrame, vars::AbstractArray)
+    return length(vars) .- sum.(ismissing.(eachrow(df[:, vars])))
+end
+
+function rowsd(df::AbstractDataFrame, vars::AbstractArray)
+    return [std(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
+end
+
+function rowpctile(df::AbstractDataFrame, vars::AbstractArray, p::Float64 = 0.5)
+    return [quantile(collect(skipmissing(x)), p) for x in eachrow(df[:, vars])]
+end
+
+function rowtotal(df::AbstractDataFrame, vars::AbstractArray)
+    return sum.(collect(skipmissing(eachrow(df[:,vars]))))
+end
+
+
+
+
