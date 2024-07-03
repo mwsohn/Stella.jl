@@ -1404,22 +1404,22 @@ function rowlast(df::AbstractDataFrame, vars::AbstractArray)
 end
 
 function rowmax(df::AbstractDataFrame, vars::AbstractArray)
-    return maximum.(eachrow(df[:, vars]))
+    return [maximum(collect(skipmissing(x))) for x in eachrow(df[:, vars]]
 end
 
 function rowmin(df::AbstractDataFrame, vars::AbstractArray)
-    return minimum.(collect(skipmissing(eachrow(df[:, vars]))))
+    return [maximum(collect(skipmissing(x))) for x in eachrow(df[:, vars]]
 end
 
 function rowmean(df::AbstractDataFrame, vars::AbstractArray)
-    return mean.(collect(skipmissing(eachrow(df[:, vars]))))
+    return [mean(collect(skipmissing(x))) for x in eachrow(df[:, vars]]
 end
 
 function rowmedian(df::AbstractDataFrame, vars::AbstractArray)
-    return median.(collect(skipmissing(eachrow(df[:, vars]))))
+    return [median(collect(skipmissing(x))) for x in eachrow(df[:, vars]]
 end
 
-function rowmmiss(df::AbstractDataFrame, vars::AbstractArray)
+function rowmiss(df::AbstractDataFrame, vars::AbstractArray)
     return sum.(ismissing.(eachrow(df[:, vars])))
 end
 
@@ -1435,7 +1435,10 @@ function rowpctile(df::AbstractDataFrame, vars::AbstractArray, p::Float64 = 0.5)
     return [quantile(collect(skipmissing(x)), p) for x in eachrow(df[:, vars])]
 end
 
-function rowtotal(df::AbstractDataFrame, vars::AbstractArray)
+function rowtotal(df::AbstractDataFrame, vars::AbstractArray, skipmissing=true)
+    if skipmissing
+        return [sum(collect(skipmissing(x)))  for x in eachrow(df[:,vars])]
+    end
     return sum.(collect(skipmissing(eachrow(df[:,vars]))))
 end
 
