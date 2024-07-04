@@ -1392,8 +1392,8 @@ end
     rowsd(df::AbstractDataFrame,vars::AbstractArray)
 	rowtotal(df::AbstractDataFrame,vars::AbstractArray)
 
-produces an array that contains the statistics based on all variables in the AbstractArray. This is
-an implementation of Stata egen "row" functions.
+produces an array that contains the statistics based on all variables in the AbstractArray, 
+ignoring missing values. This is a Julia implementation of Stata "row" egen functions.
 """
 function rowfirst(df::AbstractDataFrame,vars::AbstractArray)
     return [collect(skipmissing(x))[1] for x in eachrow(df[:,vars])]
@@ -1404,19 +1404,19 @@ function rowlast(df::AbstractDataFrame, vars::AbstractArray)
 end
 
 function rowmax(df::AbstractDataFrame, vars::AbstractArray)
-    return [maximum(collect(skipmissing(x))) for x in eachrow(df[:, vars]]
+    return [maximum(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
 end
 
 function rowmin(df::AbstractDataFrame, vars::AbstractArray)
-    return [maximum(collect(skipmissing(x))) for x in eachrow(df[:, vars]]
+    return [maximum(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
 end
 
 function rowmean(df::AbstractDataFrame, vars::AbstractArray)
-    return [mean(collect(skipmissing(x))) for x in eachrow(df[:, vars]]
+    return [mean(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
 end
 
 function rowmedian(df::AbstractDataFrame, vars::AbstractArray)
-    return [median(collect(skipmissing(x))) for x in eachrow(df[:, vars]]
+    return [median(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
 end
 
 function rowmiss(df::AbstractDataFrame, vars::AbstractArray)
@@ -1435,11 +1435,8 @@ function rowpctile(df::AbstractDataFrame, vars::AbstractArray, p::Float64 = 0.5)
     return [quantile(collect(skipmissing(x)), p) for x in eachrow(df[:, vars])]
 end
 
-function rowtotal(df::AbstractDataFrame, vars::AbstractArray, skipmissing=true)
-    if skipmissing
-        return [sum(collect(skipmissing(x)))  for x in eachrow(df[:,vars])]
-    end
-    return sum.(collect(skipmissing(eachrow(df[:,vars]))))
+function rowtotal(df::AbstractDataFrame, vars::AbstractArray)
+    return [sum(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
 end
 
 
