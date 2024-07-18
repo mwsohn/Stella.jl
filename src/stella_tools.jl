@@ -516,6 +516,92 @@ function pwcorr(indf::DataFrame, args::Vector{Symbol}; decimals=4, html=false)
 end
 pwcorr(a::DataFrame, args::Symbol...; decimals = 4) = pwcorr2(a, [args...]; decimals = decimals)
 
+# robust stadard errors and confidence intervals
+"""
+    rcoeftable(m::StatisticalMModel; vce = :hc1, adjust = true)
+
+Produces `coeftable` with robust standard errors and confidence intervals. Use `vce` option
+to set the heteroskedasticity-consistent (HC) standard error functions computed using the
+CovarianceMatrices.jl package. Choose the function using the following symbols:
+
+    :hc0 for HC0()
+    :hc1 for HC1()
+    :hc2 for HC2()
+    :hc3 for HC3()
+    :hc4 for HC4()
+    :hc4m for HC4m()
+    :hc5 for HC5()
+
+Adjust option is set to `true` by default to obtain confidence intervals that are consistent with
+Stata or R values. If you want the original HC standard errors, set it to `false`.
+"""
+function rcoeftable(m::StatisticalModel; vce = :hc1, adjust = true)
+
+    coeftab = coeftable(m)
+    est = coeftab.cols[1]
+
+    # cannot specify level in coeftable. It produces an error.
+    level = 0.95
+
+    # vce functions available
+    vcedict = Dict(:hc0 => HC0(), :hc1 => HC1(), :hc2 => HC2(),
+                    :hc3 => HC3(), :hc4 => HC4(), :hc4m => HC4m(), :hc5 => HC5())
+
+
+    # robust standard errors
+    if typeof(m.model) <: LinearModel
+        # use t-statistic
+        se = stderror(HC1(),m)
+        coeftab.cols[2] = se
+        tval = est ./ se # t-statistic
+        coeftab.cols[coeftab.teststatcol] = tval
+        coeftab.cols[4] = 2 .* ccdf.(TDist(nobs(ols) - dof(ols) + 1), abs.(tval)) # pvalues
+        cv = quantile.(TDist(nobs(ols) - dof(ols) - 1), [(1 - level) / 2, (1 + level) / 2 ])
+        coeftab.cols[5] = est .+ tval .* cv[1] # lower
+        coeftab.cols[6] = est .+ tval .* cv[2] # upper
+        return coeftab
+    end
+
+    # GLM models
+    # use Z-statistic
+    se = stderror(vcedict[vce], m, prewhite=false)
+    if adjust
+        se = se .* (nobs(m) - 1) / nobs(m)
+    end
+    coeftab.cols[2] = se
+    zval = est ./ se # z-statistic
+    coeftab.cols[coeftab.teststatcol] = zval
+    coeftab.cols[4] = 2 .* ccdf.(Normal(), abs.(zval)) # pvalues
+    cv = quantile.(Normal(), [(1 - level) / 2, (1 + level) / 2 ])
+    coeftab.cols[5] = est .+ se .* cv[1] # lower
+    coeftab.cols[6] = est .+ se .* cv[2] # upper
+    return coeftab
+end
+
+"""
+    rconfint(m::StatisticalModel; vce = :hc1, adjust = true)
+
+Produces confidence intervals based on the robust standard errors. Use `vce` option
+to set the heteroskedasticity-consistent (HC) standard error functions computed using the
+CovarianceMatrices.jl package. Choose the function using the following symbols:
+
+    :hc0 for HC0()
+    :hc1 for HC1()
+    :hc2 for HC2()
+    :hc3 for HC3()
+    :hc4 for HC4()
+    :hc4m for HC4m()
+    :hc5 for HC5()
+
+Adjust option is set to `true` by default to obtain confidence intervals that are consistent with
+Stata or R values. If you want the original HC standard errors, set it to `false`.
+"""
+
+function rconfint(m::StatisticalModel; adjust=true, vce = :hc1)
+    coeft = rcoeftable(m, adjust=adjust, vce = vce)
+    return hcat(coeft.cols[5], coeft.cols[6])
+end
+
 #--------------------------------------------------------------------------
 # ranksum(), signrank(), signtest()
 #--------------------------------------------------------------------------
