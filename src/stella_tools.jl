@@ -540,6 +540,9 @@ function rcoeftable(m::StatisticalModel; vce = :hc1, adjust = true)
     coeftab = coeftable(m)
     est = coeftab.cols[1]
 
+    # column name
+    coeftab.colnms[2] = "Robust SE"
+
     # cannot specify level in coeftable. It produces an error.
     level = 0.95
 
