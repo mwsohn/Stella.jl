@@ -176,7 +176,7 @@ function tabstat(indf::AbstractDataFrame,
 
     # stats
     for j = 1:length(namevec) 
-        outdf[!,namevec[j]] = [s[j](x[!,var1]) for x in gdf] #combine(gdf, var1 => s[i] => :x )[:,:x] 
+        outdf[!,namevec[j]] = [s[j](x[!,var1]) for x in gdf] 
     end
 
     if table
