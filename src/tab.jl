@@ -80,12 +80,6 @@ end
 
 function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
     
-    # value labels and "Total"
-    rownames = vcat(names(na)[1], "Total")
-
-    # colunm names
-    colnames = vcat(names(na)[2], "Total")
-
     # counts
     counts = na.array
     (nrow,ncol) = size(counts)
@@ -104,6 +98,13 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
 
     # add two blank cells
     rownames2 = vcat([ [x, " ", " "] for x in rownames ]...)
+
+    # value labels and "Total"
+    rownames = vcat(names(na)[1][rowz], "Total")
+
+    # colunm names
+    colnames = vcat(names(na)[2][colz], "Total")
+
 
     pretty_table(d,
         row_labels = rownames2,
