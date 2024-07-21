@@ -83,10 +83,10 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
     # counts
     counts = na.array
     counts = vcat(counts,sum(counts,dims=1)) # column sum
-    colz = findall(x -> x != 0, counts[:,end]) # find all columns with non-zero totals
+    rz = findall(x -> x != 0, counts[:,end]) # find all columns with non-zero totals
     counts = hcat(counts,sum(counts,dims=2)) # row sum
-    rowz = findall(x -> x != 0, counts[end,:]) # find all rows with non-zero totals
-    counts = counts[colz,rowz]
+    cz = findall(x -> x != 0, counts[end,:]) # find all rows with non-zero totals
+    counts = counts[rz,cz]
     (nrow, ncol) = size(counts)
 
     # row and column percentages
@@ -100,10 +100,10 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
     rownames2 = vcat([ [x, " ", " "] for x in rownames ]...)
 
     # value labels and "Total"
-    rownames = vcat(names(na)[1][rowz], "Total")
+    rownames = vcat(names(na)[1][rz], "Total")
 
     # colunm names
-    colnames = vcat(names(na)[2][colz], "Total")
+    colnames = vcat(names(na)[2][cz], "Total")
 
 
     pretty_table(d,
@@ -116,7 +116,7 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
         hlines=vcat([0, 1], [x * 3 + 1 for x in 1:(nrow+1)]),
         vlines = [1])
 
-    (statistic, dof, pval) = Stella.chi2(na.array[rowz,colz])
+    (statistic, dof, pval) = Stella.chi2(na.array[rz,cz])
     println("Pearson chi-square = ", @sprintf("%.4f",statistic), " (", dof, "), p ", 
         pval < 0.0001 ? "< 0.0001" : string("= ",round(pval,sigdigits = 6)))
 end
