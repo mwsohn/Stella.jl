@@ -89,6 +89,12 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
     counts = counts[rz,cz]
     (nrow, ncol) = size(counts)
 
+    # value labels and "Total"
+    rownames = vcat(names(na)[1], "Total")[rz]
+
+    # colunm names
+    colnames = vcat(names(na)[2], "Total")[cz]
+
     # row and column percentages
     rowpct = 100 .* counts ./ counts[:,end]
     colpct = (100 .* counts' ./ counts[end,:])'
@@ -98,12 +104,6 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
 
     # add two blank cells
     rownames2 = vcat([ [x, " ", " "] for x in rownames ]...)
-
-    # value labels and "Total"
-    rownames = vcat(names(na)[1], "Total")[rz]
-
-    # colunm names
-    colnames = vcat(names(na)[2], "Total")[cz]
 
 
     pretty_table(d,
