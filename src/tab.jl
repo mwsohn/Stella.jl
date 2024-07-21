@@ -100,10 +100,10 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
     rownames2 = vcat([ [x, " ", " "] for x in rownames ]...)
 
     # value labels and "Total"
-    rownames = vcat(names(na)[1][rz], "Total")
+    rownames = vcat(names(na)[1], "Total")[rz]
 
     # colunm names
-    colnames = vcat(names(na)[2][cz], "Total")
+    colnames = vcat(names(na)[2], "Total")[cz]
 
 
     pretty_table(d,
