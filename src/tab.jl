@@ -52,17 +52,21 @@ end
 
 function _tab1(na::NamedArray; decimals = 4)
  
-    # value labels and "Total"
-    rownames = vcat(names(na)[1],"Total")
+    # do not output rows with zeros
+    z = findall(x -> x != 0, na.array)
+    arry = na.array[z]
 
-    # counts
-    counts = vcat(na.array,sum(na,dims=1))
+    # value labels and "Total"
+    rownames = vcat(names(na)[1][z],"Total")
+
+    # counts - the last row has the total
+    counts = vcat(arry,sum(na,dims=1))
 
     # percents
     percents = 100 .* counts ./ counts[end]
 
     # cumulative percents
-    cumpct = 100 .* vcat(cumsum(na.array,dims=1),counts[end]) ./ counts[end]
+    cumpct = 100 .* vcat(cumsum(arry,dims=1),counts[end]) ./ counts[end]
 
     ar = hcat(rownames,counts, percents, cumpct)
 
