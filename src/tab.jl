@@ -90,7 +90,10 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
     counts = na.array
     (nrow,ncol) = size(counts)
     counts = vcat(counts,sum(counts,dims=1)) # column sum
+    colz = findall(x -> x != 0, counts[:,end]) # find all columns with non-zero totals
     counts = hcat(counts,sum(counts,dims=2)) # row sum
+    rowz = findall(x -> x != 0, counts[end,:]) # find all rows with non-zero totals
+    counts = counts[rowz,colz]
 
     # row and column percentages
     rowpct = 100 .* counts ./ counts[:,ncol+1]
@@ -112,7 +115,7 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
         hlines=vcat([0, 1], [x * 3 + 1 for x in 1:(nrow+1)]),
         vlines = [1])
 
-    (statistic, dof, pval) = Stella.chi2(na.array)
+    (statistic, dof, pval) = Stella.chi2(na.array[rowz,colz])
     println("Pearson chi-square = ", @sprintf("%.4f",statistic), " (", dof, "), p ", 
         pval < 0.0001 ? "< 0.0001" : string("= ",round(pval,sigdigits = 6)))
 end
