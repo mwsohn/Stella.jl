@@ -116,7 +116,7 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
         hlines=vcat([0, 1], [x * 3 + 1 for x in 1:(nrow+1)]),
         vlines = [1])
 
-    (statistic, dof, pval) = Stella.chi2(na.array[rz,cz])
+    (statistic, dof, pval) = Stella.chi2(na.array[pop!(rz),pop!(cz)])
     println("Pearson chi-square = ", @sprintf("%.4f",statistic), " (", dof, "), p ", 
         pval < 0.0001 ? "< 0.0001" : string("= ",round(pval,sigdigits = 6)))
 end
