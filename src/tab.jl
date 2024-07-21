@@ -90,11 +90,11 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
     (nrow, ncol) = size(counts)
 
     # row and column percentages
-    rowpct = 100 .* counts ./ counts[:,ncol+1]
-    colpct = (100 .* counts' ./ counts[nrow+1,:])'
+    rowpct = 100 .* counts ./ counts[:,end]
+    colpct = (100 .* counts' ./ counts[end,:])'
 
     # interleave them 
-    d = reshape(Any[counts rowpct colpct]'[:],(ncol+1,(nrow+1)*3))'
+    d = reshape(Any[counts rowpct colpct]'[:],(ncol,(nrow)*3))'
 
     # add two blank cells
     rownames2 = vcat([ [x, " ", " "] for x in rownames ]...)
