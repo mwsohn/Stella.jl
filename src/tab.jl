@@ -123,7 +123,7 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
 
     if size(testarray) == (2, 2) # 2x2 array
         println("Fisher's exact test = ", @sprintf("%.4f",
-            pvalue(HypothesisTests.FisherExactTest(reshape(testarray', (4, 1))...))))
+            pvalue(HypothesisTests.FisherExactTest(rec(testarray')...))))
     end
 end
 
