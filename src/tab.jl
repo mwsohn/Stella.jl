@@ -83,9 +83,9 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
     # counts
     counts = na.array
     counts = vcat(counts,sum(counts,dims=1)) # column sum
-    rz = findall(x -> x != 0, counts[:,end]) # find all columns with non-zero totals
     counts = hcat(counts,sum(counts,dims=2)) # row sum
-    cz = findall(x -> x != 0, counts[end,:]) # find all rows with non-zero totals
+    rz = findall(x -> x != 0, counts[:, end]) # find all columns with non-zero totals
+    cz = findall(x -> x != 0, counts[end, :]) # find all rows with non-zero totals
     counts = counts[rz,cz]
     (nrow, ncol) = size(counts)
 
