@@ -180,7 +180,7 @@ function tabstat(indf::AbstractDataFrame,
     end
 
     # identify only rows with non-zero counts
-    nz = df.n .!= 0
+    nz = outdf.n .!= 0
 
     if table
         pretty_table(outdf[nz, 2:end], 
