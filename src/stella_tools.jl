@@ -179,16 +179,19 @@ function tabstat(indf::AbstractDataFrame,
         outdf[!,namevec[j]] = [s[j](x[!,var1]) for x in gdf] 
     end
 
+    # identify only rows with non-zero counts
+    nz = df.n .!= 0
+
     if table
-        pretty_table(outdf[:, 2:end], 
-        row_labels = outdf[:,groupvar],
+        pretty_table(outdf[nz, 2:end], 
+        row_labels = outdf[nz,groupvar],
         row_label_column_title = label(indf,groupvar),
 		show_subheader = false,
 		vlines=[1])
-        anov = anova(indf,var1,groupvar, pval=true)
+        anov = anova(indf, var1, groupvar, pval=true)
         println("One-way ANOVA: F(",anov[1],", ",anov[2],") = ",@sprintf("%.5f",anov[3]),", ", anov[4] < 0.00001 ? "P < 0.00001" : @sprintf("P = %.5f",anov[4]))
     else
-        return outdf
+        return outdf[nz,:]
     end
 end
 
