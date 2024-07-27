@@ -62,7 +62,11 @@ function _tab1(na::NamedArray; decimals = 4, sort = false)
     end
 
     # value labels and "Total"
-    rownames = vcat(names(na)[1][z][s],"Total")
+    if sort
+        rownames = vcat(names(na)[1][z][s],"Total")
+    else
+        rownames = vcat(names(na)[1][z],"Total")
+    end
 
     # counts - the last row has the total
     counts = vcat(arry,sum(na,dims=1))
