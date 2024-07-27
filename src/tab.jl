@@ -21,12 +21,12 @@ function tab(na::NamedArray; skipmissing=true)
         error("Crosstabs for more than 3 variables are not currently supported.")
     end
 end
-function tab(indf,var::Union{Symbol,String}; decimals=4, skipmissing=true)
+function tab(indf,var::Union{Symbol,String}; decimals=4, skipmissing=true, sort=false)
     if in(string(var),names(indf)) == false
         println("$var is not found in the input DataFrame.")
         return nothing
     end
-    _tab1(freqtable(indf,var, skipmissing=skipmissing); decimals=decimals)
+    _tab1(freqtable(indf,var, skipmissing=skipmissing); decimals=decimals, sort=sort)
 end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows = -1, maxcols = 20, decimals=4, skipmissing=true)
     if in(string(var1),names(indf)) == false
@@ -50,14 +50,19 @@ function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String},var3::Un
     _tab3(freqtable(indf, var1, var2, var3, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, decimals=decimals)
 end
 
-function _tab1(na::NamedArray; decimals = 4)
+function _tab1(na::NamedArray; decimals = 4, sort = false)
  
     # do not output rows with zeros
     z = findall(x -> x != 0, na.array)
     arry = na.array[z]
 
+    if sort
+        s = sortperm(arry,rev=true)
+        arry = arry[s]
+    end
+
     # value labels and "Total"
-    rownames = vcat(names(na)[1][z],"Total")
+    rownames = vcat(names(na)[1][z][s],"Total")
 
     # counts - the last row has the total
     counts = vcat(arry,sum(na,dims=1))
