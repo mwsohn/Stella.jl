@@ -1408,7 +1408,7 @@ function rowmax(df::AbstractDataFrame, vars::AbstractArray)
 end
 
 function rowmin(df::AbstractDataFrame, vars::AbstractArray)
-    return [maximum(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
+    return [minimum(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
 end
 
 function rowmean(df::AbstractDataFrame, vars::AbstractArray)
