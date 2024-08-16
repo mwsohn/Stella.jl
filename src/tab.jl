@@ -28,7 +28,7 @@ function tab(indf,var::Union{Symbol,String}; decimals=4, skipmissing=true, sort=
     end
     _tab1(freqtable(indf,var, skipmissing=skipmissing); decimals=decimals, sort=sort)
 end
-function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows = -1, maxcols = 20, decimals=4, skipmissing=true)
+function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows = -1, maxcols = 20, decimals=4, skipmissing=true, summrize::Union{Symbol,String} = nothing)
     if in(string(var1),names(indf)) == false
         println("$var1 is not found in the input DataFrame.")
         return nothing
@@ -37,18 +37,11 @@ function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows
         println("$var2 is not found in the input DataFrame.")
         return nothing
     end
-    _tab2(freqtable(indf, var1, var2, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, decimals=decimals)
-end
-function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}, sumvar::Union{Symbol,String})
-    if in(string(var1), names(indf)) == false
-        println("$var1 is not found in the input DataFrame.")
-        return nothing
+    if summrize == nothing
+        _tab2(freqtable(indf, var1, var2, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, decimals=decimals)
     end
-    if in(string(var2), names(indf)) == false
-        println("$var2 is not found in the input DataFrame.")
-        return nothing
-    end
-    _tab2summarize(indf, var1, var2, sumvar)
+
+    _tab2summarize(indf, var1, var2, summarize)
 end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String},var3::Union{Symbol,String};
     maxrows=-1, maxcols=20, decimals=4, skipmissing=true)
