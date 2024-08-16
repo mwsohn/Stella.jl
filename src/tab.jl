@@ -38,7 +38,7 @@ function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows
         return nothing
     end
     if summarize == nothing
-        _tab2(freqtable(indf, var1, var2, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, decimals=decimals)
+        return _tab2(freqtable(indf, var1, var2, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, decimals=decimals)
     end
 
     _tab2summarize(indf, var1, var2, summarize)
