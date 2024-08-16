@@ -41,7 +41,7 @@ function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows
         return _tab2(freqtable(indf, var1, var2, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, decimals=decimals)
     end
 
-    _tab2summarize(indf, var1, var2, summarize)
+    _tab2summarize(indf, var1, var2, summarize; maxrows=-1, maxcols=20, decimals=4)
 end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String},var3::Union{Symbol,String};
     maxrows=-1, maxcols=20, decimals=4, skipmissing=true)
@@ -142,7 +142,7 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
     end
 end
 
-function _tab2summarize(indf, var1, var2, sumvar)
+function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, decimals=4)
     ba = completecases(indf[!,[var1,var2,sumvar]])
     na = freqtable(indf[ba,:], var1, var2)
     (nrow,ncol) = size(na.array)
