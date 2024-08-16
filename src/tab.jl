@@ -173,7 +173,7 @@ function _tab2summarize(indf, var1, var2, sumvar)
     colnames = vcat(names(na)[2], "Total")
 
     # combine stats
-    d = reshape(Any[outdf.mean outdf.sd outdf.n]'[:], (nrow * 3, ncol))
+    d = reshape(Any[outdf.mean outdf.sd outdf.n]'[:], (3, nrow * ncol))
     d = vcat(d[1:3,1:ncol], d[1:3,ncol+1:ncol*nrow])
 
     # row margins
