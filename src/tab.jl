@@ -39,6 +39,17 @@ function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows
     end
     _tab2(freqtable(indf, var1, var2, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, decimals=decimals)
 end
+function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}, summarize::{Symbol,String})
+    if in(string(var1), names(indf)) == false
+        println("$var1 is not found in the input DataFrame.")
+        return nothing
+    end
+    if in(string(var2), names(indf)) == false
+        println("$var2 is not found in the input DataFrame.")
+        return nothing
+    end
+    _tab2summarize(indf, var1, var2, sumvar)
+end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String},var3::Union{Symbol,String};
     maxrows=-1, maxcols=20, decimals=4, skipmissing=true)
     for v in (var1,var2,var3)
@@ -127,13 +138,77 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
 
     testarray = na.array[rz[1:end-1],cz[1:end-1]]
     (statistic, dof, pval) = Stella.chi2(testarray)
-    println("Pearson chi-square = ", @sprintf("%.4f",statistic), " (", dof, "), p ", 
-        pval < 0.0001 ? "< 0.0001" : string("= ",round(pval,sigdigits = 6)))
+    if size(testarray,1) > 1 && size(testarray,2) > 1
+        println("Pearson chi-square = ", @sprintf("%.4f",statistic), " (", dof, "), p ", 
+            pval < 0.0001 ? "< 0.0001" : string("= ",round(pval,sigdigits = 6)))
+    end
 
     if size(testarray) == (2, 2) # 2x2 array
         println("Fisher's exact test = ", @sprintf("%.4f",
             pvalue(HypothesisTests.FisherExactTest((testarray')...))))
     end
+end
+
+function _tab2summarize(indf, var1, var2, sumvar)
+    ba = completecases(indf[!,[var1,var2,sumvar]])
+    na = freqtable(indf[ba,:], var1, var2)
+    (nrow,ncol) = size(na.array)
+
+    # marginal stats
+    gdf = grouby(indf[ba, :], var1)
+    var1df = combine(gdf,nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
+
+    gdf = grouby(indf[ba, :], var2)
+    var2df = combine(gdf, nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
+
+    # cell stats
+    gdf = groupby(indf[ba,:],[var1,var2])
+    outdf = combine(gdf,nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
+
+    # combine them
+    combined_means = vcat(outdf.mean, var2df.mean)
+    combined_sds = vcat(outdf.sd, var2df.sd)
+    combined_ns = vcat(outdf.n, var2df.n)
+
+    # value labels and "Total"
+    rownames = vcat(names(na)[1], "Total")
+
+    # add two blank cells
+    rownames2 = vcat([[x, " ", " "] for x in rownames]...)
+
+    # colunm names
+    colnames = vcat(names(na)[2], "Total")
+
+    # combine stats
+    d = reshape(Any[outdf.mean outdf.sd outdf.n]'[:], (nrow * 3, ncol))
+
+    # row margins
+    d = hcat(d, Any[var1df.mean var1df.sd var1df.n]'[:])
+
+    # column margins
+    cm = Any[var2df.mean var2df.sd var2df.n]'[:]
+
+    # grand total
+    push!(cm, mean(indf[ba,sumvar]))
+    push!(cm, std(indf[ba, sumvar]))
+    push!(cm, size(indf[ba, sumvar],1))
+
+    cm = reshape(cm,(2,ncol + 1))
+
+    # combine cell summary stats with column margin stats
+    d = vcat(d,cm)
+
+    # output
+    pretty_table(d,
+        row_labels=rownames2,
+        row_label_column_title=string(na.dimnames[1], " / ", na.dimnames[2]),
+        header=colnames,
+        crop=:none,
+        max_num_of_rows=maxrows,
+        max_num_of_columns=maxcols,
+        hlines=vcat([0, 1], [x * 3 + 1 for x in 1:(nrow+1)]),
+        vlines=[1])
+
 end
 
 function _tab3(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
