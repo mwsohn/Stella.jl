@@ -180,7 +180,7 @@ function _tab2summarize(indf, var1, var2, sumvar)
     push!(cm, std(indf[ba, sumvar]))
     push!(cm, size(indf[ba, sumvar],1))
 
-    cm = reshape(cm,(2,ncol + 1))
+    cm = reshape(cm,(3,ncol + 1))
 
     # combine cell summary stats with column margin stats
     d = vcat(d,cm)
