@@ -149,10 +149,10 @@ function _tab2summarize(indf, var1, var2, sumvar)
 
     # marginal stats
     gdf = groupby(indf[ba, :], var1)
-    var1df = combine(gdf,nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
+    var1df = combine(gdf, sumvar => length => :n, sumvar => mean => :mean, sumvar => std => :sd)
 
     gdf = groupby(indf[ba, :], var2)
-    var2df = combine(gdf, nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
+    var2df = combine(gdf, sumvar => length => :n, sumvar => mean => :mean, sumvar => std => :sd)
 
     # cell stats
     gdf = groupby(indf[ba,:],[var1,var2])
@@ -168,7 +168,6 @@ function _tab2summarize(indf, var1, var2, sumvar)
     # combine stats
     d = Any[outdf.mean outdf.sd outdf.n]'
     d = vcat(d[1:3,1:ncol], d[1:3,ncol+1:ncol*nrow])
-    println(d)
 
     # row margins
     d = hcat(d, Any[var1df.mean var1df.sd var1df.n]'[:])
