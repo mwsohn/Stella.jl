@@ -39,7 +39,7 @@ function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows
     end
     _tab2(freqtable(indf, var1, var2, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, decimals=decimals)
 end
-function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}, summarize::{Symbol,String})
+function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}, sumvar::Union{Symbol,String})
     if in(string(var1), names(indf)) == false
         println("$var1 is not found in the input DataFrame.")
         return nothing
