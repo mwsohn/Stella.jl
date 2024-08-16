@@ -162,7 +162,7 @@ function _tab2summarize(indf, var1, var2, sumvar)
     var2df = combine(gdf, nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
 
     # cell stats
-    gdf = grouppby(indf[ba,:],[var1,var2])
+    gdf = groupby(indf[ba,:],[var1,var2])
     outdf = combine(gdf,nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
 
     # value labels and "Total"
