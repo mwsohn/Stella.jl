@@ -157,7 +157,6 @@ function _tab2summarize(indf, var1, var2, sumvar)
     # cell stats
     gdf = groupby(indf[ba,:],[var1,var2])
     outdf = combine(gdf, sumvar => length => :n, sumvar => mean => :mean, sumvar => std => :sd)
-    println(outdf)
 
     # value labels and "Total"
     rownames = vcat(names(na)[1], "Total")
@@ -169,6 +168,7 @@ function _tab2summarize(indf, var1, var2, sumvar)
     # combine stats
     d = Any[outdf.mean outdf.sd outdf.n]'
     d = vcat(d[1:3,1:ncol], d[1:3,ncol+1:ncol*nrow])
+    println(d)
 
     # row margins
     d = hcat(d, Any[var1df.mean var1df.sd var1df.n]'[:])
