@@ -44,14 +44,14 @@ function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows
     _tab2summarize(indf, var1, var2, summarize; maxrows=-1, maxcols=20, decimals=4)
 end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String},var3::Union{Symbol,String};
-    maxrows=-1, maxcols=20, decimals=4, skipmissing=true)
+    maxrows=-1, maxcols=20, decimals=4, skipmissing=true, summarize=nothing)
     for v in (var1,var2,var3)
         if in(string(v), names(indf))
             println("$v is not found in the input DataFrame.")
             return nothing
         end
     end
-    _tab3(freqtable(indf, var1, var2, var3, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, decimals=decimals)
+    _tab3(freqtable(indf, var1, var2, var3, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, decimals=decimals, summarize = summarize)
 end
 
 function _tab1(na::NamedArray; decimals = 4, sort = false)
@@ -198,7 +198,7 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, decima
 
 end
 
-function _tab3(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
+function _tab3(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4, summarize = nothing)
 
     # stratify the var3 (na.dimnames[3])
     n3 = size(na,3)
@@ -207,7 +207,7 @@ function _tab3(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
     for i in 1:n3
         println("\n\n",na.dimnames[3], " = ", vals[i] ,"\n")
 
-        _tab2(na[:,:,i]; maxrows = maxrows, maxcols = maxcols, decimals=decimals)
+        _tab2(na[:,:,i]; maxrows = maxrows, maxcols = maxcols, decimals=decimals, summarize = summarize)
     end
 end
 
