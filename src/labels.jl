@@ -18,3 +18,5 @@ function values!(df::AbstractDataFrame,v::Union{Symbol,String},val::Union{Dict,N
         levels!(df[!,v], last.(sort(collect(val))))
     end
 end
+
+labels2(df) = Dict(Pair.(propertynames(df), labels(df)))
