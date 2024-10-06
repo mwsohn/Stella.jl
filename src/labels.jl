@@ -7,6 +7,11 @@ function labels!(df::AbstractDataFrame,dd::Dict)
 end
 
 function values!(df::AbstractDataFrame,v::Union{Symbol,String},val::Union{Dict,NamedTuple}; ordered = true)
+
+    if isa(df[:,v],CategoricalArray) 
+        uncategorical!(df,v)
+    end
+
     if nonmissingtype(eltype(df[:,v])) <: Integer
         vv = categorical(df[!,v], ordered = true)
         df[!,v] = recode(vv,val...)
