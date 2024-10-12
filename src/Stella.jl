@@ -67,7 +67,8 @@ export  read_stata,  # read stata 13 and 14 files into DF
         rowmedian, rowmiss, rownonmiss,
         values!,
         labels!,
-        labels2
+        labels2,
+        rocdata, auc
 
 abstract type Link end
 abstract type Formula end
@@ -86,5 +87,6 @@ include("t-test.jl")
 include("anova.jl")
 #include("show.jl")
 include("other.jl")
+include("rocdata.jl")
 
 end
