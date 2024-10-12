@@ -40,9 +40,13 @@ function rocdata(scores, labels)
 end
 
 auc(scores, labels) = ROC.AUC(rocdata(scores,labels))
+function auc(rr::ROCData)
+    println("Number of observations = ", rr.P + rr.N)
+    println("Area under ROC curve   = ", AUC(rr))
+end
 
 import Plots.plot
 function plot(rocdata::ROCData)
-    plot(rocdata.FPR, rocdata.TPR, linetype=:steppre, legend=false)
-    plot!(collect(0:1:1), collect(0:1:1), legend=false)
+    plot(rocdata.FPR, rocdata.TPR, linetype=:steppre, legend=false, xlabel="1 - specificity", ylabel="sensitivity")
+    plot!(collect(0:1:1), collect(0:1:1), legend=false, lc = :black)
 end
