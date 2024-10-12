@@ -43,6 +43,6 @@ auc(scores, labels) = ROC.AUC(rocdata(scores,labels))
 
 import Plots.plot
 function plot(rocdata::ROCData)
-    plot(rr.FPR, rr.TPR, linetype=:steppre, legend=false)
+    plot(rocdata.FPR, rocdata.TPR, linetype=:steppre, legend=false)
     plot!(collect(0:1:1), collect(0:1:1), legend=false)
 end
