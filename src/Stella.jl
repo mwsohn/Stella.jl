@@ -45,8 +45,6 @@ export  read_stata,  # read stata 13 and 14 files into DF
         tabprint,    # print a named array output from tab or freqtable
         tabstat,     # compute univariate statistics by subgroups
         substat,     # create a dataarray of univariate statistics of one variable by subgroups
-        rowsum,      # compute
-        rowstat,     #
         duplicates,  # report, drop, or tag duplicate rows
         destring,    # convert strings to numeric values in a DataArray
         destring!,   # in-place versionof destring
@@ -66,7 +64,10 @@ export  read_stata,  # read stata 13 and 14 files into DF
         categorical!, uncategorical!, uncategorize, # functions to create CategoricalArrays or reverse them to their original values
         identify_condition, identify_condition2, # used to identify conditions in claims files
         rowtotal, rowfirst, rowlast, rowmean, rowsd, rowmin, rowmax, rowpctile, # mimics Stata's row egen functions
-        rowmedian, rowmiss, rownonmiss
+        rowmedian, rowmiss, rownonmiss,
+        values!,
+        labels!,
+        labels2
 
 abstract type Link end
 abstract type Formula end
