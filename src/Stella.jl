@@ -8,7 +8,8 @@ module Stella
 
 using DataFrames, DataAPI, Distributions, StatsBase, StatsAPI, GLM, NamedArrays, HypothesisTests,
         DataStructures, FreqTables, ReadStat, LinearAlgebra, Printf, 
-        Glob, Dates, Arrow, CategoricalArrays, PooledArrays, PrettyTables, JLD2, TableMetadataTools, Reexport, ROC
+        Glob, Dates, Arrow, CategoricalArrays, PooledArrays, PrettyTables, JLD2, TableMetadataTools, 
+        Reexport, ROC, Plots
 
 
 ##############################################################################
