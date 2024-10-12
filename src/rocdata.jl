@@ -1,12 +1,23 @@
 # adapted from _roc function in ROC.jl to speed up the computation
 
 function rocdata(scores, labels)
+
+    # thresholds are sorted list of unique values in scores
     thresholds = sort(push!(unique(scores), 1), rev=true)
-    labels = labels .== 1.0 # turn it into a boolean vector
-    P = sum(labels)        # positives
-    N = length(labels) - P # negatives
+
+    # turn labels into a boolean vector
+    labels = labels .== 1.0
+
+    # total number of positives (trues)
+    P = sum(labels)
+
+    # number of negatives (falses)
+    N = length(labels) - P
+
+    # number of thresholds
     n_thresholds = length(thresholds)
 
+    # allocate memory for ROCData vectors
     TP = Array{Int}(undef, n_thresholds) # true positives
     TN = Array{Int}(undef, n_thresholds) # true negatives
     FP = Array{Int}(undef, n_thresholds) # false positives
@@ -20,8 +31,6 @@ function rocdata(scores, labels)
         predicted_negative = labels[.!mask]
         TP[i] = sum(predicted_positive)
         TN[i] = sum(.!predicted_negative)
-        # TP[i] = TPi
-        # TN[i] = TNi
         FP[i] = length(predicted_positive) - TP[i]
         FN[i] = length(predicted_negative) - TN[i]
         FPR[i] = FP[i] / (FP[i] + TN[i])
@@ -31,3 +40,9 @@ function rocdata(scores, labels)
 end
 
 auc(scores, labels) = ROC.AUC(rocdata(scores,labels))
+
+import Plots.plot
+function plot(rocdata::ROCData)
+    plot(rr.FPR, rr.TPR, linetype=:steppre, legend=false)
+    plot!(collect(0:1:1), collect(0:1:1), legend=false)
+end
