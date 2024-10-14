@@ -328,14 +328,16 @@ after a logsitic regression or a Poisson regression, use this function to obtain
 regression output instead of `coeftable`.
 
 """
-function eform(glmout::StatsModels.RegressionModel)
+function eform(glmout::StatsModels.TableRegressionModel)
 
     # family and link function
     if isa(glmout.model,GeneralizedLinearModel)
         distrib = glmout.model.rr.d
         linkfun = GLM.Link(glmout.model.rr)
+    elseif isa(glmout.model, CoxModel)
+	#	
     else
-        error("GLM model is required as the argument")
+        error("GLM or Cox model is required.")
     end
 
 	coeftable2 = coeftable(glmout)
@@ -351,7 +353,11 @@ function eform(glmout::StatsModels.RegressionModel)
     coeftable2.cols[6] = exp.(coeftable2.cols[6])
 
 	# rename column1 to OR
-	coeftable2.colnms[1] = coeflab(distrib,linkfun)
+	if isa(glmout.model, CoxModel)
+	   coeftable2.colnms[1] = "HR"
+	else
+		coeftable2.colnms[1] = coeflab(distrib,linkfun)
+	end
 
     # parse the row names and change variable names and values
     for i in 2:length(coeftable2.rownms)
