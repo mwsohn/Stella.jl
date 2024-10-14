@@ -871,7 +871,7 @@ function duplicates(df::DataFrame, args::Union{Symbol,String}... ; cmd::Symbol =
     end
 
     # if args are not specified, use all variables
-    if nargs == length(args)
+    if length(args) == 0
         args = tuple(propertynames(df)...)
     end
 
