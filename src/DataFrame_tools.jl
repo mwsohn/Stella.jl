@@ -843,7 +843,7 @@ This function creates a variable similar to the Stata command
 Symbol.
 """
 function pickone(df::DataFrame,groupvars::Vector{Symbol})
-    df[:_____obs_____] = collect(1:size(df,1))
+    df[!,:_____obs_____] = collect(1:size(df,1))
     done = zeros(Int8,size(df,1))
     for subdf in groupby(df, groupvars)
         done[subdf[1,:_____obs_____]]=1
