@@ -6,7 +6,7 @@ module Stella
 ##
 ################################################################################
 
-using DataFrames, DataAPI, Distributions, StatsBase, StatsAPI, GLM, NamedArrays, HypothesisTests,
+using DataFrames, DataAPI, Distributions, StatsBase, StatsAPI, GLM, Survival, NamedArrays, HypothesisTests,
         DataStructures, FreqTables, ReadStat, LinearAlgebra, Printf, 
         Glob, Dates, Arrow, CategoricalArrays, PooledArrays, PrettyTables, JLD2, TableMetadataTools, 
         Reexport, ROC, Plots
