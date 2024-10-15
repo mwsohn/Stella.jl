@@ -335,7 +335,7 @@ function eform(glmout::StatsModels.TableRegressionModel)
         distrib = glmout.model.rr.d
         linkfun = GLM.Link(glmout.model.rr)
     elseif isa(glmout.model, CoxModel)
-	#	
+	    #	
     else
         error("GLM or Cox model is required.")
     end
@@ -349,8 +349,13 @@ function eform(glmout::StatsModels.TableRegressionModel)
 	coeftable2.cols[2] = coeftable2.cols[1] .* coeftable2.cols[2]
 
 	# 95% CI
-    coeftable2.cols[5] = exp.(coeftable2.cols[5])
-    coeftable2.cols[6] = exp.(coeftable2.cols[6])
+    if isa(glmout.model, CoxModel)
+        push!(coeftable2.cols, exp.(coeftable2.cols[5]))
+        push!(coeftable2.cols, exp.(coeftable2.cols[6]))
+    else
+        coeftable2.cols[5] = exp.(coeftable2.cols[5])
+        coeftable2.cols[6] = exp.(coeftable2.cols[6])
+    end
 
 	# rename column1 to OR
 	if isa(glmout.model, CoxModel)
