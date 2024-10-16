@@ -351,9 +351,9 @@ function eform(glmout::StatsModels.TableRegressionModel)
 	# 95% CI
 	if cox
         cv = quantile(Normal(0,1),0.975)
-        push!(coeftable2.cols, Vector{Float64}(exp.(coeftable2.cols[1] .- cv .* coeftable2.cols[2]))) # 95% CI Lower Bound
-        # push!(coeftable2.cols, Vector{Float64}(exp.(coeftable2.cols[1] .+ cv .* coeftable2.cols[2]))) # 95% CI Upper Bound
-        # coeftable2.cols[3] = coeftable2.cols[1] ./ coeftable2.cols[2] # Z-Values
+        push!(coeftable2.cols, Float64[exp.(coeftable2.cols[1] .- cv .* coeftable2.cols[2])]) # 95% CI Lower Bound
+        push!(coeftable2.cols, Float64[exp.(coeftable2.cols[1] .+ cv .* coeftable2.cols[2])]) # 95% CI Upper Bound
+        coeftable2.cols[3] = coeftable2.cols[1] ./ coeftable2.cols[2] # Z-Values
     else
         coeftable2.cols[5] = exp.(coeftable2.cols[5])
         coeftable2.cols[6] = exp.(coeftable2.cols[6])
@@ -362,6 +362,8 @@ function eform(glmout::StatsModels.TableRegressionModel)
 	# rename column1 to OR
 	if cox
 	   coeftable2.colnms[1] = "HR"
+       push!(coeftable2.colnms, "95% LB")
+       push!(coeftable2.colnms, "95% UB")
 	else
 		coeftable2.colnms[1] = coeflab(distrib,linkfun)
 	end
