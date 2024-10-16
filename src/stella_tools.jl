@@ -342,21 +342,22 @@ function eform(glmout::StatsModels.TableRegressionModel)
 
 	coeftable2 = coeftable(glmout)
 
-	# estimates
-	coeftable2.cols[1] = exp.(coeftable2.cols[1])
-
-	# standard errors
-	coeftable2.cols[2] = coeftable2.cols[1] .* coeftable2.cols[2]
-
 	# 95% CI
 	if cox
-        cv = quantile(Normal(),0.975)
+        cv = 1.9599639845400576 # quantile(Normal(),0.975)
         push!(coeftable2.cols, exp.(coeftable2.cols[1] .- cv .* coeftable2.cols[2])) # 95% CI Lower Bound
         push!(coeftable2.cols, exp.(coeftable2.cols[1] .+ cv .* coeftable2.cols[2])) # 95% CI Upper Bound
     else
         coeftable2.cols[5] = exp.(coeftable2.cols[5])
         coeftable2.cols[6] = exp.(coeftable2.cols[6])
     end
+
+	# estimates
+	coeftable2.cols[1] = exp.(coeftable2.cols[1])
+
+	# standard errors
+	coeftable2.cols[2] = coeftable2.cols[1] .* coeftable2.cols[2]
+
 
 	# rename column1 to OR
 	if cox
