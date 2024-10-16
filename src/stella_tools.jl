@@ -334,10 +334,10 @@ function eform(glmout::StatsModels.TableRegressionModel)
     if isa(glmout.model,GeneralizedLinearModel)
         distrib = glmout.model.rr.d
         linkfun = GLM.Link(glmout.model.rr)
-    # elseif isa(glmout.model, CoxModel)
-	#     cox = true
-    # else
-    #     error("GLM or Cox model is required.")
+    elseif isa(glmout.model, CoxModel)
+	    cox = true
+    else
+        error("GLM or Cox model is required.")
     end
 
 	coeftable2 = coeftable(glmout)
@@ -349,10 +349,10 @@ function eform(glmout::StatsModels.TableRegressionModel)
 	coeftable2.cols[2] = coeftable2.cols[1] .* coeftable2.cols[2]
 
 	# 95% CI
-	if isa(glmout.model, CoxModel)
+	if cox
         cv = quantile(Normal(0,1),0.975)
-        push!(coeftable2.cols, vec(exp.(coeftable2.cols[1] .- cv .* coeftable2.cols[2]))) # 95% CI Lower Bound
-        push!(coeftable2.cols, vec(exp.(coeftable2.cols[1] .+ cv .* coeftable2.cols[2]))) # 95% CI Upper Bound
+        push!(coeftable2.cols, Vector{Float64}(exp.(coeftable2.cols[1] .- cv .* coeftable2.cols[2]))) # 95% CI Lower Bound
+        push!(coeftable2.cols, Vector{Float64}(exp.(coeftable2.cols[1] .+ cv .* coeftable2.cols[2]))) # 95% CI Upper Bound
         coeftable2.cols[3] = coeftable2.cols[1] ./ coeftable2.cols[2] # Z-Values
     else
         coeftable2.cols[5] = exp.(coeftable2.cols[5])
@@ -360,7 +360,7 @@ function eform(glmout::StatsModels.TableRegressionModel)
     end
 
 	# rename column1 to OR
-	if isa(glmout.model, CoxModel)
+	if cox
 	   coeftable2.colnms[1] = "HR"
 	else
 		coeftable2.colnms[1] = coeflab(distrib,linkfun)
