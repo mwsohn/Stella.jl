@@ -3,7 +3,7 @@
 function rocdata(scores, labels)
 
     # thresholds are sorted list of unique values in scores
-    thresholds = sort(vcat(unique(scores), 1.0), rev=true)
+    thresholds = vcat(1.0,sort(unique(scores), rev=true))
 
     # turn labels into a boolean vector
     labels = labels .== 1.0
