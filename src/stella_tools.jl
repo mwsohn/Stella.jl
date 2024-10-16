@@ -331,6 +331,7 @@ regression output instead of `coeftable`.
 function eform(glmout::StatsModels.TableRegressionModel)
 
     # family and link function
+    cox = false
     if isa(glmout.model,GeneralizedLinearModel)
         distrib = glmout.model.rr.d
         linkfun = GLM.Link(glmout.model.rr)
@@ -343,7 +344,7 @@ function eform(glmout::StatsModels.TableRegressionModel)
 	coeftable2 = coeftable(glmout)
 
 	# 95% CI
-	if cox
+	if cox # need to allocate memory for confidence intervals
         cv = 1.9599639845400576 # quantile(Normal(),0.975)
         push!(coeftable2.cols, exp.(coeftable2.cols[1] .- cv .* coeftable2.cols[2])) # 95% CI Lower Bound
         push!(coeftable2.cols, exp.(coeftable2.cols[1] .+ cv .* coeftable2.cols[2])) # 95% CI Upper Bound
