@@ -350,7 +350,7 @@ function eform(glmout::StatsModels.TableRegressionModel)
 
 	# 95% CI
 	if cox
-        cv = quantile(Normal(0,1),0.975)
+        cv = quantile(Normal(),0.975)
         push!(coeftable2.cols, exp.(coeftable2.cols[1] .- cv .* coeftable2.cols[2])) # 95% CI Lower Bound
         push!(coeftable2.cols, exp.(coeftable2.cols[1] .+ cv .* coeftable2.cols[2])) # 95% CI Upper Bound
     else
