@@ -353,7 +353,7 @@ function eform(glmout::StatsModels.TableRegressionModel)
         cv = quantile(Normal(0,1),0.975)
         push!(coeftable2.cols, exp.(coeftable2.cols[1] .- cv*coeftable2.cols[2]))
         push!(coeftable2.cols, exp.(coeftable2.cols[1] .+ cv*coeftable2.cols[2]))
-        coeftable2.cols[2] = coeftable2.cols[1] ./ coleftable2.cols[2]
+        coeftable2.cols[2] = coeftable2.cols[1] ./ coeftable2.cols[2]
     else
         coeftable2.cols[5] = exp.(coeftable2.cols[5])
         coeftable2.cols[6] = exp.(coeftable2.cols[6])
