@@ -30,12 +30,6 @@ function rocdata(scores, labels)
 
     for (i, threshold) in enumerate(thresholds)
         mask = scores .>= threshold
-        # predicted_positive = labels[mask]
-        # predicted_negative = labels[.!mask]
-        # TP[i] = sum(predicted_positive)
-        # TN[i] = sum(.!predicted_negative)
-        # FP[i] = length(predicted_positive) - TP[i]
-        # FN[i] = length(predicted_negative) - TN[i]
         (TP[i], FP[i]) = sumnn(labels[mask])
         (TN[i], FN[i]) = sumnn(labels[.!mask])
         FPR[i] = FP[i] / (FP[i] + TN[i])
@@ -45,9 +39,13 @@ function rocdata(scores, labels)
 end
 
 auc(scores, labels) = ROC.AUC(rocdata(scores,labels))
-function auc(rr::ROCData)
+function auc(rr::ROCData; rocplot = false)
     println("Number of observations = ", rr.P + rr.N)
     println("Area under ROC curve   = ", AUC(rr))
+    if rocplot
+        plt = plot(rr)
+        return plt
+    end
 end
 
 import Plots.plot
@@ -57,3 +55,6 @@ function plot(rocdata::ROCData)
     return plt
 end
 
+function rocplot(glmout)
+    return plot(Stella.rocdata(predict(glmout), response(glmout)))
+end
