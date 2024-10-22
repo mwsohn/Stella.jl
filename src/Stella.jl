@@ -9,7 +9,7 @@ module Stella
 using DataFrames, DataAPI, Distributions, StatsBase, StatsAPI, GLM, Survival, NamedArrays, HypothesisTests,
         DataStructures, FreqTables, ReadStat, LinearAlgebra, Printf, 
         Glob, Dates, Arrow, CategoricalArrays, PooledArrays, PrettyTables, JLD2, TableMetadataTools, 
-        Reexport, ROC, Plots
+        Reexport, ROCAnalysis, Plots
 
 
 ##############################################################################
@@ -69,7 +69,10 @@ export  read_stata,  # read stata 13 and 14 files into DF
         values!,
         labels!,
         labels2,
-        rocdata, auc
+        rocinput,    # creates target and nontarget vectors from logistic regression output suitable for input to ROCAnalysis.roc
+        auc,         # outputs AUC value and optionally plot the ROC curves using Plots.jl
+        rocplot,     # produces ROC curve plot using Plots.jl
+        roccomp      # compares two ROC Curves from two logistic regressions using ROCAnalysis.delong_test
 
 abstract type Link end
 abstract type Formula end
@@ -88,6 +91,6 @@ include("t-test.jl")
 include("anova.jl")
 #include("show.jl")
 include("other.jl")
-include("rocdata.jl")
+include("rocfuns.jl")
 
 end
