@@ -22,7 +22,7 @@ export  read_stata,  # read stata 13 and 14 files into DF
         read_stata!, # read stata 13 and 14 files into DF
         dfcompress, # compress DF
         acompress,  # compress a Vector
-        desc,        # list variables with Stata labels and value labels
+        descr,        # list variables with Stata labels and value labels
         ci,          # produce column index from column names
         nmissing,    # returns the number of missing values in an AbstractArray
         lift,        # converts missing values to false in a Boolean array
