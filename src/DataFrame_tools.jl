@@ -657,7 +657,7 @@ It mimics Stata's `describe` command.
 """
 function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = true, max_varlen = 12, max_descr = 40)
 
-    cutlen(str, len) = (length(str) > len ? string(str[1:len - 6],"~", str[len - 4:end]) : str)
+    cutlen(str, len) = (length(str) > len ? string(str[1:len - 6],"~", str[len - 3:end]) : str)
 
     # get variable names
     varnames = propertynames(df)
