@@ -650,12 +650,14 @@ function eltype2(df::DataFrame,v::Symbol)
 end
 
 """
-    desc(df::DataFrame,varnames::Symbol...; nmiss::Bool = false)
+    descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false)
 
 Displays variables in a dataframe much like `showcols`. It can display variable labels and value labels.
 It mimics Stata's `describe` command. 
 """
-function desc(df::DataFrame,varnames::Symbol...; nmiss::Bool = true)
+function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = true, max_varlen = 12, max_descr = 40)
+
+    cutlen(str, len) = (length(str) > len ? string(str[1:len - 3],"..."))
 
     # get variable names
     varnames = propertynames(df)
@@ -664,13 +666,13 @@ function desc(df::DataFrame,varnames::Symbol...; nmiss::Bool = true)
     end
 
     # output dataframe
-    dfv = DataFrame(Variable = varnames)
+    dfv = DataFrame(Variable = cutlen.(varnames, max_varlen))
     dfv[!,:Eltype] = Vector{String}(undef,size(dfv,1))
     if nmiss
     	dfv[!,:Missing] = Vector{String}(undef,size(dfv,1))
     end
 
-    dfv[!,:Description] = labels(df)
+    dfv[!,:Description] = cutlen.(labels(df),max_descr)
 
     for (i,v) in enumerate(varnames)
 
