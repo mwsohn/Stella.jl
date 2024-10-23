@@ -666,7 +666,7 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = true, max_varlen
     end
 
     # output dataframe
-    dfv = DataFrame(Variable = cutlen.(varnames, max_varlen))
+    dfv = DataFrame(Variable = cutlen.(string.(varnames), max_varlen))
     dfv[!,:Eltype] = Vector{String}(undef,size(dfv,1))
     if nmiss
     	dfv[!,:Missing] = Vector{String}(undef,size(dfv,1))
