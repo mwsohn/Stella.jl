@@ -487,7 +487,7 @@ function _read_dta(io, release, rlen, len, nvar,varlist,varlabels,typelist,fmtli
 
         # variable label
         if haskey(varlabels,varlist[j])
-            labels!(df,varlist[j],varlabels[varlist[j]])
+            TableMetadataTools.label!(df,varlist[j],varlabels[varlist[j]])
         end
 
         # for vectors without missing values, convert the vector to an appropirate type
