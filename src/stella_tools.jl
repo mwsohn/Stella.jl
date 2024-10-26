@@ -533,7 +533,7 @@ function pwcorr(indf::DataFrame, args::Vector{Symbol}; decimals=4, html=false)
 	    vlines = [1])
     end
 end
-pwcorr(a::DataFrame, args::Symbol...; decimals = 4) = pwcorr2(a, [args...]; decimals = decimals)
+pwcorr(a::DataFrame, args::Symbol...; decimals = 4) = pwcorr(a, [args...]; decimals = decimals)
 
 # robust stadard errors and confidence intervals
 """
