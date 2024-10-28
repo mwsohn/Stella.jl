@@ -876,7 +876,7 @@ end
 Extracts predicted values from a GLM regression model and attaches it to original DataFrame as `varname`.
 """
 function predict!(regmodel, df::AbstractDataFrame, varname::Symbol)
-    df[!,varname] = Vector{Float64}(missing,size(df,1))
+    df[!,varname] = Vector{Float64}(undef,size(df,1))
     ba = completecases(df[:,collect(propertynames(regmodel.mf.data))])
     df[ba, varname] .= predict(regmodel) 
 end
