@@ -136,7 +136,7 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
             pval < 0.0001 ? "< 0.0001" : string("= ",round(pval,sigdigits = 6)))
     end
 
-    if size(testarray) == (2, 2) # 2x2 array
+    if size(testarray) == (2, 2) && all(x -> x > 0, testarray) # 2x2 array
         println("Fisher's exact test = ", @sprintf("%.4f",
             pvalue(HypothesisTests.FisherExactTest((testarray')...))))
     end
