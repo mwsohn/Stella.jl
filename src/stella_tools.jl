@@ -84,7 +84,7 @@ function univ(v::AbstractVector; table=true)
     if length(v2) < 2
         error("Input vector has fewer than 2 non-missing values.")
     end
-    
+
     S = smallest(v2)
     L = largest(v2)
 
@@ -868,4 +868,14 @@ converts SAS or stata date values to Julia Dates values.
 """
 function juliadate(sasdt::AbstractArray)
     return Dates.Date.(Dates.UTD.(convert.(Int64,sasdt) .+ Dates.value(Date(1959,12,31))))
+end
+
+"""
+    predict!(regmodel, df, varname)
+
+Extracts predicted values from a GLM regression model and attaches it to original DataFrame as `varname`.
+"""
+function predict!(regmodel, df::AbstractDataFrame, varname::Symbol)
+    ba = completecases(df[:,collect(propertynames(regmodel.mf.data))])
+    df[ba, varname] .= predict(regmodel) 
 end
