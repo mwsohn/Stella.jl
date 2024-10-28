@@ -870,13 +870,3 @@ function juliadate(sasdt::AbstractArray)
     return Dates.Date.(Dates.UTD.(convert.(Int64,sasdt) .+ Dates.value(Date(1959,12,31))))
 end
 
-"""
-    predict!(regmodel, df, varname)
-
-Extracts predicted values from a GLM regression model and attaches it to original DataFrame as `varname`.
-"""
-function predict!(regmodel, df::AbstractDataFrame, varname::Symbol)
-    df[!,varname] = Vector{Union{Float64,Missing}}(missing,size(df,1))
-    ba = completecases(df[:,collect(propertynames(regmodel.mf.data))])
-    df[ba, varname] .= predict(regmodel) 
-end
