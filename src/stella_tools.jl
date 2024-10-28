@@ -80,7 +80,11 @@ Computed statistics include `N Total` (number of rows in the input DataArray),
 """
 function univ(v::AbstractVector; table=true)
 
-    v2 = convert(Vector{Float64},v[.!ismissing.(v)])
+    v2 = collect(skipmissing(v)) # convert(Vector{Float64},v[.!ismissing.(v)])
+    if length(v2) < 2
+        error("Input vector has fewer than 2 non-missing values.")
+    end
+    
     S = smallest(v2)
     L = largest(v2)
 
