@@ -145,7 +145,6 @@ end
 function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, decimals=4)
     ba = completecases(indf[!,[var1,var2,sumvar]])
     na = freqtable(indf[ba,:], var1, var2)
-    # (nrow,ncol) = size(na.array)
 
     # margin stats
     gdf = groupby(indf[ba, :], var1)
@@ -192,7 +191,7 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, decima
     cm = reshape(cm,(3,ncol + 1))
 
     # combine cell summary stats with column margin stats
-    d = vcat(e,cm)
+    e = vcat(e,cm)
 
     # output
     pretty_table(e,
@@ -202,7 +201,7 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, decima
         crop=:none,
         max_num_of_rows=maxrows,
         max_num_of_columns=maxcols,
-        hlines=vcat([0, 1], [x * 3 + 1 for x in 1:(nrow+1)]),
+        hlines=vcat([0, 1], [x * 3 + 1 for x in 1:(nrows + 1)]),
         vlines=[1])
 
 end
