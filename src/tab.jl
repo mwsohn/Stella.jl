@@ -145,32 +145,41 @@ end
 function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, decimals=4)
     ba = completecases(indf[!,[var1,var2,sumvar]])
     na = freqtable(indf[ba,:], var1, var2)
-    (nrow,ncol) = size(na.array)
+    # (nrow,ncol) = size(na.array)
 
-    # marginal stats
+    # margin stats
     gdf = groupby(indf[ba, :], var1)
     var1df = combine(gdf, sumvar => length => :n, sumvar => mean => :mean, sumvar => std => :sd)
+    nrows = size(var1df,1)
 
     gdf = groupby(indf[ba, :], var2)
     var2df = combine(gdf, sumvar => length => :n, sumvar => mean => :mean, sumvar => std => :sd)
+    ncols = size(var2df,1)
 
     # cell stats
     gdf = groupby(indf[ba,:],[var1,var2])
     outdf = combine(gdf, sumvar => length => :n, sumvar => mean => :mean, sumvar => std => :sd)
 
     # value labels and "Total"
-    rownames = vcat(names(na)[1], "Total")
+    rownames = vcat(collect(skipmissing(names(na)[1])), "Total")
     rownames2 = vcat([[x, " ", " "] for x in rownames]...)
 
     # colunm names
-    colnames = vcat(names(na)[2], "Total")
+    colnames = vcat(collect(skipmissing(names(na)[2])), "Total")
 
     # combine stats
     d = Any[outdf.mean outdf.sd outdf.n]'
-    d = vcat(d[1:3,1:ncol], d[1:3,ncol+1:ncol*nrow])
+    for i = 1:nrows
+        idx = (i - 1) * ncols + 1
+        if i == 1
+            e = d[1:3, 1:ncols]
+        else
+            e = vcat(e, d[1:3, idx:idx+ncols-1])
+        end
+    end
 
     # row margins
-    d = hcat(d, Any[var1df.mean var1df.sd var1df.n]'[:])
+    e = hcat(e, Any[var1df.mean var1df.sd var1df.n]'[:])
 
     # column margins
     cm = Any[var2df.mean var2df.sd var2df.n]'[:]
@@ -183,10 +192,10 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, decima
     cm = reshape(cm,(3,ncol + 1))
 
     # combine cell summary stats with column margin stats
-    d = vcat(d,cm)
+    d = vcat(e,cm)
 
     # output
-    pretty_table(d,
+    pretty_table(e,
         row_labels=rownames2,
         row_label_column_title=string(na.dimnames[1], " / ", na.dimnames[2]),
         header=colnames,
