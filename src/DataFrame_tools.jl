@@ -223,11 +223,11 @@ end
 
 function getmaxwidth(s::AbstractArray)
     if isa(s, CategoricalArray) && nonmissingtype(eltype(s)) <: CategoricalString
-	return maximum(length.(s.pool.levels))
+	    return maximum(length.(s.pool.levels))
     end
 	
     if nmissing(s) == size(s,1)
-	return 0
+	    return 0
     end
 	
     return  maximum(length.(collect(skipmissing(s))))
