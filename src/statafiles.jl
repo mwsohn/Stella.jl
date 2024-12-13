@@ -552,7 +552,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
 
     # -----------------------------------------------------
     # variable types
-    typelist = get_types(outdf)
+    typelist = get_types(df)
     m[3] = Int64(position(outdta))
     write(outdta,"<variable_types>")
     write(outdta,UInt16.(typelist))
