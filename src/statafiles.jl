@@ -663,6 +663,7 @@ function write_chunks(outdf,datatypes, typelist)
                 if ismissing(v)
                     write(iobuf, repeat('\0', typelist[i]))
                 else
+                    println(typelist[i]," ", v)
                     write(iobuf, string(v, repeat('\0', typelist[i] - length(v))))
                 end
             elseif datatypes[i] == Date
