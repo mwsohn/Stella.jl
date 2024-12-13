@@ -666,7 +666,7 @@ function write_chunks(outdf, datatypes, typelist)
                     write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
                 end
             elseif datatypes[i] == String
-                write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - length(v))))
+                write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - length(codeunits(v)))))
             elseif datatypes[i] == Date
                 write(iobuf, Int32(ismissing(v) ? missingval[typelist[i]] : Dates.value(v - Date(1960,1,1))))
             elseif datatypes[i] == DateTime
@@ -737,7 +737,7 @@ function get_varnames(outdta,len)
 
     varstring = String[]
     for v in names(outdta)
-        vlen = length(v)
+        vlen = length(codeunits(v))
         if vlen < len - 1
             push!(varstring, string(v,repeat('\0',len - vlen)))
         else
@@ -753,7 +753,7 @@ function get_formats(outdf,typelist,len)
     for i in 1:ncol(outdf)
         if typelist[i] < 2045
             fmt = string("%-",typelist[i],"s")
-            push!(fvec,string(fmt, repeat('\0',len - length(fmt))))
+            push!(fvec,string(fmt, repeat('\0',len - length(codeunits(fmt)))))
         elseif typelist[i] == 65528 && nonmissingtype(eltype(outdf[:,i])) == Date
             push!(fvec,string("%tdNN-DD-CCYY",repeat('\0',len - 13)))
         elseif typelist[i] in (65528,65529,65530)
