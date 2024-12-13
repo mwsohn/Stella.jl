@@ -714,7 +714,7 @@ function get_types(outdf)
             if haskey(vtype,typ)
                 tlist[i] = vtype[typ]
             elseif typ == Int64
-                if maximum(outdf[:,v]) <= 2_147_483_620 && minimum(outdf[:,v]) >= −2_147_483_647
+                if maximum(skipmissing(outdf[:,v])) <= 2_147_483_620 && minimum(skipmissing(outdf[:,v])) >= −2_147_483_647
                     tlist[i] = vtype[Int32]
                 else
                     error("A column of eltype Int64 cannot be mapped to a Stata datatype.")
