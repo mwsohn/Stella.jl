@@ -24,6 +24,7 @@ using DataFrames, DataAPI, Distributions, StatsBase, StatsAPI, GLM, Survival,
 
 export  read_stata,  # read stata 13 and 14 files into DF
         read_stata!, # read stata 13 and 14 files into DF
+        write_stata, # Convert Julia DataFrame to Stata DTA file
         dfcompress, # compress DF
         acompress,  # compress a Vector
         descr,        # list variables with Stata labels and value labels
@@ -91,5 +92,6 @@ include("t-test.jl")
 include("anova.jl")
 #include("show.jl")
 include("other.jl")
+include("statafiles.jl")
 
 end
