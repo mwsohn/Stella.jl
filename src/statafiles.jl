@@ -507,8 +507,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     outdta = open(fn,"w")
 
     # excluded variables
-    exclude = [ in(x, [Bool, Int8, Int16, Int32, Int64, Float32, Float64, String, Date, DateTime]) ? 0 : 1 for x in dtypes(outdf)]
-    df = outdf[:,findall(x->x == 1, exclude)]
+    df = outdf[:,findall(x->x == 1, [ in(x, [Bool, Int8, Int16, Int32, Int64, Float32, Float64, String, Date, DateTime]) ? 1 : 0 for x in dtypes(outdf)])]
 
     # data types
     datatypes = dtypes(df)
