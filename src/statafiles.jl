@@ -757,13 +757,13 @@ function get_formats(outdf,typelist,len)
         if typelist[i] < 2045
             fmt = string("%-",typelist[i],"s")
             push!(fvec,string(fmt, repeat('\0',len - length(fmt))))
-        elseif typelist[i] == 65529 && nonmissingtype(eltype(outdf[:,i])) == Date
+        elseif typelist[i] == 65528 && nonmissingtype(eltype(outdf[:,i])) == Date
             push!(fvec,string("%tdNN-DD-CCYY",repeat('\0',len - 13)))
         elseif typelist[i] in (65528,65529,65530)
             push!(fvec,string("%8.0g",repeat('\0',len - 5)))
         elseif typelist[i] == 65527 # float
             push!(fvec,string("%6.2f",repeat('\0',len - 5)))
-        elseif typelist[i] == 65528
+        elseif typelist[i] == 65526
             if nonmissingtype(eltype(outdf[:,i])) == DateTime
                 push!(fvec,string("%tc",repeat('\0',len - 3)))
             else
@@ -771,7 +771,6 @@ function get_formats(outdf,typelist,len)
             end
         end
         varnames = names(outdf)
-        println(varnames[i],"\t\t", fvec[end])
     end    
 
     return join(fvec,"")
