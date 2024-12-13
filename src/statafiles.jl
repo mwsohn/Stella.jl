@@ -502,10 +502,11 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
 
     # excluded variables
     notallowed = [ in(x, [Bool, Int8, Int16, Int32, Int64, Float32, Float64, String, Date, DateTime]) ? false : true for x in dtypes(outdf)]
-    allmiss = [ sum(ismissing.(x)) == size(outdf,1) ? true : false for x in eachcol(outdf)]
+    # allmiss = [ sum(ismissing.(x)) == size(outdf,1) ? true : false for x in eachcol(outdf)]
 
     # subset
-    df = outdf[:,findall(x->x == true, [ notallowed[x] || allmiss[x] ? false : true for x in 1:ncol(outdf)])]
+    # df = outdf[:,findall(x->x == true, [ notallowed[x] || allmiss[x] ? false : true for x in 1:ncol(outdf)])]
+    df = outdf[:,findall(x->x == true, [ notallowed[x] ? false : true for x in 1:ncol(outdf)])]
 
     # report exclusions
     if verbose
@@ -513,10 +514,10 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
         for (i, v) in enumerate(names(outdf))
             notallowed[i] && println(@sprintf("%-30s\t%-20s",v,nonmissingtype(eltype(outdf[:,v]))))
         end
-        println("\n\nThese variables will be excluded variables because they are empty (100% missing).\n")
-        for (i, v) in enumerate(names(outdf))
-            allmiss[i] && println(@sprintf("%-30s\t%-20s",v,nonmissingtype(eltype(outdf[:,v]))))
-        end
+        # println("\n\nThese variables will be excluded variables because they are empty (100% missing).\n")
+        # for (i, v) in enumerate(names(outdf))
+        #     allmiss[i] && println(@sprintf("%-30s\t%-20s",v,nonmissingtype(eltype(outdf[:,v]))))
+        # end
     end
 
     # data types
@@ -784,10 +785,11 @@ function get_label_names(outdf,len)
     return join(lvec,"")
 end
 
-function get_variable_labels(outdf, len_varlabel)
+function get_variable_labels(outdf, len)
     lbls = labels(outdf)
     for i in 1:length(lbls)
-        lbls[i] = string(lbls[i], repeat('\0', len_varlabel - length(lbls[i])))
+        lbls[i] = string(lbls[i], repeat('\0', len - length(lbls[i])))
+        println("||",lbls[i],"||")
     end
     return join(lbls,"")
 end
