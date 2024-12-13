@@ -676,7 +676,7 @@ function dtypes(outdf)
             typ = nonmissingtype(eltype(levels(outdf[:,v])))
             if typ == String
                 push!(t, Int32)
-            else # String
+            else
                 push!(t, typ)
             end
         else
@@ -723,7 +723,7 @@ function get_types(outdf)
                     tlist[i] = vtype[Float64]
                 end
             elseif typ == String
-                maxlen = maximum(length.(outdf[!,v]))
+                maxlen = Stella.getmaxwidth(outdf[!,v])
                 if maxlen < 2045
                     tlist[i] = maxlen
                 else
