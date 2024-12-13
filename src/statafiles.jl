@@ -505,7 +505,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     allmiss = [ sum(ismissing.(x)) == size(outdf,1) ? true : false for x in eachcol(outdf)]
 
     # subset
-    df = outdf[:,findall(x->x == true, [ notallowed[x] || allmiss[x] ? true : false for x in 1:ncol(outdf)])]
+    df = outdf[:,findall(x->x == true, [ notallowed[x] || allmiss[x] ? false : true for x in 1:ncol(outdf)])]
 
     # report exclusions
     if verbose
