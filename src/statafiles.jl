@@ -36,7 +36,7 @@ function read_stata(fn::String; chunks::Int=10)
     # byte order: LSF or MSF
     byteorder = header[53:55]
     if byteorder == "MSF"
-        error("Big-endian data are not supported yet.")
+        error("Big-endian data are not supported.")
     end
 
     # number of variables
@@ -235,11 +235,6 @@ function read_stata(fn::String; chunks::Int=10)
         end
     end
 
-    # end the program here after returning Label dictionary if read_labels is set to `true`
-    # if read_labels
-    # 	return Label(dslabel, variable_dict,value_labels,lblname_dict)
-    # end
-
     # read data now
     seek(fh, data_pos)
 
@@ -407,17 +402,17 @@ function get_numbytes(typelist, nvar)
         if 0 < typelist[i] < 2045
             nb[i] = typelist[i]
         elseif typelist[i] == 32768
-            nb[i] = 8 # 8 bytes
+            nb[i] = 8
         elseif typelist[i] == 65526
-            nb[i] = 8 # double
+            nb[i] = 8
         elseif typelist[i] == 65527
-            nb[i] = 4 # float
+            nb[i] = 4
         elseif typelist[i] == 65528
-            nb[i] = 4 # long
+            nb[i] = 4
         elseif typelist[i] == 65529
-            nb[i] = 2 # int
+            nb[i] = 2
         elseif typelist[i] == 65530
-            nb[i] = 1 # byte
+            nb[i] = 1
         end
     end
     return nb
@@ -431,7 +426,6 @@ end
 
 function alloc_array(vtype, vfmt, nobs::Int64)
 
-    # create an Array for the relevant type
     if 0 <= vtype < 2045 || vtype == 32768 # string variable
         return Vector{Union{Missing,String}}(missing, nobs)
     elseif vtype == 65526
@@ -608,11 +602,8 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     # [ write(outdta,combine_row(x, typelist, rlen) for x in eachrow(outdf))]
     rows = nrow(df)
     chunks = ceil(Int32, rlen * rows / maxbuffer)
-    if chunks == 1
-        nobschunk = rows
-    else
-        nobschunk = ceil(Int32, rows / (chunks - 1))
-    end
+    nobschunk = chunks == 1 ? nobschunk = rows : ceil(Int32, rows / (chunks - 1))
+
     for i = 1:chunks
         from = 1 + (i-1)*nobschunk
         to = min(from + nobschunk - 1, rows)
@@ -647,7 +638,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
 
 end
 
-function write_chunks(outdf,datatypes, typelist)
+function write_chunks(outdf, datatypes, typelist)
     iobuf = IOBuffer()
     for dfrow in eachrow(outdf)
         for (i,v) in enumerate(dfrow)
@@ -660,11 +651,7 @@ function write_chunks(outdf,datatypes, typelist)
                     write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
                 end
             elseif datatypes[i] == String
-                if ismissing(v)
-                    write(iobuf, repeat('\0', typelist[i]))
-                else
-                    write(iobuf, string(v, repeat('\0', typelist[i] - length(v))))
-                end
+                write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - length(v))))
             elseif datatypes[i] == Date
                 write(iobuf, Int32(ismissing(v) ? missingval[typelist[i]] : Dates.value(v - Date(1960,1,1))))
             elseif datatypes[i] == DateTime
@@ -694,16 +681,16 @@ function dtypes(outdf)
     return t
 end
 
-function combine_row(a, types)
-    v = collect(a)
-    for i in 1:length(v)
-        if types[i] < 2045
-            v[i] = string(v[i],repeat('\0', types[i] - length(v[i])))
-        end
-    end
+# function combine_row(a, types)
+#     v = collect(a)
+#     for i in 1:length(v)
+#         if types[i] < 2045
+#             v[i] = string(v[i],repeat('\0', types[i] - length(v[i])))
+#         end
+#     end
 
-    return v    
-end
+#     return v    
+# end
 
 function get_types(outdf)
     varnames = propertynames(outdf)
@@ -768,7 +755,7 @@ function get_formats(outdf,typelist,len)
             push!(fvec,string(fmt, repeat('\0',len - length(fmt))))
         elseif typelist[i] == 65529 && nonmissingtype(eltype(outdf[:,i])) == Date
             push!(fvec,string("%tdNN-DD-CCYY",repeat('\0',len - 13)))
-        elseif typelist[i] in (65528,65529,65530) # integers
+        elseif typelist[i] in (65528,65529,65530)
             push!(fvec,string("%8.0g",repeat('\0',len - 5)))
         elseif typelist[i] == 65527 # float
             push!(fvec,string("%6.2f",repeat('\0',len - 5)))
