@@ -785,9 +785,9 @@ function get_label_names(outdf,len)
 end
 
 function get_variable_labels(outdf, len)
-    lbls = strip.(labels(outdf))
+    lbls = labels(outdf)
     for i in 1:length(lbls)
-        lbls[i] = string(lbls[i], repeat('\0', len - codeunits(lbls[i])))
+        lbls[i] = string(lbls[i], repeat('\0', len - length(codeunits(lbls[i]))))
     end
     return join(lbls,"")
 end
