@@ -487,6 +487,7 @@ missingval = Dict(
 )
 
 vtype = Dict(
+    Bool => 65530,
     Int8 => 65530,
     Int16 => 65529,
     Int32 => 65528,
@@ -509,8 +510,8 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     datatypes = dtypes(outdf)
 
     # excluded variables
-    exclude = exclude = [ in(x, [Int8, Int8, Int32, Int64, Float32, Float64, String, Date, DateTime]) ? 0 : 1 for x in dtypes(outdf)]
-    df = outdf[:,exclude]
+    exclude = exclude = [ in(x, [Bool, Int8, Int16, Int32, Int64, Float32, Float64, String, Date, DateTime]) ? 0 : 1 for x in dtypes(outdf)]
+    df = outdf[:,findall(x->x == 1, exclude)]
 
     # cols and rows
     (rows, cols) = size(df)
