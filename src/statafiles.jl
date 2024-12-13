@@ -561,31 +561,31 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     # variable names
     m[4] = Int64(position(outdta))
     write(outdta,"<varnames>")
-    write(outdta, get_varnames(outdf,len_varname))
+    write(outdta, get_varnames(df,len_varname))
     write(outdta,"</varnames>")
 
     # sortlist
     m[5] = Int64(position(outdta))
     write(outdta,"<sortlist>")
-    write(outdta,zeros(Int16,size(outdf,2)+1))
+    write(outdta,zeros(Int16,size(df,2)+1))
     write(outdta,"</sortlist>")
 
     # formats - no formats for now
     m[6] = Int64(position(outdta))
     write(outdta,"<formats>")
-    write(outdta,get_formats(outdf,typelist,len_format))
+    write(outdta,get_formats(df,typelist,len_format))
     write(outdta,"</formats>")
 
     # value label names
     m[7] = Int64(position(outdta))
     write(outdta,"<value_label_names>")
-    write(outdta,get_label_names(outdf,len_labelname))
+    write(outdta,get_label_names(df,len_labelname))
     write(outdta,"</value_label_names>")
 
     # variable labels
     m[8] = Int64(position(outdta))
     write(outdta,"<variable_labels>")
-    write(outdta,get_variable_labels(outdf,len_varlabel))
+    write(outdta,get_variable_labels(df,len_varlabel))
     write(outdta,"</variable_labels>")
 
     # characteristics - nothing to output
@@ -663,7 +663,6 @@ function write_chunks(outdf,datatypes, typelist)
                 if ismissing(v)
                     write(iobuf, repeat('\0', typelist[i]))
                 else
-                    println(typelist[i]," ", v)
                     write(iobuf, string(v, repeat('\0', typelist[i] - length(v))))
                 end
             elseif datatypes[i] == Date
