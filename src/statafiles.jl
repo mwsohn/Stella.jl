@@ -501,7 +501,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     outdta = open(fn,"w")
 
     # excluded variables
-    notallowed = [ in(x, [Bool, Int8, Int16, Int32, Int64, Float32, Float64, String, Date, DateTime]) ? true : false for x in dtypes(outdf)]
+    notallowed = [ in(x, [Bool, Int8, Int16, Int32, Int64, Float32, Float64, String, Date, DateTime]) ? false : true for x in dtypes(outdf)]
     allmiss = [ sum(ismissing.(x)) == size(outdf,1) ? true : false for x in eachcol(outdf)]
 
     # subset
