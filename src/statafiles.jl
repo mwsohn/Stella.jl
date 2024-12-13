@@ -505,8 +505,15 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
 
     outdta = open(fn,"w")
 
+    # data types
+    datatypes = dtypes(outdf)
+
+    # excluded variables
+    exclude = exclude = [ in(x, [Int8, Int8, Int32, Int64, Float32, Float64, String, Date, DateTime]) ? 0 : 1 for x in dtypes(outdf)]
+    df = outdf[:,exclude]
+
     # cols and rows
-    (rows, cols) = size(outdf)
+    (rows, cols) = size(df)
 
     # -----------------------------------------------------
     # release 118 format parameters
@@ -514,9 +521,6 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     len_format = 57
     len_labelname = 129
     len_varlabel = 321
-
-    # data types
-    datatypes = dtypes(outdf)
 
     # header
     write(outdta,"<stata_dta><header><release>118</release><byteorder>LSF</byteorder><K>")
@@ -589,7 +593,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     write(outdta,"<characteristics></characteristics>")
 
     # number of bytes for each variable
-    numbytes = Stella.get_numbytes(typelist,size(outdf,2))
+    numbytes = Stella.get_numbytes(typelist,size(df,2))
 
     # total length of a row
     rlen = sum(numbytes)
@@ -602,7 +606,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     # --------------------------------------------------------=
     # combine each row into one iobuffer and write
     # [ write(outdta,combine_row(x, typelist, rlen) for x in eachrow(outdf))]
-    rows = nrow(outdf)
+    rows = nrow(df)
     chunks = ceil(Int32, rlen * rows / maxbuffer)
     if chunks == 1
         nobschunk = rows
@@ -612,7 +616,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     for i = 1:chunks
         from = 1 + (i-1)*nobschunk
         to = min(from + nobschunk - 1, rows)
-        write(outdta,write_chunks(@view(outdf[from:to,:]), datatypes, typelist)) # write it in one chunk
+        write(outdta,write_chunks(@view(df[from:to,:]), datatypes, typelist)) # write it in one chunk
     end
     write(outdta,"</data>")
 
@@ -623,7 +627,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     # value labels
     m[12] = Int64(position(outdta))
     write(outdta,"<value_labels>")
-    write(outdta, get_value_labels(outdf))
+    write(outdta, get_value_labels(df))
     write(outdta,"</value_labels>")
 
     # at the end of stata_dta section
