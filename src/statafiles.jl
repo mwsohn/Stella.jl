@@ -494,7 +494,7 @@ vtype = Dict(
 function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000, verbose = false)
 
     # open the output dataset file
-    if fn[end-4:end] != ".dta"
+    if fn[end-3:end] != ".dta"
         fn = string(fn, ".dta")
     end
 
