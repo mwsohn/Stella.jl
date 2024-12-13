@@ -659,11 +659,11 @@ function write_chunks(outdf, datatypes, typelist)
         for (i,v) in enumerate(dfrow)
             if isa(outdf[:,i], CategoricalArray)
                 if nonmissingtype(eltype(levels(outdf[:,i]))) == String # output index
-                    write(iobuf, Int32(ismissing(v) ? missingval[typelist[i]] : outdf[:,i].pool.invindex[v]))
+                    write(iobuf, Int32(ismissing(v) ? missingval[typelist[i]] : outdf[:,i].pool.invindex[v])) # refs
                 elseif typelist[i] == 32768 # strLs
                     # not imolemented yet
                 else
-                    write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
+                    write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : string(unwrap(v), repeat('0', typelist[i] - length(codeunits(unwrap(v)))))))
                 end
             elseif datatypes[i] == String
                 write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - length(codeunits(v)))))
@@ -697,8 +697,6 @@ function dtypes(outdf)
 end
 
 function get_types(outdf)
-    varnames = propertynames(outdf)
-
     tlist = zeros(Int32,ncol(outdf))
     for i in 1:size(outdf,2)
         if isa(outdf[:,i], CategoricalArray)
@@ -804,10 +802,10 @@ function get_value_labels(outdf)
             val = Int32.(values(invindex))
             txt = ""
             for (i,vv) in enumerate(keys(invindex))
-                off[i] = length(txt)
+                off[i] = length(codeunits(txt))
                 txt = string(txt, vv, '\0')
             end
-            txtlen = length(txt)
+            txtlen = length(codeunits(txt))
             len = 8 + 8*n + txtlen
 
             # write the value label to the iobuffer
