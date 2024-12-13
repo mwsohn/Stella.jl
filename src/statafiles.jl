@@ -719,9 +719,7 @@ function get_types(outdf)
                 if length(tvec) > 0 && maximum(tvec) <= 2_147_483_620 && minimum(tvec) >= −2_147_483_647
                     tlist[i] = vtype[Int32]
                 else
-                    # error("A column of eltype Int64 cannot be mapped to a Stata datatype.")
-                    # convert to Float54
-                    tlist[i] = vtype[Float64]
+                    error("A column of eltype Int64 cannot be mapped to a Stata datatype.")
                 end
             elseif typ == String
                 maxlen = Stella.getmaxwidth(outdf[!,v])
