@@ -710,7 +710,7 @@ function get_types(outdf)
     varnames = propertynames(outdf)
 
     tlist = zeros(Int32,ncol(outdf))
-    for (i,v) in enumerate(varnames)
+    for i in 1:size(outdf,2)
         if isa(outdf[:,i], CategoricalArray)
             typ = nonmissingtype(eltype(levels(outdf[:,i])))
             if typ == String
@@ -719,18 +719,18 @@ function get_types(outdf)
                 tlist[i] = typ
             end
         else
-            typ = nonmissingtype(eltype(outdf[!,v]))
+            typ = nonmissingtype(eltype(outdf[:,i]))
             if haskey(vtype,typ)
                 tlist[i] = vtype[typ]
             elseif typ == Int64
-                tvec = collect(skipmissing(outdf[:,v]))
+                tvec = collect(skipmissing(outdf[:,i]))
                 if (length(tvec) > 0 && maximum(tvec) <= 2_147_483_620 && minimum(tvec) >= −2_147_483_647) || length(tvec) == 0
                     tlist[i] = vtype[Int32]
                 else
                     error("A column of eltype Int64 cannot be mapped to a Stata datatype.")
                 end
             elseif typ == String
-                maxlen = Stella.getmaxwidth(outdf[!,v])
+                maxlen = Stella.getmaxwidth(outdf[:,i])
                 if maxlen < 2045
                     tlist[i] = maxlen
                 else
