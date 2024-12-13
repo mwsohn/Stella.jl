@@ -749,10 +749,7 @@ end
 
 function get_formats(outdf,typelist,len)
 
-    # create format names for all CategoricalArrays
     fvec = String[]
-
-    # no format for now
     for i in 1:ncol(outdf)
         if typelist[i] < 2045
             fmt = string("%-",typelist[i],"s")
@@ -763,14 +760,11 @@ function get_formats(outdf,typelist,len)
             push!(fvec,string("%8.0g",repeat('\0',len - 5)))
         elseif typelist[i] == 65527 # float
             push!(fvec,string("%6.2f",repeat('\0',len - 5)))
-        elseif typelist[i] == 65526
-            if nonmissingtype(eltype(outdf[:,i])) == DateTime
+        elseif typelist[i] == 65526 && nonmissingtype(eltype(outdf[:,i])) == DateTime
                 push!(fvec,string("%tc",repeat('\0',len - 3)))
-            else
+        elseif typelist[i] == 65526
                 push!(fvec,string("%11.1f",repeat('\0',len - 6)))
-            end
         end
-        varnames = names(outdf)
     end    
 
     return join(fvec,"")
