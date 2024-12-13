@@ -662,6 +662,7 @@ function write_chunks(outdf,datatypes, typelist)
             elseif datatypes[i] == DateTime
                 write(iobuf, Float64(ismissing(v) ? missingval[typelist[i]] : Dates.value(v - DateTime(1960,1,1))))
             else
+                println(i, "  ", v, " ", datatypes[i])
                 write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
             end
         end
