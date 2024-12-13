@@ -491,7 +491,7 @@ vtype = Dict(
     DateTime => 65526
 )
 
-function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000)
+function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000, verbose = false)
 
     # open the output dataset file
     if fn[end-4:end] != ".dta"
@@ -501,7 +501,24 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     outdta = open(fn,"w")
 
     # excluded variables
-    df = outdf[:,findall(x->x == 1, [ in(x, [Bool, Int8, Int16, Int32, Int64, Float32, Float64, String, Date, DateTime]) ? 1 : 0 for x in dtypes(outdf)])]
+    notallowed = [ in(x, [Bool, Int8, Int16, Int32, Int64, Float32, Float64, String, Date, DateTime]) ? 1 : 0 for x in dtypes(outdf)]
+    allmiss = [ sum(ismissing.(x)) == size(outdf,1) ? 1 : 0 for x in eachcol(outdf)]
+    exclude = [ notallowed[i] || allmiss[i] ? 1 : 0 for i in 1:size(outdf,2)]
+
+    # subset
+    df = outdf[:,findall(x->x == 1, exclude)]
+
+    # report exclusions
+    if verbose
+        println("These variables will NOT be exported because of their data types:\n")
+        for (i, v) in enumerate(names(outdf))
+            notallowed[i] && println(@sprintf("%-30s\t%-20s",v,nonmissingtype(eltype(outdf[:,v]))))
+        end
+        println("\n\nThese variables will be excluded variables because they are empty (100% missing).\n")
+        for (i, v) in enumerate(names(outdf))
+            allmiss[i] && println(@sprintf("%-30s\t%-20s",v,nonmissingtype(eltype(outdf[:,v]))))
+        end
+    end
 
     # data types
     datatypes = dtypes(df)
@@ -598,8 +615,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     write(outdta,"<data>")
 
     # --------------------------------------------------------=
-    # combine each row into one iobuffer and write
-    # [ write(outdta,combine_row(x, typelist, rlen) for x in eachrow(outdf))]
+    # combine rows into one iobuffer and write
     rows = nrow(df)
     chunks = ceil(Int32, rlen * rows / maxbuffer)
     nobschunk = chunks == 1 ? nobschunk = rows : ceil(Int32, rows / (chunks - 1))
@@ -607,11 +623,11 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     for i = 1:chunks
         from = 1 + (i-1)*nobschunk
         to = min(from + nobschunk - 1, rows)
-        write(outdta,write_chunks(@view(df[from:to,:]), datatypes, typelist)) # write it in one chunk
+        write(outdta,write_chunks(@view(df[from:to,:]), datatypes, typelist))
     end
     write(outdta,"</data>")
 
-    # strL section - no strLs for now
+    # strL section - no strLs
     m[11] = Int64(position(outdta))
     write(outdta, "<strls></strls>")
 
@@ -680,17 +696,6 @@ function dtypes(outdf)
     end
     return t
 end
-
-# function combine_row(a, types)
-#     v = collect(a)
-#     for i in 1:length(v)
-#         if types[i] < 2045
-#             v[i] = string(v[i],repeat('\0', types[i] - length(v[i])))
-#         end
-#     end
-
-#     return v    
-# end
 
 function get_types(outdf)
     varnames = propertynames(outdf)
