@@ -577,7 +577,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     # sortlist
     m[5] = Int64(position(outdta))
     write(outdta,"<sortlist>")
-    write(outdta,zeros(Int16,size(df,2)+1))
+    write(outdta,zeros(Int16, cols+1))
     write(outdta,"</sortlist>")
 
     # formats - no formats for now
@@ -770,6 +770,8 @@ function get_formats(outdf,typelist,len)
                 push!(fvec,string("%11.1f",repeat('\0',len - 6)))
             end
         end
+        varnames = names(outdf)
+        println(varnames[i],"\t\t", fvec[end])
     end    
 
     return join(fvec,"")
