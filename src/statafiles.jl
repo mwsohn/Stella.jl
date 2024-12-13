@@ -661,7 +661,7 @@ function write_chunks(outdf,datatypes, typelist)
                 end
             elseif datatypes[i] == String
                 if ismissing(v)
-                    write(iobuf, repeat('\0', typelist[i])
+                    write(iobuf, repeat('\0', typelist[i]))
                 else
                     write(iobuf, string(v, repeat('\0', typelist[i] - length(v))))
                 end
