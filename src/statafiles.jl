@@ -714,7 +714,7 @@ function get_types(outdf)
             if haskey(vtype,typ)
                 tlist[i] = vtype[typ]
             elseif typ == Int64
-                tvec = collect(skipmissingt(outdf[:,v]))
+                tvec = collect(skipmissing(outdf[:,v]))
                 if length(tvec) > 0 && maximum(tvec) <= 2_147_483_620 && minimum(tvec) >= −2_147_483_647
                     tlist[i] = vtype[Int32]
                 else
