@@ -761,9 +761,9 @@ function get_formats(outdf,typelist,len)
         elseif typelist[i] == 65527 # float
             push!(fvec,string("%6.2f",repeat('\0',len - 5)))
         elseif typelist[i] == 65526 && nonmissingtype(eltype(outdf[:,i])) == DateTime
-                push!(fvec,string("%tc",repeat('\0',len - 3)))
+            push!(fvec,string("%tc",repeat('\0',len - 3)))
         elseif typelist[i] == 65526
-                push!(fvec,string("%11.1f",repeat('\0',len - 6)))
+            push!(fvec,string("%11.1f",repeat('\0',len - 6)))
         end
     end    
 
@@ -821,7 +821,6 @@ function get_value_labels(outdf)
             write(iobf,val)
             write(iobf,txt)
             write(iobf,"</lbl>")
-
         end
     end
 
