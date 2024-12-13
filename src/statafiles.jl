@@ -579,7 +579,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     # value label names
     m[7] = Int64(position(outdta))
     write(outdta,"<value_label_names>")
-    write(outdta,get_label_names(outdf,datatypes,len_labelname))
+    write(outdta,get_label_names(outdf,len_labelname))
     write(outdta,"</value_label_names>")
 
     # variable labels
@@ -666,7 +666,6 @@ function write_chunks(outdf,datatypes, typelist)
             elseif datatypes[i] == DateTime
                 write(iobuf, Float64(ismissing(v) ? missingval[typelist[i]] : Dates.value(v - DateTime(1960,1,1))))
             else
-                println(i, "  ", v, " ", datatypes[i])
                 write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
             end
         end
@@ -777,7 +776,7 @@ function get_formats(outdf,typelist,len)
     return join(fvec,"")
 end
 
-function get_label_names(outdf,datatypes,len)
+function get_label_names(outdf,len)
 
     lvec = String[]
     for i in 1:size(outdf,2)
