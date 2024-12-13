@@ -763,6 +763,8 @@ function get_formats(outdf,typelist,len)
             push!(fvec,string("%8.0g",repeat('\0',len - 5)))
         elseif typelist[i] == 65527 # float
             push!(fvec,string("%6.2f",repeat('\0',len - 5)))
+        elseif typelist[i] == 65528 && nonmissingtype(eltype(outdf[:,i])) == DateDate
+            push!(fvec,string("%tcdd uuu yyyy HH:MM:SS",repeat('\0',len - 23)))
         elseif typelist[i] == 65528 # double
             push!(fvec,string("%11.1f",repeat('\0',len - 5)))
         end
