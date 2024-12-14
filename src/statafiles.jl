@@ -668,9 +668,9 @@ function write_chunks(outdf, datatypes, typelist)
             elseif datatypes[i] == String
                 write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - length(codeunits(v)))))
             elseif datatypes[i] == Date
-                write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : Dates.value(v - Date(1960,1,1))))
+                write(iobuf, Int32(ismissing(v) ? missingval[typelist[i]] : Dates.value(v - Date(1960,1,1))))
             elseif datatypes[i] == DateTime
-                write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : Dates.value(v - DateTime(1960,1,1))))
+                write(iobuf, Float64(ismissing(v) ? missingval[typelist[i]] : Dates.value(v - DateTime(1960,1,1))))
             else
                 write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
             end
