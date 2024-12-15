@@ -688,7 +688,7 @@ end
 
 function dtypes(outdf)
     t = []
-    for (i,v) in enumerate(propertynames(outdf))
+    for v in propertynames(outdf)
         if isa(outdf[:,v], CategoricalArray)
             typ = eltype2(levels(outdf[:,v]))
             if typ == String
@@ -732,6 +732,9 @@ function get_types(outdf)
             if typ == String
                 tlist[i] = 65528 # Int32
                 numbytes[i] = maximum(sizeof.(levels(outdf[:,i])))
+            elseif typ == Bool
+                tlist[i] = 65530
+                numbytes[i] = 1
             else
                 tlist[i] = vtype[typ]
                 numbytes[i] = bytesize[tlist[i]]
@@ -741,6 +744,9 @@ function get_types(outdf)
             if haskey(vtype,typ)
                 tlist[i] = vtype[typ]
                 numbytes[i] = bytesize[tlist[i]]
+            elseif typ == Bool
+                tlist[i] = 65530
+                numbytes[i] = 1
             elseif typ == Int64
                 tvec = collect(skipmissing(outdf[:,i]))
                 if (length(tvec) > 0 && maximum(tvec) <= 2_147_483_620 && minimum(tvec) >= −2_147_483_647) || length(tvec) == 0
