@@ -657,7 +657,7 @@ function write_chunks(outdf, datatypes, typelist, rlen)
         loc = position(iobuf)
         for (i,v) in enumerate(dfrow)
             if isa(outdf[:,i], CategoricalArray)
-                if eltype2(levels(outdf[:,i])) == String # output index
+                if eltype2(levels(outdf[:,i])) == String
                     write(iobuf, Int32(ismissing(v) ? missingval[typelist[i]] : outdf[:,i].pool.invindex[v])) # refs
                 elseif typelist[i] == 32768 # strLs
                     # not imolemented yet
