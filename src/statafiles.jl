@@ -676,9 +676,7 @@ function write_chunks(outdf, datatypes, typelist, rlen)
                 write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
             end
         end
-        if position(iobuf) - loc == rlen
-            write(iobuf,vec)
-        else
+        if position(iobuf) - loc != rlen
             error("Data overrun on observation ",k, "; record length = ", rlen,"; current length = ", position(iobuf) - loc)
         end
 
