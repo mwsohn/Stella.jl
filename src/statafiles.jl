@@ -729,7 +729,7 @@ function get_types(outdf)
             typ = eltype2(levels(outdf[:,i]))
             if typ == String
                 tlist[i] = 65528 # Int32
-                numbytes[i] = maximu(sizeof.(levels(outdf[:,i])))
+                numbytes[i] = maximum(sizeof.(levels(outdf[:,i])))
             else
                 tlist[i] = vtype[typ]
                 numbytes[i] = bytesize[tlist[i]]
