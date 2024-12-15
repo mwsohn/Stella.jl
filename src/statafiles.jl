@@ -562,7 +562,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
 
     # -----------------------------------------------------
     # variable types
-    typelist = get_types(df)
+    (typelist, numbytes) = get_types(df)
     m[3] = Int64(position(outdta))
     write(outdta,"<variable_types>")
     write(outdta,UInt16.(typelist))
@@ -603,7 +603,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     write(outdta,"<characteristics></characteristics>")
 
     # total length of a row
-    rlen = sum(Stella.get_numbytes(typelist,size(df,2)))
+    rlen = sum(numbytes)
     
     # ---------------------------------------------------------
     # the rest of the map section data
@@ -703,7 +703,7 @@ end
 
 function getmaxbytes(s::AbstractArray)
     if isa(s, CategoricalArray) && eltype2(s) <: CategoricalString
-        return maximum(sizeof.(s.pool.levels))
+        return maximum(sizeof.(levels(s)))
     end
 
     if nmissing(s) == size(s, 1)
@@ -714,23 +714,36 @@ function getmaxbytes(s::AbstractArray)
 end
 
 function get_types(outdf)
+    bytesize = Dict(
+        65526 => 8,
+        65527 => 4,
+        65528 => 4,
+        65529 => 2,
+        65530 => 1,
+    )
+
     tlist = zeros(Int32,ncol(outdf))
+    numbytes = zeros(Int32,ncol(outdf))
     for i in 1:ncol(outdf)
         if isa(outdf[:,i], CategoricalArray)
             typ = eltype2(levels(outdf[:,i]))
             if typ == String
                 tlist[i] = 65528 # Int32
+                numbytes[i] = sizeof(levels(outdf[:,i]))
             else
-                tlist[i] = typ
+                tlist[i] = vtype[typ]
+                numbytes[i] = bytesize[tlist[i]]
             end
         else
             typ = eltype2(outdf[:,i])
             if haskey(vtype,typ)
                 tlist[i] = vtype[typ]
+                numbytes[i] = bytesize[tlist[i]]
             elseif typ == Int64
                 tvec = collect(skipmissing(outdf[:,i]))
                 if (length(tvec) > 0 && maximum(tvec) <= 2_147_483_620 && minimum(tvec) >= −2_147_483_647) || length(tvec) == 0
                     tlist[i] = vtype[Int32]
+                    numbytes[i] = bytesize[tlist[i]]
                 else
                     error("A column of eltype Int64 cannot be mapped to a Stata datatype.")
                 end
@@ -738,14 +751,16 @@ function get_types(outdf)
                 maxlen = Stella.getmaxbytes(outdf[:,i])
                 if maxlen < 2045
                     tlist[i] = maxlen
+                    numbytes[i] = tlist[i]
                 else
                     tlist[i] = 32768
+                    numbytes[i] = 4
                 end
             end
         end
     end
 
-    return tlist
+    return (tlist, numbytes)
 end
 
 function get_varnames(outdta,len)
