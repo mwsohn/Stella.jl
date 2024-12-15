@@ -533,7 +533,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     len_varlabel = 321
 
     # header
-    binvec = Vector{Unit8}()
+    binvec = Vector{UInt8}()
     append!(binvec,"<stata_dta><header><release>118</release><byteorder>LSF</byteorder><K>")
     append!(binvec,Int16(cols))
     append!(binvec,"</K><N>")
