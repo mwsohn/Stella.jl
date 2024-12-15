@@ -533,37 +533,24 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     len_varlabel = 321
 
     # header
-    binvec = Vector{UInt8}()
-    append!(binvec,"<stata_dta><header><release>118</release><byteorder>LSF</byteorder><K>")
-    append!(binvec,Int16(cols))
-    append!(binvec,"</K><N>")
-    append!(binvec,Int64(rows))
-    append!(binvec,"</N><label>")
-    append!(binvec,UInt16(0))
-    append!(binvec,"</label><timestamp>")
-    ts = Dates.format(now(), "dd uuu yyyy HH:MM")
-    append!(binvec,UInt8(length(ts)))
-    append!(binvec,string(ts,"</timestamp></header>"))
-    write(outdta,binvec)
+    write(outdta,"<stata_dta><header><release>118</release><byteorder>LSF</byteorder><K>")
 
-    # write(outdta,"<stata_dta><header><release>118</release><byteorder>LSF</byteorder><K>")
+    # number of variables
+    write(outdta,Int16(cols))
+    write(outdta,"</K><N>")
 
-    # # number of variables
-    # write(outdta,Int16(cols))
-    # write(outdta,"</K><N>")
+    # number of observations
+    write(outdta, Int64(rows))
+    write(outdta, "</N><label>")
 
-    # # number of observations
-    # write(outdta, Int64(rows))
-    # write(outdta, "</N><label>")
-
-    # # assume no data label
-    # write(outdta,UInt16(0))
-    # write(outdta,"</label><timestamp>")
+    # assume no data label
+    write(outdta,UInt16(0))
+    write(outdta,"</label><timestamp>")
     
-    # # timestamp
-    # ts = Dates.format(now(), "dd uuu yyyy HH:MM")
-    # write(outdta,UInt8(length(ts)))
-    # write(outdta,string(ts,"</timestamp></header>"))
+    # timestamp
+    ts = Dates.format(now(), "dd uuu yyyy HH:MM")
+    write(outdta,UInt8(length(ts)))
+    write(outdta,string(ts,"</timestamp></header>"))
 
     # -----------------------------------------------------
     # map
@@ -667,37 +654,32 @@ eltype2(a) = nonmissingtype(eltype(a))
 function write_chunks(outdf, datatypes, typelist, rlen)
     iobuf = IOBuffer()
     for (k,dfrow) in enumerate(eachrow(outdf))
-        vec = Vector{UInt8}()
+        loc = position(iobuf)
         for (i,v) in enumerate(dfrow)
             if isa(outdf[:,i], CategoricalArray)
                 if eltype2(levels(outdf[:,i])) == String # output index
-                    # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : outdf[:,i].pool.invindex[v])) # refs
-                    append!(vec,datatypes[i](ismissing(v) ? missingval[typelist[i]] : outdf[:,i].pool.invindex[v]))
+                    write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : outdf[:,i].pool.invindex[v])) # refs
                 elseif typelist[i] == 32768 # strLs
                     # not imolemented yet
                 else
-                    # write(iobuf, ismissing(v) ? missingval[typelist[i]] : datatypes[i](unwrap(v)))
-                    append!(vec,datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
+                    write(iobuf, ismissing(v) ? missingval[typelist[i]] : datatypes[i](unwrap(v)))
                 end
             elseif datatypes[i] == String
-                # write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
-                append!(vec,ismissing(v) ? repeat('\0', typelist[i]) : codeunits(string(v, repeat('\0', typelist[i] - sizeof(v)))))
+                write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
             elseif datatypes[i] == Date
-                # write(iobuf, Int32(ismissing(v) ? missingval[typelist[i]] : Dates.value(v - Date(1960,1,1))))
-                append!(vec,Int32(ismissing(v) ? missingval[typelist[i]] : Dates.value(v - Date(1960,1,1))))
+                write(iobuf, Int32(ismissing(v) ? missingval[typelist[i]] : Dates.value(v - Date(1960,1,1))))
             elseif datatypes[i] == DateTime
-                # write(iobuf, Float64(ismissing(v) ? missingval[typelist[i]] : Dates.value(v - DateTime(1960,1,1))))
-                append!(vec,Float64(ismissing(v) ? missingval[typelist[i]] : Dates.value(v - DateTime(1960,1,1))))
+                write(iobuf, Float64(ismissing(v) ? missingval[typelist[i]] : Dates.value(v - DateTime(1960,1,1))))
             else
-                # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
-                append!(vec,datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
+                write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
             end
         end
-        if sizeof(vec) == rlen
+        if position(iobuf) - loc == rlen
             write(iobuf,vec)
         else
             error("Data overrun on observation ",k)
         end
+
     end
     return take!(iobuf)
 end
