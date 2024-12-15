@@ -658,7 +658,7 @@ function write_chunks(outdf, datatypes, typelist, rlen)
         for (i,v) in enumerate(dfrow)
             if isa(outdf[:,i], CategoricalArray)
                 if eltype2(levels(outdf[:,i])) == String # output index
-                    write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : outdf[:,i].pool.invindex[v])) # refs
+                    write(iobuf, Int32(ismissing(v) ? missingval[Int32] : outdf[:,i].pool.invindex[v])) # refs
                 elseif typelist[i] == 32768 # strLs
                     # not imolemented yet
                 else
@@ -667,11 +667,11 @@ function write_chunks(outdf, datatypes, typelist, rlen)
             elseif datatypes[i] == String
                 write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
             elseif datatypes[i] == Date
-                write(iobuf, Int32(ismissing(v) ? missingval[typelist[i]] : Dates.value(v - Date(1960,1,1))))
+                write(iobuf, Int32(ismissing(v) ? missingval[65528] : Dates.value(v - Date(1960,1,1))))
             elseif datatypes[i] == DateTime
-                write(iobuf, Float64(ismissing(v) ? missingval[typelist[i]] : Dates.value(v - DateTime(1960,1,1))))
+                write(iobuf, Float64(ismissing(v) ? missingval[65526] : Dates.value(v - DateTime(1960,1,1))))
             elseif datatypes[i] == Bool
-                write(iobuf, Int8(ismissing(v) ? missingval[typelist[i]] : v == true ? 1 : 0))
+                write(iobuf, Int8(ismissing(v) ? missingval[65530] : v == true ? 1 : 0))
             else
                 write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
             end
