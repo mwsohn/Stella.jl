@@ -533,24 +533,37 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     len_varlabel = 321
 
     # header
-    write(outdta,"<stata_dta><header><release>118</release><byteorder>LSF</byteorder><K>")
-
-    # number of variables
-    write(outdta,Int16(cols))
-    write(outdta,"</K><N>")
-
-    # number of observations
-    write(outdta, Int64(rows))
-    write(outdta, "</N><label>")
-
-    # assume no data label
-    write(outdta,UInt16(0))
-    write(outdta,"</label><timestamp>")
-    
-    # timestamp
+    binvec = Vector{Unit8}()
+    append!(binvec,"<stata_dta><header><release>118</release><byteorder>LSF</byteorder><K>")
+    append!(binvec,Int16(cols))
+    append!(binvec,"</K><N>")
+    append!(binvec,Int64(rows))
+    append!(binvec,"</N><label>")
+    append!(binvec,UInt16(0))
+    append!(binvec,"</label><timestamp>")
     ts = Dates.format(now(), "dd uuu yyyy HH:MM")
-    write(outdta,UInt8(length(ts)))
-    write(outdta,string(ts,"</timestamp></header>"))
+    append!(binvec,UInt8(length(ts)))
+    append!(binvec,string(ts,"</timestamp></header>"))
+    write(outdta,binvec)
+
+    # write(outdta,"<stata_dta><header><release>118</release><byteorder>LSF</byteorder><K>")
+
+    # # number of variables
+    # write(outdta,Int16(cols))
+    # write(outdta,"</K><N>")
+
+    # # number of observations
+    # write(outdta, Int64(rows))
+    # write(outdta, "</N><label>")
+
+    # # assume no data label
+    # write(outdta,UInt16(0))
+    # write(outdta,"</label><timestamp>")
+    
+    # # timestamp
+    # ts = Dates.format(now(), "dd uuu yyyy HH:MM")
+    # write(outdta,UInt8(length(ts)))
+    # write(outdta,string(ts,"</timestamp></header>"))
 
     # -----------------------------------------------------
     # map
@@ -602,11 +615,8 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     m[9] = Int64(position(outdta))
     write(outdta,"<characteristics></characteristics>")
 
-    # number of bytes for each variable
-    numbytes = Stella.get_numbytes(typelist,size(df,2))
-
     # total length of a row
-    rlen = sum(numbytes)
+    rlen = sum(Stella.get_numbytes(typelist,size(df,2)))
     
     # ---------------------------------------------------------
     # the rest of the map section data
@@ -615,14 +625,13 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
 
     # --------------------------------------------------------=
     # combine rows into one iobuffer and write
-    rows = nrow(df)
     chunks = ceil(Int32, rlen * rows / maxbuffer)
     nobschunk = chunks == 1 ? nobschunk = rows : ceil(Int32, rows / (chunks - 1))
 
     for i = 1:chunks
         from = 1 + (i-1)*nobschunk
         to = min(from + nobschunk - 1, rows)
-        write(outdta,write_chunks(@view(df[from:to,:]), datatypes, typelist))
+        write(outdta,write_chunks(@view(df[from:to,:]), datatypes, typelist, rlen))
     end
     write(outdta,"</data>")
 
@@ -653,27 +662,41 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
 
 end
 
-function write_chunks(outdf, datatypes, typelist)
+eltype2(a) = nonmissingtype(eltype(a))
+
+function write_chunks(outdf, datatypes, typelist, rlen)
     iobuf = IOBuffer()
-    for dfrow in eachrow(outdf)
+    for (k,dfrow) in enumerate(eachrow(outdf))
+        vec = Vector{UInt8}()
         for (i,v) in enumerate(dfrow)
             if isa(outdf[:,i], CategoricalArray)
-                if nonmissingtype(eltype(levels(outdf[:,i]))) == String # output index
-                    write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : outdf[:,i].pool.invindex[v])) # refs
+                if eltype2(levels(outdf[:,i])) == String # output index
+                    # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : outdf[:,i].pool.invindex[v])) # refs
+                    append!(vec,datatypes[i](ismissing(v) ? missingval[typelist[i]] : outdf[:,i].pool.invindex[v]))
                 elseif typelist[i] == 32768 # strLs
                     # not imolemented yet
                 else
-                    write(iobuf, ismissing(v) ? missingval[typelist[i]] : datatypes[i](unwrap(v)))
+                    # write(iobuf, ismissing(v) ? missingval[typelist[i]] : datatypes[i](unwrap(v)))
+                    append!(vec,datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
                 end
             elseif datatypes[i] == String
-                write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - length(codeunits(v)))))
+                # write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
+                append!(vec,ismissing(v) ? repeat('\0', typelist[i]) : codeunits(string(v, repeat('\0', typelist[i] - sizeof(v)))))
             elseif datatypes[i] == Date
-                write(iobuf, Int32(ismissing(v) ? missingval[typelist[i]] : Dates.value(v - Date(1960,1,1))))
+                # write(iobuf, Int32(ismissing(v) ? missingval[typelist[i]] : Dates.value(v - Date(1960,1,1))))
+                append!(vec,Int32(ismissing(v) ? missingval[typelist[i]] : Dates.value(v - Date(1960,1,1))))
             elseif datatypes[i] == DateTime
-                write(iobuf, Float64(ismissing(v) ? missingval[typelist[i]] : Dates.value(v - DateTime(1960,1,1))))
+                # write(iobuf, Float64(ismissing(v) ? missingval[typelist[i]] : Dates.value(v - DateTime(1960,1,1))))
+                append!(vec,Float64(ismissing(v) ? missingval[typelist[i]] : Dates.value(v - DateTime(1960,1,1))))
             else
-                write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
+                # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
+                append!(vec,datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
             end
+        end
+        if sizeof(vec) == rlen
+            write(iobuf,vec)
+        else
+            error("Data overrun on observation ",k)
         end
     end
     return take!(iobuf)
@@ -683,31 +706,43 @@ function dtypes(outdf)
     t = []
     for (i,v) in enumerate(propertynames(outdf))
         if isa(outdf[:,v], CategoricalArray)
-            typ = nonmissingtype(eltype(levels(outdf[:,v])))
+            typ = eltype2(levels(outdf[:,v]))
             if typ == String
                 push!(t, Int32)
             else
                 push!(t, typ)
             end
         else
-            push!(t, nonmissingtype(eltype(outdf[:,v])))
+            push!(t, eltype2(outdf[:,v]))
         end
     end
     return t
 end
 
+function getmaxbytes(s::AbstractArray)
+    if isa(s, CategoricalArray) && eltype2(s)) <: CategoricalString
+        return maximum(sizeof.(s.pool.levels))
+    end
+
+    if nmissing(s) == size(s, 1)
+        return 0
+    end
+
+    return maximum(sizeof.(skipmissing(s)))
+end
+
 function get_types(outdf)
     tlist = zeros(Int32,ncol(outdf))
-    for i in 1:size(outdf,2)
+    for i in 1:ncol(outdf)
         if isa(outdf[:,i], CategoricalArray)
-            typ = nonmissingtype(eltype(levels(outdf[:,i])))
+            typ = eltype2(levels(outdf[:,i]))
             if typ == String
                 tlist[i] = 65528 # Int32
             else
                 tlist[i] = typ
             end
         else
-            typ = nonmissingtype(eltype(outdf[:,i]))
+            typ = eltype2(outdf[:,i])
             if haskey(vtype,typ)
                 tlist[i] = vtype[typ]
             elseif typ == Int64
@@ -718,7 +753,7 @@ function get_types(outdf)
                     error("A column of eltype Int64 cannot be mapped to a Stata datatype.")
                 end
             elseif typ == String
-                maxlen = Stella.getmaxwidth(outdf[:,i])
+                maxlen = Stella.getmaxbytes(outdf[:,i])
                 if maxlen < 2045
                     tlist[i] = maxlen
                 else
@@ -735,7 +770,7 @@ function get_varnames(outdta,len)
 
     varstring = String[]
     for v in names(outdta)
-        vlen = length(codeunits(v))
+        vlen = sizeof(v)
         if vlen < len - 1
             push!(varstring, string(v,repeat('\0',len - vlen)))
         else
@@ -751,14 +786,14 @@ function get_formats(outdf,typelist,len)
     for i in 1:ncol(outdf)
         if typelist[i] < 2045
             fmt = string("%-",typelist[i],"s")
-            push!(fvec,string(fmt, repeat('\0',len - length(codeunits(fmt)))))
-        elseif typelist[i] == 65528 && nonmissingtype(eltype(outdf[:,i])) == Date
+            push!(fvec,string(fmt, repeat('\0',len - sizeof(fmt))))
+        elseif typelist[i] == 65528 && eltype2(outdf[:,i]) == Date
             push!(fvec,string("%tdNN-DD-CCYY",repeat('\0',len - 13)))
         elseif typelist[i] in (65528,65529,65530)
             push!(fvec,string("%8.0g",repeat('\0',len - 5)))
         elseif typelist[i] == 65527 # float
             push!(fvec,string("%6.2f",repeat('\0',len - 5)))
-        elseif typelist[i] == 65526 && nonmissingtype(eltype(outdf[:,i])) == DateTime
+        elseif typelist[i] == 65526 && eltype2(outdf[:,i]) == DateTime
             push!(fvec,string("%tc",repeat('\0',len - 3)))
         elseif typelist[i] == 65526
             push!(fvec,string("%11.1f",repeat('\0',len - 6)))
@@ -774,7 +809,7 @@ function get_label_names(outdf,len)
     for i in 1:size(outdf,2)
         if isa(outdf[:,i], CategoricalArray) && eltype(levels(outdf[:,i])) == String
             lblname = string("fmt",i)
-            push!(lvec,string(lblname, repeat('\0',len - length(lblname))))
+            push!(lvec,string(lblname, repeat('\0',len - sizeof(lblname))))
         else
             push!(lvec,repeat('\0',len))
         end
@@ -785,7 +820,7 @@ end
 function get_variable_labels(outdf, len)
     lbls = labels(outdf)
     for i in 1:length(lbls)
-        lbls[i] = string(lbls[i], repeat('\0', len - length(codeunits(lbls[i]))))
+        lbls[i] = string(lbls[i], repeat('\0', len - sizeof(lbls[i])))
     end
     return join(lbls,"")
 end
@@ -794,7 +829,7 @@ function get_value_labels(outdf)
 
     iobf = IOBuffer()
     for (j,v) in enumerate(propertynames(outdf))
-        if isa(outdf[:,v], CategoricalArray) && nonmissingtype(eltype(levels(outdf[:,v]))) == String
+        if isa(outdf[:,v], CategoricalArray) && eltype2(levels(outdf[:,v])) == String
 
             invindex = outdf[:,v].pool.invindex
             n = length(invindex)
@@ -802,17 +837,17 @@ function get_value_labels(outdf)
             val = Int32.(values(invindex))
             txt = ""
             for (i,vv) in enumerate(keys(invindex))
-                off[i] = length(codeunits(txt))
+                off[i] = sizeof(txt)
                 txt = string(txt, vv, '\0')
             end
-            txtlen = length(codeunits(txt))
+            txtlen = sizeof(txt)
             len = 8 + 8*n + txtlen
 
             # write the value label to the iobuffer
             write(iobf,"<lbl>")
             write(iobf,Int32(len))
             fmt = string("fmt",j)
-            write(iobf,string(fmt,repeat('\0',129 - length(fmt)), "   ")) # 3 spaces padded
+            write(iobf,string(fmt,repeat('\0',129 - sizeof(fmt)), "   ")) # 3 spaces padded
             write(iobf,Int32(n))
             write(iobf,Int32(txtlen))
             write(iobf,off)
