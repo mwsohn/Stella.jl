@@ -677,7 +677,7 @@ function write_chunks(outdf, datatypes, typelist, rlen)
         if position(iobuf) - loc == rlen
             write(iobuf,vec)
         else
-            error("Data overrun on observation ",k)
+            error("Data overrun on observation ",k, "; record length = ", rlen,"; current length = ", position(iobuf) - loc)
         end
 
     end
