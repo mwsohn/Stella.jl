@@ -720,7 +720,7 @@ function dtypes(outdf)
 end
 
 function getmaxbytes(s::AbstractArray)
-    if isa(s, CategoricalArray) && eltype2(s)) <: CategoricalString
+    if isa(s, CategoricalArray) && eltype2(s) <: CategoricalString
         return maximum(sizeof.(s.pool.levels))
     end
 
