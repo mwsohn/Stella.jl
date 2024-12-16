@@ -501,7 +501,8 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     # excluded variables
     notallowed = [ in(x, [Bool, Int8, Int16, Int32, Int64, Float32, Float64, String, Date, DateTime]) ? false : true for x in dtypes(outdf)]
     allmiss = [ sum(ismissing.(x)) == size(outdf,1) ? true : false for x in eachcol(outdf)]
-
+    lint64 = [ maximum(skipmissing(r)) <= 2_147_483_620 && minimum(skipmissing(r)) >= −2_147_483_647 ? 1 : 0 for r in eachcol(outdf) ]
+    
     # subset
     df = outdf[:,findall(x->x == true, [ notallowed[x] || allmiss[x] ? false : true for x in 1:ncol(outdf)])]
 
@@ -673,8 +674,6 @@ function write_chunks(outdf, datatypes, typelist, rlen)
             elseif datatypes[i] == Int64
                 if typelist[i] == 65528
                     write(iobuf, Int32(ismissing(v) ? missingval[65528] : v))
-                else
-                    # do not export
                 end
             else
                 write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
