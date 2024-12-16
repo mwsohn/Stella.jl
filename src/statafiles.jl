@@ -498,23 +498,39 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
 
     outdta = open(fn,"w")
 
-    # excluded variables
+    # allowed variable types
     notallowed = [ in(x, [Bool, Int8, Int16, Int32, Int64, Float32, Float64, String, Date, DateTime]) ? false : true for x in dtypes(outdf)]
+
+    # empty variables
     allmiss = [ sum(ismissing.(x)) == size(outdf,1) ? true : false for x in eachcol(outdf)]
-    lint64 = [ maximum(skipmissing(r)) <= 2_147_483_620 && minimum(skipmissing(r)) >= −2_147_483_647 ? 1 : 0 for r in eachcol(outdf) ]
+
+    # large Int64 values that cannot be saved as Int32
+    lint64 = falses(ncol(outdf))
+    for i in 1:ncol(outdf)
+        if eltype2(outdf[:,i]) == Int64
+            tvec = collect(skipmissing(outdf[:,i]))
+            if maximum(tvec) > 2_147_483_620 || minimum(tvec) < −2_147_483_647
+                lint64[i] = true
+            end
+        end
+    end
     
     # subset
-    df = outdf[:,findall(x->x == true, [ notallowed[x] || allmiss[x] ? false : true for x in 1:ncol(outdf)])]
+    df = outdf[:,findall(x->x == true, [ notallowed[x] || allmiss[x] || lint64[x] ? false : true for x in 1:ncol(outdf)])]
 
     # report exclusions
     if verbose
         println("These variables will NOT be exported because of their data types:\n")
         for (i, v) in enumerate(names(outdf))
-            notallowed[i] && println(@sprintf("%-30s\t%-20s",v,nonmissingtype(eltype(outdf[:,v]))))
+            notallowed[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
         end
         println("\n\nThese variables will be excluded variables because they are empty (100% missing).\n")
         for (i, v) in enumerate(names(outdf))
-            allmiss[i] && println(@sprintf("%-30s\t%-20s",v,nonmissingtype(eltype(outdf[:,v]))))
+            allmiss[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
+        end
+        println("\n\nThese variables will be excluded variables because they are Int64 variables that contain values larger than Int32 can hold.\n")
+        for (i, v) in enumerate(names(outdf))
+            lint64[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
         end
     end
 
@@ -672,9 +688,7 @@ function write_chunks(outdf, datatypes, typelist, rlen)
             elseif datatypes[i] == Bool
                 write(iobuf, Int8(ismissing(v) ? missingval[65530] : v == true ? 1 : 0))
             elseif datatypes[i] == Int64
-                if typelist[i] == 65528
-                    write(iobuf, Int32(ismissing(v) ? missingval[65528] : v))
-                end
+                write(iobuf, Int32(ismissing(v) ? missingval[65528] : v))
             else
                 write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
             end
@@ -749,13 +763,8 @@ function get_types(outdf)
                 tlist[i] = 65530
                 numbytes[i] = 1
             elseif typ == Int64
-                tvec = collect(skipmissing(outdf[:,i]))
-                if length(tvec) > 0 && maximum(tvec) <= 2_147_483_620 && minimum(tvec) >= −2_147_483_647
-                    tlist[i] = vtype[Int32]
-                    numbytes[i] = bytesize[tlist[i]]
-                else
-                    error("A column of eltype Int64 cannot be mapped to a Stata datatype.")
-                end
+                tlist[i] = vtype[Int32]
+                numbytes[i] = bytesize[tlist[i]]
             elseif typ == String
                 maxlen = Stella.getmaxbytes(outdf[:,i])
                 if maxlen < 2045
