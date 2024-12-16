@@ -672,7 +672,7 @@ function write_chunks(outdf, datatypes, typelist, rlen)
                 write(iobuf, Int8(ismissing(v) ? missingval[65530] : v == true ? 1 : 0))
             elseif datatypes[i] == Int64
                 if typelist[i] == 65528
-                    write(iobuf, Int32(ismissing(v) ? missingval[Int32] : v))
+                    write(iobuf, Int32(ismissing(v) ? missingval[65528] : v))
                 else
                     # do not export
                 end
