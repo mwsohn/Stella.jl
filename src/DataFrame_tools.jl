@@ -312,6 +312,8 @@ function ds(df::DataFrame, typ::Type, args...)
                     push!(dslist,v)
                 end
             end
+        elseif typ == CategoricalArray && isa(df[!,v], CategoricalArray)
+            push!(dslist,v)
         elseif nonmissingtype(eltype(df[!,v])) == typ
             push!(dslist,v)
         elseif (typ == Integer && nonmissingtype(eltype(df[!,v])) <: Integer) || (typ == AbstractFloat && nonmissingtype(eltype(df[!,v])) <: AbstractFloat) || (typ == Number && nonmissingtype(eltype(df[!,v])) <: Number)
