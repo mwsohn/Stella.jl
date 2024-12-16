@@ -677,9 +677,6 @@ function write_chunks(outdf, datatypes, typelist, rlen)
             end
         end
         if position(iobuf) - loc != rlen
-            # str=take!(iobuf)
-            # println(sizeof(str),"\n\n")
-            println(readlines(iobuf))
             error("Data overrun on observation ",k, "; record length = ", rlen,"; current length = ", position(iobuf) - loc)
         end
 
@@ -750,7 +747,7 @@ function get_types(outdf)
                 numbytes[i] = 1
             elseif typ == Int64
                 tvec = collect(skipmissing(outdf[:,i]))
-                if (length(tvec) > 0 && maximum(tvec) <= 2_147_483_620 && minimum(tvec) >= −2_147_483_647) || length(tvec) == 0
+                if length(tvec) > 0 && maximum(tvec) <= 2_147_483_620 && minimum(tvec) >= −2_147_483_647
                     tlist[i] = vtype[Int32]
                     numbytes[i] = bytesize[tlist[i]]
                 else
