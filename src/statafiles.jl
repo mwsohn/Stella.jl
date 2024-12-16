@@ -475,8 +475,6 @@ missingval = Dict(
     65529 => 32_741,
     65528 => 2_147_483_621,
     65527 => typemax(Float32),
-    65526 => typemax(Float64),
-    65528 => 2_147_483_621, 
     65526 => typemax(Float64)
 )
 
@@ -672,6 +670,12 @@ function write_chunks(outdf, datatypes, typelist, rlen)
                 write(iobuf, Float64(ismissing(v) ? missingval[65526] : Dates.value(v - DateTime(1960,1,1))))
             elseif datatypes[i] == Bool
                 write(iobuf, Int8(ismissing(v) ? missingval[65530] : v == true ? 1 : 0))
+            elseif datatypes[i] == Int64
+                if typelist[i] == 65528
+                    write(iobuf, Int32(ismissing(v) ? missingval[Int32] : v))
+                else
+                    # do not export
+                end
             else
                 write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
             end
