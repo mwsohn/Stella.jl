@@ -507,7 +507,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     # large Int64 values that cannot be saved as Int32
     lint64 = falses(ncol(outdf))
     for i in 1:ncol(outdf)
-        if eltype2(outdf[:,i]) == Int64
+        if eltype2(outdf[:,i]) == Int64 && allmiss[i] == false
             tvec = collect(skipmissing(outdf[:,i]))
             if maximum(tvec) > 2_147_483_620 || minimum(tvec) < −2_147_483_647
                 lint64[i] = true
