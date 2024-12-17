@@ -146,10 +146,10 @@ function eltype2(df::AbstractDataFrame,v::Symbol)
 end
 function eltype2(a::AbstractArray)
     if isa(a, CategoricalArray)
-        return nonmissingtype(eltype(levels(df[!,v])))
+        return nonmissingtype(eltype(levels(a)))
     end
     return nonmissingtype(eltype(a))
-end    
+end
 
 """
     descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false)
