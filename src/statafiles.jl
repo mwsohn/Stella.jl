@@ -670,7 +670,7 @@ function write_chunks(outdf, datatypes, typelist, rlen)
         for (i,v) in enumerate(dfrow)
             if isa(outdf[:,i], CategoricalArray) # CategoricalArray
                 if eltype2(outdf[:,i]) == String
-                    write(iobuf, Int32(ismissing(v) ? missingval[Int32] : outdf[:,i].pool.invindex[v]))
+                    write(iobuf, Int32(ismissing(v) ? missingval[65528] : outdf[:,i].pool.invindex[v]))
                 # else
                 #     write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
                 end
