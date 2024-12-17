@@ -777,14 +777,44 @@ function get_varnames(outdta,len)
 
     varstring = String[]
     for v in names(outdta)
+
+        # first letter must be A-Z, a-z, or _
+        # rest of the variable name can include A-Z, a-z, 0-9, or _
+        if !startswith(v,r"[A-Za-z_]")
+            v[1] = "_" # replace with an underscore
+        end
+        for i in 2:sizeof(v)
+            if !occursin(r"[A-Za-z0-9_]",v[i:i])
+                v[i] = '_'
+            end
+        end
+
         vlen = sizeof(v)
+
         if vlen < len - 1
-            push!(varstring, string(v,repeat('\0',len - vlen)))
+            v2 = string(v,repeat('\0',len - vlen))
         else
-            push!(varstring, string(v[1:end-1],'\0'))
+            v2 - string(v[1:end-1],'\0')
+        end
+        if !in(v2,varstring)
+            push!(varstring,v2)
+        else
+            push!(varstring,varnameunique(varstring,v2))
         end
     end
     return join(varstring,"")
+end
+
+# revise the function to accommodate
+function varnameunique(varnames, name, len)
+    for i in 1:1000
+        name = string(name,"_",i)
+        if !in(name,varnames)
+            if length(name) < len
+                return name
+            end
+        end
+    end
 end
 
 function get_formats(outdf,typelist,len)
