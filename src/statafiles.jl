@@ -604,6 +604,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     # value label names
     m[7] = Int64(position(outdta))
     write(outdta,"<value_label_names>")
+    println(get_label_names(df,len_labelname))
     write(outdta,get_label_names(df,len_labelname))
     write(outdta,"</value_label_names>")
 
@@ -688,10 +689,6 @@ function write_chunks(outdf, datatypes, typelist, rlen)
                 write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
             end
         end
-        if position(iobuf) - loc != rlen
-            error("Data overrun on observation ",k, "; record length = ", rlen,"; current length = ", position(iobuf) - loc)
-        end
-
     end
     return take!(iobuf)
 end
@@ -818,7 +815,7 @@ function get_label_names(outdf,len)
 
     lvec = String[]
     for i in 1:size(outdf,2)
-        if isa(outdf[:,i], CategoricalArray) && eltype(levels(outdf[:,i])) == String
+        if isa(outdf[:,i], CategoricalArray) && eltype2(outdf[:,i]) == String
             lblname = string("fmt",i)
             push!(lvec,string(lblname, repeat('\0',len - sizeof(lblname))))
         else
