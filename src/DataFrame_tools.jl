@@ -141,12 +141,15 @@ function etype(df::DataFrame,v::Symbol)
     return eltyp
 end
 
-function eltype2(df::DataFrame,v::Symbol)
-    if typeof(df[!,v]) <: CategoricalArray
-        return eltype(df[!,v].pool.index)
-    end
-    return nonmissingtype(eltype(df[!,v]))
+function eltype2(df::AbstractDataFrame,v::Symbol)
+    return eltype2(df[:,v])
 end
+function eltype2(a::AbstractArray)
+    if isa(a, CategoricalArray)
+        return nonmissingtype(eltype(levels(df[!,v])))
+    end
+    return nonmissingtype(eltype(a))
+end    
 
 """
     descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false)
