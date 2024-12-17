@@ -123,9 +123,9 @@ end
 function etype(df::DataFrame,v::Symbol)
     # Eltype
     if typeof(df[!,v]) <: CategoricalArray
-        eltyp = string(eltype(df[!,v].pool.levels))
+        eltyp = string(eltype(levels(df[!,v])))
         if in(eltyp,["String","AbstractString"])
-            eltyp = string("Str",getmaxwidth(df[!,v].pool.levels))
+            eltyp = string("Str",getmaxwidth(levels(df[!,v])))
         end
     else
         eltyp = string(nonmissingtype(eltype(df[!,v])))
