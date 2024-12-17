@@ -534,8 +534,11 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
         end
     end
 
+    # identify categorical arrays
+    ca = [ isa(r, CategoricalArray) ? true : false for r in eachcol(df)]
+
     # data types
-    datatypes = dtypes(df)
+    datatypes = dtypes(df,ca)
 
     # cols and rows
     (rows, cols) = size(df)
@@ -577,7 +580,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
 
     # -----------------------------------------------------
     # variable types
-    (typelist, numbytes) = get_types(df)
+    (typelist, numbytes) = get_types(df,ca)
     m[3] = Int64(position(outdta))
     write(outdta,"<variable_types>")
     write(outdta,UInt16.(typelist))
@@ -629,11 +632,10 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     # combine rows into one iobuffer and write
     chunks = ceil(Int32, rlen * rows / maxbuffer)
     nobschunk = chunks == 1 ? nobschunk = rows : ceil(Int32, rows / (chunks - 1))
-
     for i = 1:chunks
         from = 1 + (i-1)*nobschunk
         to = min(from + nobschunk - 1, rows)
-        write(outdta,write_chunks(@view(df[from:to,:]), datatypes, typelist, rlen))
+        write(outdta,write_chunks(@view(df[from:to,:]), datatypes, typelist, rlen, ca))
     end
     write(outdta,"</data>")
 
@@ -664,20 +666,16 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
 
 end
 
-eltype2(a) = nonmissingtype(eltype(a))
-
-function write_chunks(outdf, datatypes, typelist, rlen)
+function write_chunks(outdf, datatypes, typelist, rlen, ca)
     iobuf = IOBuffer()
     for (k,dfrow) in enumerate(eachrow(outdf))
         loc = position(iobuf)
         for (i,v) in enumerate(dfrow)
-            if isa(outdf[:,i], CategoricalArray)
-                if eltype2(levels(outdf[:,i])) == String
-                    write(iobuf, Int32(ismissing(v) ? missingval[typelist[i]] : outdf[:,i].pool.invindex[v])) # refs
-                elseif typelist[i] == 32768 # strLs
-                    # not imolemented yet
+            if ca[i] # CategoricalArray
+                if eltype2(outdf[:,i]) == String
+                    write(iobuf, Int32(ismissing(v) ? missingval[Int32] : outdf[:,i].pool.invindex[v]))
                 else
-                    write(iobuf, ismissing(v) ? missingval[typelist[i]] : datatypes[i](unwrap(v)))
+                    write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
                 end
             elseif datatypes[i] == String
                 write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
@@ -701,18 +699,18 @@ function write_chunks(outdf, datatypes, typelist, rlen)
     return take!(iobuf)
 end
 
-function dtypes(outdf)
+function dtypes(outdf, ca)
     t = []
-    for v in propertynames(outdf)
-        if isa(outdf[:,v], CategoricalArray)
-            typ = eltype2(levels(outdf[:,v]))
+    for i in 1:ncol(outdf)
+        if ca[i]
+            typ = eltype2(outdf[:,i])
             if typ == String
                 push!(t, Int32)
             else
                 push!(t, typ)
             end
         else
-            push!(t, eltype2(outdf[:,v]))
+            push!(t, eltype2(outdf[:,i]))
         end
     end
     return t
@@ -730,7 +728,8 @@ function getmaxbytes(s::AbstractArray)
     return maximum(sizeof.(skipmissing(s)))
 end
 
-function get_types(outdf)
+function get_types(outdf,ca)
+
     bytesize = Dict(
         65526 => 8,
         65527 => 4,
@@ -742,8 +741,8 @@ function get_types(outdf)
     tlist = zeros(Int32,ncol(outdf))
     numbytes = zeros(Int32,ncol(outdf))
     for i in 1:ncol(outdf)
-        if isa(outdf[:,i], CategoricalArray)
-            typ = eltype2(levels(outdf[:,i]))
+        if ca[i]
+            typ = eltype2(outdf[:,i])
             if typ == String
                 tlist[i] = 65528 # Int32
                 numbytes[i] = maximum(sizeof.(levels(outdf[:,i])))
@@ -844,7 +843,7 @@ function get_value_labels(outdf)
 
     iobf = IOBuffer()
     for (j,v) in enumerate(propertynames(outdf))
-        if isa(outdf[:,v], CategoricalArray) && eltype2(levels(outdf[:,v])) == String
+        if isa(outdf[:,v], CategoricalArray) && eltype2(outdf[:,v]) == String
 
             invindex = outdf[:,v].pool.invindex
             n = length(invindex)
