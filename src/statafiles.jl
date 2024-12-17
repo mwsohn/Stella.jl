@@ -604,7 +604,6 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     # value label names
     m[7] = Int64(position(outdta))
     write(outdta,"<value_label_names>")
-    println(get_label_names(df,len_labelname))
     write(outdta,get_label_names(df,len_labelname))
     write(outdta,"</value_label_names>")
 
