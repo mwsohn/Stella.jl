@@ -534,9 +534,6 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
         end
     end
 
-    # identify categorical arrays
-    ca = [ isa(r, CategoricalArray) ? true : false for r in eachcol(df)]
-
     # data types
     datatypes = dtypes(df)
 
@@ -580,7 +577,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
 
     # -----------------------------------------------------
     # variable types
-    (typelist, numbytes) = get_types(df,ca)
+    (typelist, numbytes) = get_types(df)
     m[3] = Int64(position(outdta))
     write(outdta,"<variable_types>")
     write(outdta,UInt16.(typelist))
@@ -635,7 +632,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     for i = 1:chunks
         from = 1 + (i-1)*nobschunk
         to = min(from + nobschunk - 1, rows)
-        write(outdta,write_chunks(@view(df[from:to,:]), datatypes, typelist, rlen, ca))
+        write(outdta,write_chunks(@view(df[from:to,:]), datatypes, typelist, rlen))
     end
     write(outdta,"</data>")
 
@@ -666,12 +663,12 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
 
 end
 
-function write_chunks(outdf, datatypes, typelist, rlen, ca)
+function write_chunks(outdf, datatypes, typelist, rlen)
     iobuf = IOBuffer()
     for (k,dfrow) in enumerate(eachrow(outdf))
         loc = position(iobuf)
         for (i,v) in enumerate(dfrow)
-            if ca[i] # CategoricalArray
+            if isa(outdf[:,i], CategoricalArray) # CategoricalArray
                 if eltype2(outdf[:,i]) == String
                     write(iobuf, Int32(ismissing(v) ? missingval[Int32] : outdf[:,i].pool.invindex[v]))
                 # else
@@ -728,7 +725,7 @@ function getmaxbytes(s::AbstractArray)
     return maximum(sizeof.(skipmissing(s)))
 end
 
-function get_types(outdf,ca)
+function get_types(outdf)
 
     bytesize = Dict(
         65526 => 8,
@@ -741,11 +738,11 @@ function get_types(outdf,ca)
     tlist = zeros(Int32,ncol(outdf))
     numbytes = zeros(Int32,ncol(outdf))
     for i in 1:ncol(outdf)
-        if ca[i]
+        if isa(outdf[:,i], CategoricalArray)
             typ = eltype2(outdf[:,i])
             if typ == String
-                tlist[i] = 65528 # Int32
-                numbytes[i] = maximum(sizeof.(levels(outdf[:,i])))
+                tlist[i] = 65528
+                numbytes[i] = 4
             elseif typ == Bool
                 tlist[i] = 65530
                 numbytes[i] = 1
