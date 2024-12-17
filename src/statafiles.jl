@@ -538,7 +538,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     ca = [ isa(r, CategoricalArray) ? true : false for r in eachcol(df)]
 
     # data types
-    datatypes = dtypes(df,ca)
+    datatypes = dtypes(df)
 
     # cols and rows
     (rows, cols) = size(df)
@@ -699,10 +699,10 @@ function write_chunks(outdf, datatypes, typelist, rlen, ca)
     return take!(iobuf)
 end
 
-function dtypes(outdf, ca)
+function dtypes(outdf)
     t = []
     for i in 1:ncol(outdf)
-        if ca[i]
+        if isa(outdf[:,i], CategoricalArray)
             typ = eltype2(outdf[:,i])
             if typ == String
                 push!(t, Int32)
