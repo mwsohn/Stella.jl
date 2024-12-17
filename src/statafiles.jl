@@ -845,7 +845,7 @@ function get_value_labels(outdf)
             invindex = outdf[:,v].pool.invindex
             n = length(invindex)
             off = zeros(Int32,n)
-            val = Int32.(values(invindex))
+            val = Int32.(sort(values(invindex)))
             txt = ""
             for (i,vv) in enumerate(keys(invindex))
                 off[i] = sizeof(txt)
