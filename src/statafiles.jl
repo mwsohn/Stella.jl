@@ -518,6 +518,16 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 50_000_000
     # subset
     df = outdf[:,findall(x->x == true, [ notallowed[x] || allmiss[x] || lint64[x] ? false : true for x in 1:ncol(outdf)])]
 
+    # convert Bool to Int8 and Int64 to Int32
+    for v in names(df)
+        if eltype2(df.v) == Bool
+            df.v = convert(Vector{Union{Int8,Missing}}, df.v)
+        end
+        if eltype2(df.v) == Int64
+            df.v = convert(Vector{Union{Int64,Missing}}, df.v)
+        end
+    end
+
     # report exclusions
     if verbose
         println("These variables will NOT be exported because of their data types:\n")
@@ -664,42 +674,32 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 50_000_000
 end
 
 function write_chunks(outdf, datatypes, typelist)
-    # iobuf = IOBuffer()
-    vec = Vector{UInt8}()
+    iobuf = IOBuffer()
     for k in 1:size(outdf,2)
         
         for (i,v) in enumerate(outdf[k,:])
-            if isa(outdf[:,i], CategoricalArray) # CategoricalArray
+            if isa(outdf[:,i], CategoricalArray)
                 if eltype2(outdf[:,i]) == String
-                    # write(iobuf, Int32(ismissing(v) ? missingval[65528] : outdf[:,i].pool.invindex[v]))
-                    append!(vec,reinterpret(UInt8,Int32(ismissing(v) ? missingval[65528] : outdf[:,i].pool.invindex[v])))
+                    write(iobuf, Int32(ismissing(v) ? missingval[65528] : outdf[:,i].pool.invindex[v]))
                 else
-                    # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
-                    append!(vec,reinterpret(UInt8,datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v))))
+                    write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
                 end
             elseif datatypes[i] == String
-                # write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
-                append!(vec,ismissing(v) ? repeat('\0', typelist[i]) : string(codeunits(v), repeat('\0', typelist[i] - sizeof(v))))
+                write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
             elseif datatypes[i] == Date
-                # write(iobuf, Int32(ismissing(v) ? missingval[65528] : Dates.value(v - Date(1960,1,1))))
-                append!(vec,reinterpret(UInt8,Int32(ismissing(v) ? missingval[65528] : Dates.value(v - Date(1960,1,1)))))
+                write(iobuf, Int32(ismissing(v) ? missingval[65528] : Dates.value(v - Date(1960,1,1))))
             elseif datatypes[i] == DateTime
-                # write(iobuf, Float64(ismissing(v) ? missingval[65526] : Dates.value(v - DateTime(1960,1,1))))
-                append!(vec,reinterpret(UInt8,Float64(ismissing(v) ? missingval[65526] : Dates.value(v - DateTime(1960,1,1)))))
-            elseif datatypes[i] == Bool
-                # write(iobuf, Int8(ismissing(v) ? missingval[65530] : v))
-                append!(vec,reinterpret(UInt8,Int8(ismissing(v) ? missingval[65530] : v)))
-            elseif datatypes[i] == Int64
-                # write(iobuf, Int32(ismissing(v) ? missingval[65528] : v))
-                append!(vec,reinterpret(UInt8,Int32(ismissing(v) ? missingval[65528] : v)))
+                write(iobuf, Float64(ismissing(v) ? missingval[65526] : Dates.value(v - DateTime(1960,1,1))))
+            # elseif datatypes[i] == Bool
+            #     write(iobuf, Int8(ismissing(v) ? missingval[65530] : v))
+            # elseif datatypes[i] == Int64
+            #     write(iobuf, Int32(ismissing(v) ? missingval[65528] : v))
             else
-                # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
-                append!(vec,reinterpret(UInt8,datatypes[i](ismissing(v) ? missingval[typelist[i]] : v)))
+                write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
             end
         end
     end
-    # return take!(iobuf)
-    return vec
+    return take!(iobuf)
 end
 
 function dtypes(outdf)
