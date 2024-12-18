@@ -522,7 +522,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     for v in propertynames(df)
         if eltype2(df[:,v]) == Bool
             df.v = Int8.(df[:,v])
-        elseif eltype2(df[:,v]) == Int62
+        elseif eltype2(df[:,v]) == Int64
             df.v = Int32.(df[:,v])
         end
     end
