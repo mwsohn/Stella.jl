@@ -694,10 +694,10 @@ function write_chunks(outdf, from, to, datatypes, typelist)
             elseif datatypes[i] == DateTime
                 write(iobuf, ismissing(v) ? missingval[65526] : Float64(Dates.value(v - DateTime(1960,1,1))))
                 # append!(vec,ismissing(v) ? missingval[65526] : Float64(Dates.value(v - DateTime(1960,1,1))))
-            # elseif datatypes[i] == Bool
-            #     write(iobuf, Int8(ismissing(v) ? missingval[65530] : v == true ? 1 : 0))
-            # elseif datatypes[i] == Int64
-            #     write(iobuf, Int32(ismissing(v) ? missingval[65528] : v))
+            elseif datatypes[i] == Bool
+                write(iobuf, Int8(ismissing(v) ? missingval[65530] : v == true ? 1 : 0))
+            elseif datatypes[i] == Int64
+                write(iobuf, Int32(ismissing(v) ? missingval[65528] : v))
             else
                 write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
                 # append!(vec,datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
@@ -754,9 +754,9 @@ function get_types(outdf)
             if typ == String
                 tlist[i] = 65528
                 numbytes[i] = 4
-            # elseif typ == Bool
-            #     tlist[i] = 65530
-            #     numbytes[i] = 1
+            elseif typ == Bool
+                tlist[i] = 65530
+                numbytes[i] = 1
             else
                 tlist[i] = vtype[typ]
                 numbytes[i] = bytesize[tlist[i]]
@@ -766,12 +766,12 @@ function get_types(outdf)
             if haskey(vtype,typ)
                 tlist[i] = vtype[typ]
                 numbytes[i] = bytesize[tlist[i]]
-            # elseif typ == Bool
-            #     tlist[i] = 65530
-            #     numbytes[i] = 1
-            # elseif typ == Int64
-            #     tlist[i] = vtype[Int32]
-            #     numbytes[i] = bytesize[tlist[i]]
+            elseif typ == Bool
+                tlist[i] = 65530
+                numbytes[i] = 1
+            elseif typ == Int64
+                tlist[i] = vtype[Int32]
+                numbytes[i] = bytesize[tlist[i]]
             elseif typ == String
                 maxlen = Stella.getmaxbytes(outdf[:,i])
                 if maxlen < 2045
