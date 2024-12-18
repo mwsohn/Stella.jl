@@ -675,9 +675,8 @@ end
 
 function write_chunks(outdf, datatypes, typelist)
     iobuf = IOBuffer()
-    for k in 1:size(outdf,2)
-        
-        for (i,v) in enumerate(outdf[k,:])
+    for dfrow in eachrow(outdf)
+        for (i,v) in enumerate(dfrow)
             if isa(outdf[:,i], CategoricalArray)
                 if eltype2(outdf[:,i]) == String
                     write(iobuf, Int32(ismissing(v) ? missingval[65528] : outdf[:,i].pool.invindex[v]))
