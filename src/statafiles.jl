@@ -489,7 +489,7 @@ vtype = Dict(
     DateTime => 65526
 )
 
-function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 1_000_000, verbose = false)
+function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, verbose = false)
 
     # open the output dataset file
     if fn[end-3:end] != ".dta"
@@ -637,32 +637,35 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 1_000_000,
 
     # --------------------------------------------------------=
     # combine rows into one iobuffer and write
-    chunks = ceil(Int32, rlen * rows / maxbuffer)
-    nobschunk = chunks == 1 ? nobschunk = rows : ceil(Int32, rows / (chunks - 1))
-    for i = 1:chunks
-        from = 1 + (i-1)*nobschunk
-        to = min(from + nobschunk - 1, rows)
-        write(outdta,write_chunks(@views(df[from:to, :]), datatypes, typelist))
-    end
-    # for dfrow in eachrow(df)
-    #     for (i,v) in enumerate(dfrow)
-    #         if isa(outdf[:,i], CategoricalArray)
-    #             if eltype2(outdf[:,i]) == String
-    #                 write(outdta, Int32(ismissing(v) ? missingval[65528] : outdf[:,i].pool.invindex[v]))
-    #             else
-    #                 write(outdta, datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
-    #             end
-    #         elseif datatypes[i] == String
-    #             write(outdta, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
-    #         elseif datatypes[i] == Date
-    #             write(outdta, Int32(ismissing(v) ? missingval[65528] : Dates.value(v - Date(1960,1,1))))
-    #         elseif datatypes[i] == DateTime
-    #             write(outdta, Float64(ismissing(v) ? missingval[65526] : Dates.value(v - DateTime(1960,1,1))))
-    #         else
-    #             write(outdta, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
-    #         end
-    #     end
+    # if maxbuffer < rlen
+    #     maxbuffer = rlen
     # end
+    # chunks = ceil(Int32, rlen * rows / maxbuffer)
+    # nobschunk = chunks == 1 ? nobschunk = rows : ceil(Int32, rows / (chunks - 1))
+    # for i = 1:chunks
+    #     from = 1 + (i-1)*nobschunk
+    #     to = min(from + nobschunk - 1, rows)
+    #     write(outdta,write_chunks(@views(df[from:to, :]), datatypes, typelist))
+    # end
+    for dfrow in eachrow(df)
+        for (i,v) in enumerate(dfrow)
+            if isa(outdf[:,i], CategoricalArray)
+                if eltype2(outdf[:,i]) == String
+                    write(outdta, Int32(ismissing(v) ? missingval[65528] : outdf[:,i].pool.invindex[v]))
+                else
+                    write(outdta, datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
+                end
+            elseif datatypes[i] == String
+                write(outdta, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
+            elseif datatypes[i] == Date
+                write(outdta, Int32(ismissing(v) ? missingval[65528] : Dates.value(v - Date(1960,1,1))))
+            elseif datatypes[i] == DateTime
+                write(outdta, Float64(ismissing(v) ? missingval[65526] : Dates.value(v - DateTime(1960,1,1))))
+            else
+                write(outdta, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
+            end
+        end
+    end
     write(outdta,"</data>")
 
     # strL section - no strLs
