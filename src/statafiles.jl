@@ -665,7 +665,7 @@ end
 
 function write_chunks(outdf, from, to, datatypes, typelist)
     iobuf = IOBuffer()
-    for k in 1:ncol(outdf[from:to,:]) #eachrow(outdf)
+    for k in from:to
         for (i,v) in enumerate(outdf[k,:])
             if isa(outdf[:,i], CategoricalArray) # CategoricalArray
                 if eltype2(outdf[:,i]) == String
