@@ -520,11 +520,11 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 50_000_000
 
     # convert Bool to Int8 and Int64 to Int32
     for v in names(df)
-        if eltype2(df.v) == Bool
-            df.v = convert(Vector{Union{Int8,Missing}}, df.v)
+        if eltype2(df[:, v]) == Bool
+            df[:,v] = convert(Vector{Union{Int8,Missing}}, df[:,v])
         end
-        if eltype2(df.v) == Int64
-            df.v = convert(Vector{Union{Int64,Missing}}, df.v)
+        if eltype2(df[:,v]) == Int64
+            df[:,v] = convert(Vector{Union{Int64,Missing}}, df[:,v])
         end
     end
 
