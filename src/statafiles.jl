@@ -641,7 +641,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     for i = 1:chunks
         from = 1 + (i-1)*nobschunk
         to = min(from + nobschunk - 1, rows)
-        write(outdta,write_chunks(df[from:to,:], datatypes, typelist))
+        write(outdta,write_chunks(df, from, to, datatypes, typelist))
     end
     write(outdta,"</data>")
 
@@ -672,37 +672,36 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
 
 end
 
-function write_chunks(outdf, datatypes, typelist)
+function write_chunks(outdf, from, to, datatypes, typelist)
     iobuf = IOBuffer()
-    for k in 1:ncol(outdf) #eachrow(outdf)
+    for k in 1:ncol(outdf[from:to,:]) #eachrow(outdf)
         vec = Vector{UInt8}()
         for (i,v) in enumerate(outdf[k,:])
             if isa(outdf[:,i], CategoricalArray) # CategoricalArray
                 if eltype2(outdf[:,i]) == String
-                    # write(iobuf, Int32(ismissing(v) ? missingval[65528] : outdf[:,i].pool.invindex[v]))
-                    append!(vec,Int32(ismissing(v) ? missingval[65528] : outdf[:,i].pool.invindex[v]))
+                    write(iobuf, Int32(ismissing(v) ? missingval[65528] : outdf[:,i].pool.invindex[v]))
+                    # append!(vec,Int32(ismissing(v) ? missingval[65528] : outdf[:,i].pool.invindex[v]))
                 else
-                    # write(iobuf, ismissing(v) ? missingval[typelist[i]] : unwrap(v))
-                    append!(vec,datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
+                    write(iobuf, ismissing(v) ? missingval[typelist[i]] : unwrap(v))
+                    # append!(vec,datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
                 end
             elseif datatypes[i] == String
-                # write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
-                append!(vec,ismissing(v) ? repeat('\0', typelist[i]) : string(codeunits(v), repeat('\0', typelist[i] - sizeof(v))))
+                write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
+                # append!(vec,ismissing(v) ? repeat('\0', typelist[i]) : string(codeunits(v), repeat('\0', typelist[i] - sizeof(v))))
             elseif datatypes[i] == Date
-                # write(iobuf, ismissing(v) ? missingval[65528] : Int32(Dates.value(v - Date(1960,1,1))))
-                append!(vec,ismissing(v) ? missingval[65528] : Int32(Dates.value(v - Date(1960,1,1))))
+                write(iobuf, ismissing(v) ? missingval[65528] : Int32(Dates.value(v - Date(1960,1,1))))
+                # append!(vec,ismissing(v) ? missingval[65528] : Int32(Dates.value(v - Date(1960,1,1))))
             elseif datatypes[i] == DateTime
-                # write(iobuf, ismissing(v) ? missingval[65526] : Float64(Dates.value(v - DateTime(1960,1,1))))
-                append!(vec,ismissing(v) ? missingval[65526] : Float64(Dates.value(v - DateTime(1960,1,1))))
+                write(iobuf, ismissing(v) ? missingval[65526] : Float64(Dates.value(v - DateTime(1960,1,1))))
+                # append!(vec,ismissing(v) ? missingval[65526] : Float64(Dates.value(v - DateTime(1960,1,1))))
             # elseif datatypes[i] == Bool
             #     write(iobuf, Int8(ismissing(v) ? missingval[65530] : v == true ? 1 : 0))
             # elseif datatypes[i] == Int64
             #     write(iobuf, Int32(ismissing(v) ? missingval[65528] : v))
             else
-                # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
-                append!(vec,datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
+                write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
+                # append!(vec,datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
             end
-            write(iobuf,vec)
         end
     end
     return take!(iobuf)
