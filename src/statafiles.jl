@@ -518,15 +518,6 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 50_000_000
     # subset
     df = outdf[:,findall(x->x == true, [ notallowed[x] || allmiss[x] || lint64[x] ? false : true for x in 1:ncol(outdf)])]
 
-    # convert Bool to Int8 and Int64 to Int32
-    for v in propertynames(df)
-        if eltype2(df[:,v]) == Bool
-            df[!,v] = Int8.(df[:,v])
-        elseif eltype2(df[:,v]) == Int64
-            df[!,v] = Int32.(df[:,v])
-        end
-    end
-
     # report exclusions
     if verbose
         println("These variables will NOT be exported because of their data types:\n")
@@ -688,10 +679,10 @@ function write_chunks(outdf, from, to, datatypes, typelist)
                 write(iobuf, Int32(ismissing(v) ? missingval[65528] : Dates.value(v - Date(1960,1,1))))
             elseif datatypes[i] == DateTime
                 write(iobuf, Float64(ismissing(v) ? missingval[65526] : Dates.value(v - DateTime(1960,1,1))))
-            # elseif datatypes[i] == Bool
-            #     write(iobuf, Int8(ismissing(v) ? missingval[65530] : v)
-            # elseif datatypes[i] == Int64
-            #     write(iobuf, Int32(ismissing(v) ? missingval[65528] : v)
+            elseif datatypes[i] == Bool
+                write(iobuf, Int8(ismissing(v) ? missingval[65530] : v))
+            elseif datatypes[i] == Int64
+                write(iobuf, Int32(ismissing(v) ? missingval[65528] : v))
             else
                 write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
             end
