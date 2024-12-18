@@ -518,6 +518,15 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     # subset
     df = outdf[:,findall(x->x == true, [ notallowed[x] || allmiss[x] || lint64[x] ? false : true for x in 1:ncol(outdf)])]
 
+    # convert Bool to Int8 and Int64 to Int32
+    for v in propertynames(df)
+        if eltype2(df.v) == Bool
+            df.v = Int8.(df.v)
+        elseif eltype2(df.v) == Int62
+            df.v = Int32.(df.v)
+        end
+    end
+
     # report exclusions
     if verbose
         println("These variables will NOT be exported because of their data types:\n")
@@ -632,7 +641,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
     for i = 1:chunks
         from = 1 + (i-1)*nobschunk
         to = min(from + nobschunk - 1, rows)
-        write(outdta,write_chunks(@view(df[from:to,:]), datatypes, typelist, rlen))
+        write(outdta,write_chunks(df[from:to,:], datatypes, typelist))
     end
     write(outdta,"</data>")
 
@@ -663,29 +672,28 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000_000
 
 end
 
-function write_chunks(outdf, datatypes, typelist, rlen)
+function write_chunks(outdf, datatypes, typelist)
     iobuf = IOBuffer()
-    for (k,dfrow) in enumerate(eachrow(outdf))
-        loc = position(iobuf)
+    for dfrow in eachrow(outdf)
         for (i,v) in enumerate(dfrow)
             if isa(outdf[:,i], CategoricalArray) # CategoricalArray
                 if eltype2(outdf[:,i]) == String
                     write(iobuf, Int32(ismissing(v) ? missingval[65528] : outdf[:,i].pool.invindex[v]))
-                # else
-                #     write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
+                else
+                    write(iobuf, ismissing(v) ? missingval[typelist[i]] : unwrap(v))
                 end
             elseif datatypes[i] == String
                 write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
             elseif datatypes[i] == Date
-                write(iobuf, Int32(ismissing(v) ? missingval[65528] : Dates.value(v - Date(1960,1,1))))
+                write(iobuf, ismissing(v) ? missingval[65528] : Dates.value(v - Date(1960,1,1)))
             elseif datatypes[i] == DateTime
-                write(iobuf, Float64(ismissing(v) ? missingval[65526] : Dates.value(v - DateTime(1960,1,1))))
-            elseif datatypes[i] == Bool
-                write(iobuf, Int8(ismissing(v) ? missingval[65530] : v == true ? 1 : 0))
-            elseif datatypes[i] == Int64
-                write(iobuf, Int32(ismissing(v) ? missingval[65528] : v))
+                write(iobuf, ismissing(v) ? missingval[65526] : Dates.value(v - DateTime(1960,1,1)))
+            # elseif datatypes[i] == Bool
+            #     write(iobuf, Int8(ismissing(v) ? missingval[65530] : v == true ? 1 : 0))
+            # elseif datatypes[i] == Int64
+            #     write(iobuf, Int32(ismissing(v) ? missingval[65528] : v))
             else
-                write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
+                write(iobuf, ismissing(v) ? missingval[typelist[i]] : v)
             end
         end
     end
