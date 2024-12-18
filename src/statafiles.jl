@@ -674,27 +674,35 @@ end
 
 function write_chunks(outdf, datatypes, typelist)
     iobuf = IOBuffer()
-    for dfrow in eachrow(outdf)
-        for (i,v) in enumerate(dfrow)
+    for k in 1:ncol(outdf) #eachrow(outdf)
+        vec = Vector{UInt8}()
+        for (i,v) in enumerate(outdf[k,:])
             if isa(outdf[:,i], CategoricalArray) # CategoricalArray
                 if eltype2(outdf[:,i]) == String
-                    write(iobuf, Int32(ismissing(v) ? missingval[65528] : outdf[:,i].pool.invindex[v]))
+                    # write(iobuf, Int32(ismissing(v) ? missingval[65528] : outdf[:,i].pool.invindex[v]))
+                    append!(vec,Int32(ismissing(v) ? missingval[65528] : outdf[:,i].pool.invindex[v]))
                 else
-                    write(iobuf, ismissing(v) ? missingval[typelist[i]] : unwrap(v))
+                    # write(iobuf, ismissing(v) ? missingval[typelist[i]] : unwrap(v))
+                    append!(vec,datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
                 end
             elseif datatypes[i] == String
-                write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
+                # write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
+                append!(vec,ismissing(v) ? repeat('\0', typelist[i]) : string(codeunits(v), repeat('\0', typelist[i] - sizeof(v))))
             elseif datatypes[i] == Date
-                write(iobuf, ismissing(v) ? missingval[65528] : Dates.value(v - Date(1960,1,1)))
+                # write(iobuf, ismissing(v) ? missingval[65528] : Int32(Dates.value(v - Date(1960,1,1))))
+                append!(vec,ismissing(v) ? missingval[65528] : Int32(Dates.value(v - Date(1960,1,1))))
             elseif datatypes[i] == DateTime
-                write(iobuf, ismissing(v) ? missingval[65526] : Dates.value(v - DateTime(1960,1,1)))
+                # write(iobuf, ismissing(v) ? missingval[65526] : Float64(Dates.value(v - DateTime(1960,1,1))))
+                append!(vec,ismissing(v) ? missingval[65526] : Float64(Dates.value(v - DateTime(1960,1,1))))
             # elseif datatypes[i] == Bool
             #     write(iobuf, Int8(ismissing(v) ? missingval[65530] : v == true ? 1 : 0))
             # elseif datatypes[i] == Int64
             #     write(iobuf, Int32(ismissing(v) ? missingval[65528] : v))
             else
-                write(iobuf, ismissing(v) ? missingval[typelist[i]] : v)
+                # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
+                append!(vec,datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
             end
+            write(iobuf,vec)
         end
     end
     return take!(iobuf)
@@ -747,9 +755,9 @@ function get_types(outdf)
             if typ == String
                 tlist[i] = 65528
                 numbytes[i] = 4
-            elseif typ == Bool
-                tlist[i] = 65530
-                numbytes[i] = 1
+            # elseif typ == Bool
+            #     tlist[i] = 65530
+            #     numbytes[i] = 1
             else
                 tlist[i] = vtype[typ]
                 numbytes[i] = bytesize[tlist[i]]
@@ -759,12 +767,12 @@ function get_types(outdf)
             if haskey(vtype,typ)
                 tlist[i] = vtype[typ]
                 numbytes[i] = bytesize[tlist[i]]
-            elseif typ == Bool
-                tlist[i] = 65530
-                numbytes[i] = 1
-            elseif typ == Int64
-                tlist[i] = vtype[Int32]
-                numbytes[i] = bytesize[tlist[i]]
+            # elseif typ == Bool
+            #     tlist[i] = 65530
+            #     numbytes[i] = 1
+            # elseif typ == Int64
+            #     tlist[i] = vtype[Int32]
+            #     numbytes[i] = bytesize[tlist[i]]
             elseif typ == String
                 maxlen = Stella.getmaxbytes(outdf[:,i])
                 if maxlen < 2045
