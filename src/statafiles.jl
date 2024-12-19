@@ -661,10 +661,10 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
             istart = ones(Int64,ncols)
             iend = zeros(Int64,ncols)
             for i in 2:ncols
-                iend[i-1] = typelist[i-1] < 2450 ? typelist[i-1] :  bytesize[typelist[i-1]]
-                istart[i] = istart[i-1] + 1
+                iend[i-1] = typelist[i-1] < 2045 ? typelist[i-1] :  bytesize[typelist[i-1]]
+                istart[i] = iend[i-1] + 1
             end
-            iend[ncols] = typelist[ncols] < 2450 ? typelist[ncols] :  bytesize[typelist[ncols]]
+            iend[ncols] = typelist[ncols] < 2045 ? typelist[ncols] :  bytesize[typelist[ncols]]
             return istart, iend
         end
 
