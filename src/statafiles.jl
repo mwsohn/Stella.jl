@@ -649,7 +649,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
             write(outdta,write_chunks(@views(df[from:to, :]), datatypes, typelist))
         end
     elseif wmethod == 2
-        function get_subscripts(typelist)
+        function get_subscripts(typelist, ncols)
             bytesize = Dict(
                 65526 => 8,
                 65527 => 4,
@@ -667,10 +667,10 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
             return istart, iend
         end
 
-        (s,f) = get_subscripts(typelist)
+        (s,f) = get_subscripts(typelist, ncols)
         mybuf = Vector{UInt32}(undef,rlen)
         for i = 1:ncols
-            fill_buf!(outdf,i,mybuf, datatypes, typelist)
+            fill_buf!(outdf,i,mybuf, datatypes, typelist, s, f)
             write(outdta,mybuf)
         end
     end
