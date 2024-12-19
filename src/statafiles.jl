@@ -669,6 +669,10 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
         end
 
         (s,f) = get_subscripts(typelist, cols)
+
+        for i in 1:length(s)
+            println(i, " ", s[i], " ", f[i])
+        end
         mybuf = Vector{UInt32}(undef,rlen)
         for i = 1:cols
             fill_buf!(outdf,i,mybuf, datatypes, typelist, s, f)
