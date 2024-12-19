@@ -637,35 +637,43 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
 
     # --------------------------------------------------------=
     # combine rows into one iobuffer and write
-    if maxbuffer < rlen
-        maxbuffer = rlen
+    if method == 1
+        if maxbuffer < rlen
+            maxbuffer = rlen
+        end
+        chunks = ceil(Int32, rlen * rows / maxbuffer)
+        nobschunk = chunks == 1 ? nobschunk = rows : ceil(Int32, rows / (chunks - 1))
+        for i = 1:chunks
+            from = 1 + (i-1)*nobschunk
+            to = min(from + nobschunk - 1, rows)
+            write(outdta,write_chunks(@views(df[from:to, :]), datatypes, typelist))
+        end
+    elseif method == 2
+        function get_subscripts(typelist)
+            bytesize = Dict(
+                65526 => 8,
+                65527 => 4,
+                65528 => 4,
+                65529 => 2,
+                65530 => 1,
+            )
+        
+            istart = ones(Int64,ncols)
+            iend = zeros(Int64,ncols)
+            for i in 2:ncols
+                istart[i] = typelist[i-1] < 2450 ? typelist[i-1] :  bytesize[typelist[i-1]]
+                iend[i-1] = istart[i] -1
+            end
+            return istart, iend
+        end
+
+        (s,f) = get_subscrpts(typelist)
+        mybuf = Vector{UInt32}(undef,rlen)
+        for i = 1:ncols
+            fill_buf!(outdf,i,mybuf, datatypes, typelist)
+            write(outdta,mybuf)
+        end
     end
-    chunks = ceil(Int32, rlen * rows / maxbuffer)
-    nobschunk = chunks == 1 ? nobschunk = rows : ceil(Int32, rows / (chunks - 1))
-    for i = 1:chunks
-        from = 1 + (i-1)*nobschunk
-        to = min(from + nobschunk - 1, rows)
-        write(outdta,write_chunks(@views(df[from:to, :]), datatypes, typelist))
-    end
-    # for dfrow in eachrow(df)
-    #     for (i,v) in enumerate(dfrow)
-    #         if isa(outdf[:,i], CategoricalArray)
-    #             if eltype2(outdf[:,i]) == String
-    #                 write(outdta, Int32(ismissing(v) ? missingval[65528] : outdf[:,i].pool.invindex[v]))
-    #             else
-    #                 write(outdta, datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
-    #             end
-    #         elseif datatypes[i] == String
-    #             write(outdta, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
-    #         elseif datatypes[i] == Date
-    #             write(outdta, Int32(ismissing(v) ? missingval[65528] : Dates.value(v - Date(1960,1,1))))
-    #         elseif datatypes[i] == DateTime
-    #             write(outdta, Float64(ismissing(v) ? missingval[65526] : Dates.value(v - DateTime(1960,1,1))))
-    #         else
-    #             write(outdta, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
-    #         end
-    #     end
-    # end
     write(outdta,"</data>")
 
     # strL section - no strLs
@@ -721,6 +729,36 @@ function write_chunks(outdf, datatypes, typelist)
         end
     end
     return take!(iobuf)
+end
+
+function fill_buf!(outdf, n, buf, datatypes, typelist, s, e)
+    for (i,v) in enumerate(outdf[n,:])
+        if isa(outdf[:,i], CategoricalArray)
+            if eltype2(outdf[:,i]) == String
+                # write(iobuf, Int32(ismissing(v) ? missingval[65528] : outdf[:,i].pool.invindex[v]))
+                buf[s[i]:e[i]] = reinterpret(UInt8, [Int32(ismissing(v) ? missingval[65528] : outdf[:,i].pool.invindex[v])])
+            else
+                # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
+                buf[s[i]:e[i]] = reinterpret(UInt8, [datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v))])
+            end
+        elseif datatypes[i] == String
+            # write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
+            buf[s[i]:e[i]] = reinterpret(UInt8, [codeunits(ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))])
+        elseif datatypes[i] == Date
+            # write(iobuf, Int32(ismissing(v) ? missingval[65528] : Dates.value(v - Date(1960,1,1))))
+            buf[s[i]:e[i]] = reinterpret(UInt8, [Int32(ismissing(v) ? missingval[65528] : Dates.value(v - Date(1960,1,1)))])
+        elseif datatypes[i] == DateTime
+            # write(iobuf, Float64(ismissing(v) ? missingval[65526] : Dates.value(v - DateTime(1960,1,1))))
+            buf[s[i]:e[i]] = reinterpret(UInt8, [Float64(ismissing(v) ? missingval[65526] : Dates.value(v - DateTime(1960,1,1)))])
+        # elseif datatypes[i] == Bool
+        #     write(iobuf, Int8(ismissing(v) ? missingval[65530] : v))
+        # elseif datatypes[i] == Int64
+        #     write(iobuf, Int32(ismissing(v) ? missingval[65528] : v))
+        else
+            # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
+            buf[s[i]:e[i]] = reinterpret(UInt8, [datatypes[i](ismissing(v) ? missingval[typelist[i]] : v)])
+        end
+    end
 end
 
 function dtypes(outdf)
