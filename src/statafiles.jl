@@ -489,7 +489,7 @@ vtype = Dict(
     DateTime => 65526
 )
 
-function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, verbose = false)
+function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, verbose = false, wmethod = 1)
 
     # open the output dataset file
     if fn[end-3:end] != ".dta"
@@ -637,7 +637,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
 
     # --------------------------------------------------------=
     # combine rows into one iobuffer and write
-    if method == 1
+    if wmethod == 1
         if maxbuffer < rlen
             maxbuffer = rlen
         end
@@ -648,7 +648,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
             to = min(from + nobschunk - 1, rows)
             write(outdta,write_chunks(@views(df[from:to, :]), datatypes, typelist))
         end
-    elseif method == 2
+    elseif wmethod == 2
         function get_subscripts(typelist)
             bytesize = Dict(
                 65526 => 8,
