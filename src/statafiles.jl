@@ -489,6 +489,34 @@ vtype = Dict(
     DateTime => 65526
 )
 
+"""
+    write_stata(filename, df; maxbuffer = 10_000, verbose = true)
+
+Converts a DataFrame into a Stata dataset. It will map the data types as follows:
+
+DataFrame      Stata
+Int8           byte
+Int16          int
+Int32          long
+Float32        float
+Foat64         double
+Date           long
+DateTime       double
+
+Stata does not provide a Int64-equivalent data type. Thie program will test if 
+the values of a Int64 variable are within the range of values that can be saved
+as a `long`, then it will convert the data; otherwise, the variable will NOT be
+converted.
+
+Any variables of the data type that is not listed above or any variable that is
+100% missing will NOT be exported either. 
+
+All CategoricalArrays will be converted into an appropriate type and a matching
+label automatically. For example, a CategoricalArray whose `levels` consist of
+string values, a value label will be created and its `ref` values will be converted
+as a `long` (Int32). A CategoricalArray whose `levels` are numeric values, they 
+will be exported to an appropriate numeric data type.
+"""
 function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, verbose = true)
 
     # open the output dataset file
@@ -695,28 +723,28 @@ function get_subscripts(typelist, ncols)
     iend = zeros(Int64,ncols)
     for i in 1:ncols
         istart[i] = i == 1 ? 1 : iend[i-1] + 1        
-        iend[i] = istart[i] + (typelist[i] < 2045 ? typelist[i] :  bytesize[typelist[i]]) - 1 
     end
     iend[ncols] = iend[ncols-1] + (typelist[ncols] < 2045 ? typelist[ncols] :  bytesize[typelist[ncols]])
     return istart, iend
 end
 
 function write_chunks(outdf, datatypes, typelist)
+
     iobuf = IOBuffer()
     for dfrow in eachrow(outdf)
         for (i,v) in enumerate(dfrow)
             if isa(outdf[:,i], CategoricalArray)
                 if eltype2(outdf[:,i]) == String
-                    write(iobuf, Int32(ismissing(v) ? missingval[65528] : outdf[:,i].pool.invindex[v]))
+                    write(iobuf, Int32(ismissing(v) ? 2_147_483_621 : outdf[:,i].pool.invindex[v]))
                 else
                     write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
                 end
             elseif datatypes[i] == String
                 write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
             elseif datatypes[i] == Date
-                write(iobuf, Int32(ismissing(v) ? missingval[65528] : Dates.value(v - Date(1960,1,1))))
+                write(iobuf, Int32(ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1))))
             elseif datatypes[i] == DateTime
-                write(iobuf, Float64(ismissing(v) ? missingval[65526] : Dates.value(v - DateTime(1960,1,1))))
+                write(iobuf, Float64(ismissing(v) ? typemax(Float64) : Dates.value(v - DateTime(1960,1,1))))
             else
                 write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
             end
@@ -838,7 +866,6 @@ function get_varnames(outdta,len)
     return join(varstring,"")
 end
 
-# revise the function to accommodate
 function varnameunique(varnames, name, len)
     for i in 1:1000
         name = string(name,"_",i)
