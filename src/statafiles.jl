@@ -746,7 +746,7 @@ function write_chunks(outdf, datatypes, typelist)
             elseif datatypes[i] == DateTime
                 write(iobuf, Float64(ismissing(v) ? typemax(Float64) : Dates.value(v - DateTime(1960,1,1))))
             else
-                write(iobuf, datatypes[i](ismissing(v) ? typemax(dtatypes[i]) : v))
+                write(iobuf, datatypes[i](ismissing(v) ? typemax(datatypes[i]) : v))
             end
         end
     end
