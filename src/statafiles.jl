@@ -704,9 +704,6 @@ function get_subscripts(typelist, ncols)
         iend[i] = istart[i] + (typelist[i] < 2045 ? typelist[i] :  bytesize[typelist[i]]) - 1 
     end
     iend[ncols] = iend[ncols-1] + (typelist[ncols] < 2045 ? typelist[ncols] :  bytesize[typelist[ncols]])
-    for i in 1:ncols
-        println(i, " ", istart[i], " ", iend[i])
-    end
     return istart, iend
 end
 
@@ -726,10 +723,6 @@ function write_chunks(outdf, datatypes, typelist)
                 write(iobuf, Int32(ismissing(v) ? missingval[65528] : Dates.value(v - Date(1960,1,1))))
             elseif datatypes[i] == DateTime
                 write(iobuf, Float64(ismissing(v) ? missingval[65526] : Dates.value(v - DateTime(1960,1,1))))
-            # elseif datatypes[i] == Bool
-            #     write(iobuf, Int8(ismissing(v) ? missingval[65530] : v))
-            # elseif datatypes[i] == Int64
-            #     write(iobuf, Int32(ismissing(v) ? missingval[65528] : v))
             else
                 write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
             end
@@ -742,30 +735,17 @@ function fill_buf!(outdf, n, buf, datatypes, typelist, s, e)
     for (i,v) in enumerate(outdf[n,:])
         if isa(outdf[:,i], CategoricalArray)
             if eltype2(outdf[:,i]) == String
-                # write(iobuf, Int32(ismissing(v) ? missingval[65528] : outdf[:,i].pool.invindex[v]))
                 buf[s[i]:e[i]] = reinterpret(UInt8, [Int32(ismissing(v) ? missingval[65528] : outdf[:,i].pool.invindex[v])])
             else
-                # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
                 buf[s[i]:e[i]] = reinterpret(UInt8, [datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v))])
             end
         elseif datatypes[i] == String
-            # write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
             buf[s[i]:e[i]] = reinterpret(UInt8,codeunits(ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v)))))
         elseif datatypes[i] == Date
-            # write(iobuf, Int32(ismissing(v) ? missingval[65528] : Dates.value(v - Date(1960,1,1))))
             buf[s[i]:e[i]] = reinterpret(UInt8, [Int32(ismissing(v) ? missingval[65528] : Dates.value(v - Date(1960,1,1)))])
         elseif datatypes[i] == DateTime
-            # write(iobuf, Float64(ismissing(v) ? missingval[65526] : Dates.value(v - DateTime(1960,1,1))))
             buf[s[i]:e[i]] = reinterpret(UInt8, [Float64(ismissing(v) ? missingval[65526] : Dates.value(v - DateTime(1960,1,1)))])
-        # elseif datatypes[i] == Bool
-        #     write(iobuf, Int8(ismissing(v) ? missingval[65530] : v))
-        # elseif datatypes[i] == Int64
-        #     write(iobuf, Int32(ismissing(v) ? missingval[65528] : v))
         else
-            # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
-            if !ismissing(v) && v == 37.41841616182464
-                println(n,"  ------   ", i)
-            end
             buf[s[i]:e[i]] = reinterpret(UInt8, [datatypes[i](ismissing(v) ? missingval[typelist[i]] : v)])
         end
     end
