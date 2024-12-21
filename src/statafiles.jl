@@ -655,7 +655,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
 
         mybuf = Vector{UInt32}(undef,rlen)
         for i = 1:cols
-            fill_buf!(outdf,i,mybuf, datatypes, typelist, s, f)
+            fill_buf!(df,i,mybuf, datatypes, typelist, s, f)
             write(outdta,mybuf)
         end
     end
