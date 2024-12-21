@@ -565,7 +565,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
             end
         end
         if sum(allmiss) > 0
-            println("\n\nThese variables will be excluded variables because they are empty (100% missing).\n")
+            println("\n\nThese variables will NOT be excluded because they are empty (100% missing).\n")
             for (i, v) in enumerate(names(outdf))
                 allmiss[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
             end
@@ -710,24 +710,6 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
 
 end
 
-function get_subscripts(typelist, ncols)
-    bytesize = Dict(
-        65526 => 8,
-        65527 => 4,
-        65528 => 4,
-        65529 => 2,
-        65530 => 1,
-    )
-
-    istart = ones(Int64,ncols)
-    iend = zeros(Int64,ncols)
-    for i in 1:ncols
-        istart[i] = i == 1 ? 1 : iend[i-1] + 1        
-    end
-    iend[ncols] = iend[ncols-1] + (typelist[ncols] < 2045 ? typelist[ncols] :  bytesize[typelist[ncols]])
-    return istart, iend
-end
-
 function write_chunks(outdf, datatypes, typelist)
 
     iobuf = IOBuffer()
@@ -737,7 +719,7 @@ function write_chunks(outdf, datatypes, typelist)
                 if eltype2(outdf[:,i]) == String
                     write(iobuf, Int32(ismissing(v) ? 2_147_483_621 : outdf[:,i].pool.invindex[v]))
                 else
-                    write(iobuf, datatypes[i](ismissing(v) ? typemax(datatypes[i]) : unwrap(v)))
+                    write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
                 end
             elseif datatypes[i] == String
                 write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
@@ -746,7 +728,7 @@ function write_chunks(outdf, datatypes, typelist)
             elseif datatypes[i] == DateTime
                 write(iobuf, Float64(ismissing(v) ? typemax(Float64) : Dates.value(v - DateTime(1960,1,1))))
             else
-                write(iobuf, datatypes[i](ismissing(v) ? typemax(datatypes[i]) : v))
+                write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
             end
         end
     end
