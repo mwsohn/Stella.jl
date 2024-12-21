@@ -531,7 +531,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
     # report exclusions
     if verbose
         if sum(notallowed) > 0
-            println("These variables will NOT be exported because of their data types:\n")
+            println("\n\nThese variables will NOT be exported because of their data types:\n")
             for (i, v) in enumerate(names(outdf))
                 notallowed[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
             end
