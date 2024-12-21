@@ -649,27 +649,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
             write(outdta,write_chunks(@views(df[from:to, :]), datatypes, typelist))
         end
     elseif wmethod == 2
-        function get_subscripts(typelist, ncols)
-            bytesize = Dict(
-                65526 => 8,
-                65527 => 4,
-                65528 => 4,
-                65529 => 2,
-                65530 => 1,
-            )
-        
-            istart = ones(Int64,ncols)
-            iend = zeros(Int64,ncols)
-            for i in 2:ncols
-                iend[i-1] = typelist[i-1] < 2045 ? typelist[i-1] :  bytesize[typelist[i-1]]
-                istart[i] = iend[i-1] + 1
-            end
-            iend[ncols] = typelist[ncols] < 2045 ? typelist[ncols] :  bytesize[typelist[ncols]]
-            for i in 1:ncols
-                println(i, " ", istart[i], " ", iend[i])
-            end
-                return istart, iend
-        end
+ 
 
         (s,f) = get_subscripts(typelist, cols)
 
@@ -706,6 +686,28 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
     flush(outdta)
     close(outdta)
 
+end
+
+function get_subscripts(typelist, ncols)
+    bytesize = Dict(
+        65526 => 8,
+        65527 => 4,
+        65528 => 4,
+        65529 => 2,
+        65530 => 1,
+    )
+
+    istart = ones(Int64,ncols)
+    iend = zeros(Int64,ncols)
+    for i in 2:ncols
+        iend[i] = istart[i] + (typelist[i-1] < 2045 ? typelist[i-1] :  bytesize[typelist[i-1]]) 
+        istart[i] = i == 1 ? 1 : iend[i-1] + 1        
+    end
+    iend[ncols] = iend[ncols-1] + (typelist[ncols] < 2045 ? typelist[ncols] :  bytesize[typelist[ncols]])
+    for i in 1:ncols
+        println(i, " ", istart[i], " ", iend[i])
+    end
+    return istart, iend
 end
 
 function write_chunks(outdf, datatypes, typelist)
