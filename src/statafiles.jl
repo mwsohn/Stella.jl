@@ -530,17 +530,23 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
 
     # report exclusions
     if verbose
-        println("These variables will NOT be exported because of their data types:\n")
-        for (i, v) in enumerate(names(outdf))
-            notallowed[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
+        if sum(notallowed) > 0
+            println("These variables will NOT be exported because of their data types:\n")
+            for (i, v) in enumerate(names(outdf))
+                notallowed[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
+            end
         end
-        println("\n\nThese variables will be excluded variables because they are empty (100% missing).\n")
-        for (i, v) in enumerate(names(outdf))
-            allmiss[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
+        if sum(allmiss) > 0
+            println("\n\nThese variables will be excluded variables because they are empty (100% missing).\n")
+            for (i, v) in enumerate(names(outdf))
+                allmiss[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
+            end
         end
-        println("\n\nThese variables will be excluded variables because they are Int64 variables that contain values larger than Int32 can hold.\n")
-        for (i, v) in enumerate(names(outdf))
-            lint64[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
+        if sum(lint64) > 0
+            println("\n\nThese variables will be excluded variables because they are Int64 variables that contain values larger than Int32 can hold.\n")
+            for (i, v) in enumerate(names(outdf))
+                lint64[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
+            end
         end
     end
 
