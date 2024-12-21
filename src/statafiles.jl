@@ -763,7 +763,7 @@ function fill_buf!(outdf, n, buf, datatypes, typelist, s, e)
         #     write(iobuf, Int32(ismissing(v) ? missingval[65528] : v))
         else
             # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
-            if v == 37.41841616182464
+            if !ismissing(v) && v == 37.41841616182464
                 println(n,"  ------   ", i)
             end
             buf[s[i]:e[i]] = reinterpret(UInt8, [datatypes[i](ismissing(v) ? missingval[typelist[i]] : v)])
