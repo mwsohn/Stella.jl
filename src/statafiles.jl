@@ -750,7 +750,7 @@ function fill_buf!(outdf, n, buf, datatypes, typelist, s, e)
             end
         elseif datatypes[i] == String
             # write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
-            buf[s[i]:e[i]] = codeunits(ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
+            buf[s[i]:e[i]] = reinterpret(UInt8,codeunits(ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v)))))
         elseif datatypes[i] == Date
             # write(iobuf, Int32(ismissing(v) ? missingval[65528] : Dates.value(v - Date(1960,1,1))))
             buf[s[i]:e[i]] = reinterpret(UInt8, [Int32(ismissing(v) ? missingval[65528] : Dates.value(v - Date(1960,1,1)))])
