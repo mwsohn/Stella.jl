@@ -655,8 +655,8 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
 
         mybuf = Vector{UInt32}(undef,rlen)
         for i = 1:cols
-            fill_buf!(df,i,mybuf, datatypes, typelist, s, f)
-            write(outdta,mybuf)
+            
+            write(outdta,fill_buf(df,i,mybuf, datatypes, typelist, s, f))
         end
     end
     write(outdta,"</data>")
@@ -731,7 +731,7 @@ function write_chunks(outdf, datatypes, typelist)
     return take!(iobuf)
 end
 
-function fill_buf!(outdf, n, buf, datatypes, typelist, s, e)
+function fill_buf(outdf, n, buf, datatypes, typelist, s, e)
     for (i,v) in enumerate(outdf[n,:])
         if isa(outdf[:,i], CategoricalArray)
             if eltype2(outdf[:,i]) == String
@@ -749,6 +749,7 @@ function fill_buf!(outdf, n, buf, datatypes, typelist, s, e)
             buf[s[i]:e[i]] = reinterpret(UInt8, [datatypes[i](ismissing(v) ? missingval[typelist[i]] : v)])
         end
     end
+    return buf
 end
 
 function dtypes(outdf)
