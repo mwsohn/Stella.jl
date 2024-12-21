@@ -712,7 +712,7 @@ end
 
 function write_chunks(outdf, datatypes, typelist)
     iobuf = IOBuffer()
-    for dfrow in eachrow(outdf)
+    for (k,dfrow) in enumerate(eachrow(outdf))
         for (i,v) in enumerate(dfrow)
             if isa(outdf[:,i], CategoricalArray)
                 if eltype2(outdf[:,i]) == String
@@ -731,6 +731,9 @@ function write_chunks(outdf, datatypes, typelist)
             # elseif datatypes[i] == Int64
             #     write(iobuf, Int32(ismissing(v) ? missingval[65528] : v))
             else
+                if v == 37.41841616182464
+                    println(k, "    ", i)
+                end
                 write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
             end
         end
