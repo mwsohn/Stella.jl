@@ -749,7 +749,7 @@ function fill_buf(outdf, n, buf, datatypes, typelist, s, e)
             buf[s[i]:e[i]] = reinterpret(UInt8, [datatypes[i](ismissing(v) ? missingval[typelist[i]] : v)])
         end
     end
-    return buf
+    return unsafe_addr(buf)
 end
 
 function dtypes(outdf)
