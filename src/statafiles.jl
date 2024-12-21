@@ -489,7 +489,7 @@ vtype = Dict(
     DateTime => 65526
 )
 
-function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, verbose = false, wmethod = 1)
+function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, verbose = true)
 
     # open the output dataset file
     if fn[end-3:end] != ".dta"
