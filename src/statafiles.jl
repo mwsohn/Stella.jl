@@ -699,9 +699,9 @@ function get_subscripts(typelist, ncols)
 
     istart = ones(Int64,ncols)
     iend = zeros(Int64,ncols)
-    for i in 2:ncols
-        iend[i] = istart[i] + (typelist[i-1] < 2045 ? typelist[i-1] :  bytesize[typelist[i-1]]) 
+    for i in 1:ncols
         istart[i] = i == 1 ? 1 : iend[i-1] + 1        
+        iend[i] = istart[i] + (typelist[i] < 2045 ? typelist[i] :  bytesize[typelist[i]]) - 1 
     end
     iend[ncols] = iend[ncols-1] + (typelist[ncols] < 2045 ? typelist[ncols] :  bytesize[typelist[ncols]])
     for i in 1:ncols
