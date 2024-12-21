@@ -737,7 +737,7 @@ function write_chunks(outdf, datatypes, typelist)
                 if eltype2(outdf[:,i]) == String
                     write(iobuf, Int32(ismissing(v) ? 2_147_483_621 : outdf[:,i].pool.invindex[v]))
                 else
-                    write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
+                    write(iobuf, datatypes[i](ismissing(v) ? typemax(typelist[i]) : unwrap(v)))
                 end
             elseif datatypes[i] == String
                 write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
@@ -746,7 +746,7 @@ function write_chunks(outdf, datatypes, typelist)
             elseif datatypes[i] == DateTime
                 write(iobuf, Float64(ismissing(v) ? typemax(Float64) : Dates.value(v - DateTime(1960,1,1))))
             else
-                write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
+                write(iobuf, datatypes[i](ismissing(v) ? typemax(typelist[i]) : v))
             end
         end
     end
