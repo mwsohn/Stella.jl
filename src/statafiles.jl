@@ -679,7 +679,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
     for i = 1:chunks
         from = 1 + (i-1)*nobschunk
         to = min(from + nobschunk - 1, rows)
-        write(outdta,write_chunks(@views(df[from:to, :]), datatypes, typelist))
+        write(outdta,write_chunks(@views(df[from:to, :]), datatypes, typelist, rlen))
     end
     write(outdta,"</data>")
 
