@@ -804,8 +804,7 @@ function write_chunks(outdf, vec, s, e, datatypes, typelist, len)
                 # s += 8
             elseif datatypes[i] == Int8
                 # append!(vec, reinterpret(UInt8,Int8(ismissing(v) ? 101 : v )))
-                println(s[i], " ---------- ",e[i])
-                vec[s[i]:e[i]] = reinterpret(UInt8,Int8(ismissing(v) ? 101 : v ))
+                vec[s[i]] = reinterpret(UInt8,Int8(ismissing(v) ? 101 : v ))
             else
                 # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
                 vec[s[i]:e[i]] = reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : v])
