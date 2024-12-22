@@ -676,10 +676,12 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
     end
     chunks = ceil(Int32, rlen * rows / maxbuffer)
     nobschunk = chunks == 1 ? nobschunk = rows : ceil(Int32, rows / (chunks - 1))
+    (s,e) = get_loc(df,datatypes,typelist,rlen)
+    vec = Vector{UInt8}(undef,rlen)
     for i = 1:chunks
         from = 1 + (i-1)*nobschunk
         to = min(from + nobschunk - 1, rows)
-        write(outdta,write_chunks(@views(df[from:to, :]), datatypes, typelist, rlen))
+        write(outdta,write_chunks(@views(df[from:to, :]), vec, s, e, datatypes, typelist, rlen))
     end
     write(outdta,"</data>")
 
@@ -710,7 +712,28 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
 
 end
 
-function write_chunks(outdf, datatypes, typelist, len)
+function get_loc(df,datatypes,typelist,len)
+    bytesize = Dict(
+        65526 => 8,
+        65527 => 4,
+        65528 => 4,
+        65529 => 2,
+        65530 => 1,
+    )
+    s = ones(Int64,len)
+    e = ones(Int64,len)
+
+    for i = 1:size(df,2)
+        if i > 1
+            s[i] = s[i] + (typelist[i] < 2045 ? typelist[i] : bytesize[typelist[i]])
+        end
+        e[i] = s[i] + (typelist[i] < 2045 ? typelist[i] : bytesize[typelist[i]]) - 1
+    end
+    return (s,e)
+end
+
+
+function write_chunks(outdf, vec, s, e, datatypes, typelist, len)
 
     # iobuf = IOBuffer()
     # for dfrow in eachrow(outdf)
@@ -743,44 +766,45 @@ function write_chunks(outdf, datatypes, typelist, len)
         65530 => 1,
     )
     
-    vec = Vector{UInt8}()
+    # vec = Vector{UInt8}()
     # s = 1
     for dfrow in eachrow(outdf)
         for (i,v) in enumerate(dfrow)
             if isa(outdf[:,i], CategoricalArray)
                 if eltype2(outdf[:,i]) == String
                     # write(iobuf, Int32(ismissing(v) ? 2_147_483_621 : outdf[:,i].pool.invindex[v]))
-                    # vec[s:(s+3)] = reinterpret(UInt8,Int32[ismissing(v) ? 2_147_483_621 : outdf[:,i].pool.invindex[v]])
+                    vec[s[i]:e[i]] = reinterpret(UInt8,Int32[ismissing(v) ? 2_147_483_621 : outdf[:,i].pool.invindex[v]])
                     # s += 4
-                    append!(vec, reinterpret(UInt8,Int32[ismissing(v) ? 2_147_483_621 : outdf[:,i].pool.invindex[v]]))
+                    # append!(vec, reinterpret(UInt8,Int32[ismissing(v) ? 2_147_483_621 : outdf[:,i].pool.invindex[v]]))
                 else
 
                     # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
-                    # vec[s:(s+bytesize[typelist[i]]-1)] = reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : unwrap(v)])
+                    vec[s[i]:e[i]] = reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : unwrap(v)])
                     # s += bytesize[typelist[i]]
-                    append!(vec, reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : unwrap(v)]))
+                    # append!(vec, reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : unwrap(v)]))
             end
             elseif datatypes[i] == String
                 # write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
-                # vec[s:(s+typelist[i]-1)] = codeunits(ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
-                append!(vec, codeunits(ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v)))))
+                vec[s[i]:e[i]] = codeunits(ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
+                # append!(vec, codeunits(ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v)))))
                 # s += typelist[i]
             elseif datatypes[i] == Date
                 # write(iobuf, Int32(ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1))))
-                # vec[s:(s+3)] = reinterpret(UInt8, Int32[ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1))])
-                append!(vec, reinterpret(UInt8, Int32[ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1))]))
+                vec[s[i]:e[i]] = reinterpret(UInt8, Int32[ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1))])
+                # append!(vec, reinterpret(UInt8, Int32[ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1))]))
                 # s += 4
             elseif datatypes[i] == DateTime
                 # write(iobuf, Float64(ismissing(v) ? typemax(Float64) : Dates.value(v - DateTime(1960,1,1))))
-                # vec[s:(s+7)] = reinterpret(UInt8, Float64[ismissing(v) ? 8.989e307 : Dates.value(v - DateTime(1960,1,1))])
-                append!(vec, reinterpret(UInt8, Float64[ismissing(v) ? 8.989e307 : Dates.value(v - DateTime(1960,1,1))]))
+                vec[s[i]:e[i]] = reinterpret(UInt8, Float64[ismissing(v) ? 8.989e307 : Dates.value(v - DateTime(1960,1,1))])
+                # append!(vec, reinterpret(UInt8, Float64[ismissing(v) ? 8.989e307 : Dates.value(v - DateTime(1960,1,1))]))
                 # s += 8
             elseif datatypes[i] == Int8
-                append!(vec, reinterpret(UInt8,Int8(ismissing(v) ? 101 : v )))
+                # append!(vec, reinterpret(UInt8,Int8(ismissing(v) ? 101 : v )))
+                vec[s[i]:e[i]] = reinterpret(UInt8,Int8(ismissing(v) ? 101 : v ))
             else
                 # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
-                # vec[s:(s+bytesize[typelist[i]]-1)] = reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : v])
-                append!(vec, reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : v ]))
+                vec[s[i]:e[i]] = reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : v])
+                # append!(vec, reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : v ]))
                 # s += bytesize[typelist[i]]
             end
         end
