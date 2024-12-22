@@ -774,7 +774,7 @@ function write_chunks(outdf, datatypes, typelist, len)
                 s += 8
             else
                 # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
-                vec[s:(s+bytesize[datatypes[i]-1])] = reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : v])
+                vec[s:(s+bytesize[datatypes[i]]-1)] = reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : v])
                 s += bytesize[datatypes[i]]
             end
         end
