@@ -726,7 +726,7 @@ function write_chunks(outdf, datatypes, typelist, len)
     #         elseif datatypes[i] == Date
     #             write(iobuf, Int32(ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1))))
     #         elseif datatypes[i] == DateTime
-    #             write(iobuf, Float64(ismissing(v) ? typemax(Float64) : Dates.value(v - DateTime(1960,1,1))))
+    #             write(iobuf, Float64(ismissing(v) ? 8.989e307 : Dates.value(v - DateTime(1960,1,1))))
     #         else
     #             write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
     #         end
@@ -742,40 +742,44 @@ function write_chunks(outdf, datatypes, typelist, len)
         65529 => 2,
         65530 => 1,
     )
-
     
-    vec = Vector{UInt8}(undef,len)
-
-    s = 1
+    vec = Vector{UInt8}()
+    # s = 1
     for dfrow in eachrow(outdf)
         for (i,v) in enumerate(dfrow)
             if isa(outdf[:,i], CategoricalArray)
                 if eltype2(outdf[:,i]) == String
                     # write(iobuf, Int32(ismissing(v) ? 2_147_483_621 : outdf[:,i].pool.invindex[v]))
-                    vec[s:(s+3)] = reinterpret(UInt8,Int32[ismissing(v) ? 2_147_483_621 : outdf[:,i].pool.invindex[v]])
-                    s += 4
+                    # vec[s:(s+3)] = reinterpret(UInt8,Int32[ismissing(v) ? 2_147_483_621 : outdf[:,i].pool.invindex[v]])
+                    # s += 4
+                    push!(vec, reinterpret(UInt8,Int32[ismissing(v) ? 2_147_483_621 : outdf[:,i].pool.invindex[v]]))
                 else
 
                     # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
-                    vec[s:(s+bytesize[typelist[i]]-1)] = reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : unwrap(v)])
-                    s += bytesize[typelist[i]]
-                end
+                    # vec[s:(s+bytesize[typelist[i]]-1)] = reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : unwrap(v)])
+                    # s += bytesize[typelist[i]]
+                    push!(vec, reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : unwrap(v)]))
+            end
             elseif datatypes[i] == String
                 # write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
-                vec[s:(s+typelist[i]-1)] = codeunits(ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
-                s += typelist[i]
+                # vec[s:(s+typelist[i]-1)] = codeunits(ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
+                push!(vec, codeunits(ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v)))))
+                # s += typelist[i]
             elseif datatypes[i] == Date
                 # write(iobuf, Int32(ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1))))
-                vec[s:(s+3)] = reinterpret(UInt8, Int32[ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1))])
-                s += 4
+                # vec[s:(s+3)] = reinterpret(UInt8, Int32[ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1))])
+                push!(vec, reinterpret(UInt8, Int32[ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1))]))
+                # s += 4
             elseif datatypes[i] == DateTime
                 # write(iobuf, Float64(ismissing(v) ? typemax(Float64) : Dates.value(v - DateTime(1960,1,1))))
-                vec[s:(s+7)] = reinterpret(UInt8, Float64[ismissing(v) ? typemax(Float64) : Dates.value(v - DateTime(1960,1,1))])
-                s += 8
+                # vec[s:(s+7)] = reinterpret(UInt8, Float64[ismissing(v) ? 8.989e307 : Dates.value(v - DateTime(1960,1,1))])
+                push!(vec, reinterpret(UInt8, Float64[ismissing(v) ? 8.989e307 : Dates.value(v - DateTime(1960,1,1))]))
+                # s += 8
             else
                 # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
-                vec[s:(s+bytesize[typelist[i]]-1)] = reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : v])
-                s += bytesize[typelist[i]]
+                # vec[s:(s+bytesize[typelist[i]]-1)] = reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : v])
+                push!(vec, reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : v]))
+                # s += bytesize[typelist[i]]
             end
         end
     end
