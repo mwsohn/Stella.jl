@@ -757,8 +757,8 @@ function write_chunks(outdf, datatypes, typelist, len)
                 else
 
                     # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
-                    vec[s:(s+bytesize[datatypes[i]]-1)] = reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : unwrap(v)])
-                    s += bytesize[datatypes[i]]
+                    vec[s:(s+bytesize[typelist[i]]-1)] = reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : unwrap(v)])
+                    s += bytesize[typelist[i]]
                 end
             elseif datatypes[i] == String
                 # write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
@@ -774,8 +774,8 @@ function write_chunks(outdf, datatypes, typelist, len)
                 s += 8
             else
                 # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
-                vec[s:(s+bytesize[datatypes[i]]-1)] = reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : v])
-                s += bytesize[datatypes[i]]
+                vec[s:(s+bytesize[typelist[i]]-1)] = reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : v])
+                s += bytesize[typelist[i]]
             end
         end
     end
