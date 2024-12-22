@@ -775,10 +775,12 @@ function write_chunks(outdf, datatypes, typelist, len)
                 # vec[s:(s+7)] = reinterpret(UInt8, Float64[ismissing(v) ? 8.989e307 : Dates.value(v - DateTime(1960,1,1))])
                 push!(vec, reinterpret(UInt8, Float64[ismissing(v) ? 8.989e307 : Dates.value(v - DateTime(1960,1,1))]))
                 # s += 8
+            elseif datatypes[i] == Int8
+                push!(vec, reinterpret(UInt8,Int8(ismissing(v) ? 101 : v )))
             else
                 # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
                 # vec[s:(s+bytesize[typelist[i]]-1)] = reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : v])
-                push!(vec, reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : v]))
+                push!(vec, reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : v ]))
                 # s += bytesize[typelist[i]]
             end
         end
