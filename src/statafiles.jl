@@ -721,12 +721,12 @@ function get_loc(df,datatypes,typelist,len)
         65529 => 2,
         65530 => 1,
     )
-    s = ones(Int64,len)
-    e = ones(Int64,len)
+    s = ones(Int64,size(df,2))
+    e = ones(Int64,size(df,2))
 
     for i = 1:size(df,2)
         if i > 1
-            s[i] = s[i] + (typelist[i] < 2045 ? typelist[i] : bytesize[typelist[i]])
+            s[i] = s[i-1] + (typelist[i-1] < 2045 ? typelist[i-1] : bytesize[typelist[i-1]])
         end
         e[i] = s[i] + (typelist[i] < 2045 ? typelist[i] : bytesize[typelist[i]]) - 1
     end
