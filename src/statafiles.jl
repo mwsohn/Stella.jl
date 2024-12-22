@@ -677,6 +677,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
     chunks = ceil(Int32, rlen * rows / maxbuffer)
     nobschunk = chunks == 1 ? nobschunk = rows : ceil(Int32, rows / (chunks - 1))
     (s,e) = get_loc(df,datatypes,typelist,rlen)
+
     vec = Vector{UInt8}(undef,rlen)
     for i = 1:chunks
         from = 1 + (i-1)*nobschunk
@@ -728,6 +729,9 @@ function get_loc(df,datatypes,typelist,len)
             s[i] = s[i] + (typelist[i] < 2045 ? typelist[i] : bytesize[typelist[i]])
         end
         e[i] = s[i] + (typelist[i] < 2045 ? typelist[i] : bytesize[typelist[i]]) - 1
+    end
+    for i = 1:size(df,2)
+        println(i, " ", datatypes[i], " ", s[i], " ", e[i])
     end
     return (s,e)
 end
@@ -800,6 +804,7 @@ function write_chunks(outdf, vec, s, e, datatypes, typelist, len)
                 # s += 8
             elseif datatypes[i] == Int8
                 # append!(vec, reinterpret(UInt8,Int8(ismissing(v) ? 101 : v )))
+                println(s[i], " ---------- ",e[i])
                 vec[s[i]:e[i]] = reinterpret(UInt8,Int8(ismissing(v) ? 101 : v ))
             else
                 # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
