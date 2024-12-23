@@ -526,60 +526,8 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
 
     outdta = open(fn,"w")
 
-    # allowed variable types
-    notallowed = [ in(x, [Bool, Int8, Int16, Int32, Int64, Float32, Float64, String, Date, DateTime]) ? false : true for x in dtypes(outdf)]
-
-    # empty variables
-    allmiss = [ sum(ismissing.(x)) == size(outdf,1) ? true : false for x in eachcol(outdf)]
-
-    # large Int64 values that cannot be saved as Int32
-    lint64 = falses(ncol(outdf))
-    for i in 1:ncol(outdf)
-        if eltype2(outdf[:,i]) == Int64 && allmiss[i] == false
-            tvec = collect(skipmissing(outdf[:,i]))
-            if maximum(tvec) > 2_147_483_620 || minimum(tvec) < −2_147_483_647
-                lint64[i] = true
-            end
-        end
-    end
-    
-    # subset
-    df = outdf[:,findall(x->x == true, [ notallowed[x] || allmiss[x] || lint64[x] ? false : true for x in 1:ncol(outdf)])]
-
-    # convert Bool to Int8 and Int64 to Int32
-    for v in names(df)
-        if eltype2(df[:, v]) == Bool
-            df[:,v] = convert(Vector{Union{Int8,Missing}}, df[:,v])
-        end
-        if eltype2(df[:,v]) == Int64
-            df[:,v] = convert(Vector{Union{Int64,Missing}}, df[:,v])
-        end
-    end
-
-    # report exclusions
-    if verbose
-        if sum(notallowed) > 0
-            println("\n\nThese variables will NOT be exported because of their data types:\n")
-            for (i, v) in enumerate(names(outdf))
-                notallowed[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
-            end
-        end
-        if sum(allmiss) > 0
-            println("\n\nThese variables will NOT be excluded because they are empty (100% missing).\n")
-            for (i, v) in enumerate(names(outdf))
-                allmiss[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
-            end
-        end
-        if sum(lint64) > 0
-            println("\n\nThese variables will be excluded variables because they are Int64 variables that contain values larger than Int32 can hold.\n")
-            for (i, v) in enumerate(names(outdf))
-                lint64[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
-            end
-        end
-    end
-
-    # data types
-    datatypes = dtypes(df)
+    # prepare the dataframe
+    (df, datatypes, typelist, numbytes, value_labels) = prepare_df(outdf,verbose=verbose)
 
     # cols and rows
     (rows, cols) = size(df)
@@ -621,7 +569,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
 
     # -----------------------------------------------------
     # variable types
-    (typelist, numbytes) = get_types(df)
+    
     m[3] = Int64(position(outdta))
     write(outdta,"<variable_types>")
     write(outdta,UInt16.(typelist))
@@ -676,14 +624,15 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
     end
     chunks = ceil(Int32, rlen * rows / maxbuffer)
     nobschunk = chunks == 1 ? nobschunk = rows : ceil(Int32, rows / (chunks - 1))
-    # (s,e) = get_loc(df,datatypes,typelist,rlen)
-
-    # vec = Vector{UInt8}(undef,rlen)
-    for i = 1:chunks
-        from = 1 + (i-1)*nobschunk
-        to = min(from + nobschunk - 1, rows)
-        write(outdta,write_chunks(@views(df[from:to, :]), datatypes, typelist))
+    # for i = 1:chunks
+    #     from = 1 + (i-1)*nobschunk
+    #     to = min(from + nobschunk - 1, rows)
+    #     write(outdta,write_chunks(@views(df[from:to, :]), datatypes, typelist))
+    # end
+    for i in 1:size(df,1)
+        write(outdta,join(collect(df[i,:])))
     end
+
     write(outdta,"</data>")
 
     # strL section - no strLs
@@ -693,7 +642,8 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
     # value labels
     m[12] = Int64(position(outdta))
     write(outdta,"<value_labels>")
-    write(outdta, get_value_labels(df))
+    # write(outdta, get_value_labels(df))
+    write(outdta,value_labels)
     write(outdta,"</value_labels>")
 
     # at the end of stata_dta section
@@ -711,6 +661,88 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
     flush(outdta)
     close(outdta)
 
+end
+
+function prepare_df(outdf; verbose=verbose)
+
+    # allowed variable types
+    notallowed = [ in(x, [Bool, Int8, Int16, Int32, Int64, Float32, Float64, String, Date, DateTime]) ? false : true for x in dtypes(outdf)]
+
+    # empty variables
+    allmiss = [ sum(ismissing.(x)) == size(outdf,1) ? true : false for x in eachcol(outdf)]
+
+    # large Int64 values that cannot be saved as Int32
+    lint64 = falses(ncol(outdf))
+    for i in 1:ncol(outdf)
+        if eltype2(outdf[:,i]) == Int64 && allmiss[i] == false
+            tvec = collect(skipmissing(outdf[:,i]))
+            if maximum(tvec) > 2_147_483_620 || minimum(tvec) < −2_147_483_647
+                lint64[i] = true
+            end
+        end
+    end
+    
+    # subset
+    df = outdf[:,findall(x->x == true, [ notallowed[x] || allmiss[x] || lint64[x] ? false : true for x in 1:ncol(outdf)])]
+
+    # convert Bool to Int8 and Int64 to Int32
+    for v in names(df)
+        if eltype2(df[:, v]) == Bool
+            df[:,v] = convert(Vector{Union{Int8,Missing}}, df[:,v])
+        end
+        if eltype2(df[:,v]) == Int64
+            df[:,v] = convert(Vector{Union{Int64,Missing}}, df[:,v])
+        end
+    end
+
+    # report exclusions
+    if verbose
+        if sum(notallowed) > 0
+            println("\n\nThese variables will NOT be exported because of their data types:\n")
+            for (i, v) in enumerate(names(outdf))
+                notallowed[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
+            end
+        end
+        if sum(allmiss) > 0
+            println("\n\nThese variables will NOT be excluded because they are empty (100% missing).\n")
+            for (i, v) in enumerate(names(outdf))
+                allmiss[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
+            end
+        end
+        if sum(lint64) > 0
+            println("\n\nThese variables will be excluded variables because they are Int64 variables that contain values larger than Int32 can hold.\n")
+            for (i, v) in enumerate(names(outdf))
+                lint64[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
+            end
+        end
+    end
+
+    datatypes = dtypes(df)
+    (typelist, numbytes) = get_types(df)
+    vlabels = get_value_labels(df)
+
+    for i = 1:size(df,2)
+        if isa(outdf[:,i], CategoricalArray)
+            if eltype2(outdf[:,i]) == String
+                df[!,i] = convert(Vector{UInt32}, Int32(ismissing(v) ? 2_147_483_621 : outdf[:,i].pool.invindex[v]))
+            else
+                df[!,i] = convert(Vector{UInt32}, datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
+            end
+        elseif datatypes[i] == String
+            df[!,i] = codeunits(ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
+        elseif datatypes[i] == Date
+            # write(iobuf, Int32(ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1))))
+            df[!,i] = convert(Vector{UInt32}, Int32(ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1))))
+        elseif datatypes[i] == DateTime
+            # write(iobuf, Float64(ismissing(v) ? 8.989e307 : Dates.value(v - DateTime(1960,1,1))))
+            df[!,i] = convert(Vector{UInt32}, Float64(ismissing(v) ? 8.989e307 : Dates.value(v - DateTime(1960,1,1))))
+        else
+            # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
+            df[!,i] = convert(Vector{UInt32}, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
+        end
+    end
+
+    return df, datatypes, typelist, numbytes, vlabels
 end
 
 function get_loc(df,datatypes,typelist,len)
