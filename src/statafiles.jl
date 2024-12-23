@@ -722,8 +722,8 @@ function prepare_df(outdf; verbose=verbose)
     vlabels = get_value_labels(df)
 
     for i = 1:size(df,2)
-        if isa(outdf[:,i], CategoricalArray)
-            if eltype2(outdf[:,i]) == String
+        if isa(df[:,i], CategoricalArray)
+            if eltype2(df[:,i]) == String
                 df[!,i] = convert(Vector{UInt32}, Int32[ismissing(v) ? 2_147_483_621 : v for v in df[:,i].refs])
             else
                 df[!,i] = convert(Vector{UInt32}, datatypes[i][ismissing(v) ? missingval[typelist[i]] : unwrap(v) for v in df[:,i]])
