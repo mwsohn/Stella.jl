@@ -729,7 +729,7 @@ function prepare_df(outdf; verbose=verbose)
                 df[!,i] = convert(Vector{UInt32}, datatypes[i][ismissing(v) ? missingval[typelist[i]] : unwrap(v) for v in df[:,i]])
             end
         elseif datatypes[i] == String
-            df[!,i] = codeunits.([ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v)) for v in df[:,i]])
+            df[!,i] = codeunits.([ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))) for v in df[:,i]])
         elseif datatypes[i] == Date
             # write(iobuf, Int32(ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1))))
             df[!,i] = convert(Vector{UInt32}, Int32[ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1)) for v in df[:,i]])
