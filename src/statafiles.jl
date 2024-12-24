@@ -527,7 +527,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
     outdta = open(fn,"w")
 
     # prepare the dataframe
-    (df, datatypes, typelist, numbytes, value_labels) = prepare_df(outdf,verbose=verbose)
+    (df, typelist, numbytes, value_labels) = prepare_df(outdf,verbose=verbose)
 
     # cols and rows
     (rows, cols) = size(df)
@@ -663,10 +663,11 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
 
 end
 
+
 function prepare_df(outdf; verbose=verbose)
 
     # allowed variable types
-    notallowed = [ in(x, [Bool, Int8, Int16, Int32, Int64, Float32, Float64, String, Date, DateTime]) ? false : true for x in dtypes(outdf)]
+    notallowed = [ in(x, [Bool, Int8, Int16, Int32, Int64, Float32, Float64, String, Date, DateTime]) ? false : true for x in Stella.dtypes(outdf)]
 
     # empty variables
     allmiss = [ sum(ismissing.(x)) == size(outdf,1) ? true : false for x in eachcol(outdf)]
@@ -717,32 +718,39 @@ function prepare_df(outdf; verbose=verbose)
         end
     end
 
-    datatypes = dtypes(df)
-    (typelist, numbytes) = get_types(df)
-    vlabels = get_value_labels(df)
+    datatypes = Stella.dtypes(df)
+    (typelist, numbytes) = Stella.get_types(df)
+    vlabels = Stella.get_value_labels(df)
+    nms = names(df)
 
     for i = 1:size(df,2)
+        println(i, "\t", nms[i], "\t", datatypes[i], "\t",typelist[i] < 2045 ? " " : Stella.missingval[typelist[i]] )
         if isa(df[:,i], CategoricalArray)
             if eltype2(df[:,i]) == String
-                df[!,i] = convert(Vector{UInt32}, Int32[ismissing(v) ? 2_147_483_621 : v for v in df[:,i].refs])
+                df[!,i] = reinterpret(UInt32, Int32[ismissing(v) ? 2_147_483_621 : v for v in df[:,i].refs])
             else
-                df[!,i] = convert(Vector{UInt32}, datatypes[i][ismissing(v) ? missingval[typelist[i]] : unwrap(v) for v in df[:,i]])
+                df[!,i] = convert(Vector{UInt8}, datatypes[i][ismissing(v) ? Stella.missingval[typelist[i]] : unwrap(v) for v in df[:,i]])
             end
         elseif datatypes[i] == String
             df[!,i] = codeunits.([ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))) for v in df[:,i]])
         elseif datatypes[i] == Date
-            # write(iobuf, Int32(ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1))))
-            df[!,i] = convert(Vector{UInt32}, Int32[ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1)) for v in df[:,i]])
+            df[!,i] = reinterpret(UInt32, Int32[ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1)) for v in df[:,i]])
         elseif datatypes[i] == DateTime
-            # write(iobuf, Float64(ismissing(v) ? 8.989e307 : Dates.value(v - DateTime(1960,1,1))))
-            df[!,i] = convert(Vector{UInt32}, Float64[ismissing(v) ? 8.989e307 : Dates.value(v - DateTime(1960,1,1)) for v in df[:,i]])
-        else
-            # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
-            df[!,i] = convert(Vector{UInt32}, datatypes[i][ismissing(v) ? missingval[typelist[i]] : v for v in df[:,i]])
+            df[!,i] = reinterpret(UInt64, Float64[ismissing(v) ? 8.989e307 : Dates.value(v - DateTime(1960,1,1)) for v in df[:,i]])
+        elseif datatypes[i] == Int8
+            df[!,i] = reinterpret(UInt8, Int8[ismissing(v) ? 101 : v for v in df[:,i]])
+        elseif datatypes[i] == Int16
+            df[!,i] = reinterpret(UInt16, Int16[ismissing(v) ? 32_741 : v for v in df[:,i]])
+        elseif datatypes[i] == Int32
+            df[!,i] = reinterpret(UInt32, Int32[ismissing(v) ? 2_147_483_621 : v for v in df[:,i]])
+        elseif datatypes[i] == Float32
+            df[!,i] = reinterpret(UInt32, Float32[ismissing(v) ? 1.702e38 : v for v in df[:,i]])
+        elseif datatypes[i] == Float64
+            df[!,i] = reinterpret(UInt64, Float64[ismissing(v) ? 8.989e307 : v for v in df[:,i]])
         end
     end
 
-    return df, datatypes, typelist, numbytes, vlabels
+    return df, typelist, numbytes, vlabels
 end
 
 function get_loc(df,datatypes,typelist,len)
