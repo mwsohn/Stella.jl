@@ -682,6 +682,28 @@ function prepare_df(outdf; verbose=verbose)
         end
     end
     
+    # report exclusions
+    if verbose
+        if sum(notallowed) > 0
+            println("\n\nThese variables will NOT be exported because of their data types:\n")
+            for (i, v) in enumerate(names(outdf))
+                notallowed[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
+            end
+        end
+        if sum(allmiss) > 0
+            println("\n\nThese variables will NOT be exported because they are empty (100% missing).\n")
+            for (i, v) in enumerate(names(outdf))
+                allmiss[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
+            end
+        end
+        if sum(lint64) > 0
+            println("\n\nThese variables will be excluded variables because they are Int64 variables that contain values larger than Int32 can hold.\n")
+            for (i, v) in enumerate(names(outdf))
+                lint64[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
+            end
+        end
+    end
+
     # subset
     df = outdf[:,findall(x->x == true, [ notallowed[x] || allmiss[x] || lint64[x] ? false : true for x in 1:ncol(outdf)])]
 
@@ -692,28 +714,6 @@ function prepare_df(outdf; verbose=verbose)
         end
         if eltype2(df[:,v]) == Int64
             df[:,v] = convert(Vector{Union{Int64,Missing}}, df[:,v])
-        end
-    end
-
-    # report exclusions
-    if verbose
-        if sum(notallowed) > 0
-            println("\n\nThese variables will NOT be exported because of their data types:\n")
-            for (i, v) in enumerate(names(outdf))
-                notallowed[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
-            end
-        end
-        if sum(allmiss) > 0
-            println("\n\nThese variables will NOT be excluded because they are empty (100% missing).\n")
-            for (i, v) in enumerate(names(outdf))
-                allmiss[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
-            end
-        end
-        if sum(lint64) > 0
-            println("\n\nThese variables will be excluded variables because they are Int64 variables that contain values larger than Int32 can hold.\n")
-            for (i, v) in enumerate(names(outdf))
-                lint64[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
-            end
         end
     end
 
