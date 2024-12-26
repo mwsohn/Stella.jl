@@ -527,7 +527,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
     outdta = open(fn,"w")
 
     # prepare the dataframe
-    (df, typelist, numbytes, value_labels) = prepare_df(outdf,verbose=verbose)
+    (df, datatypes, typelist, numbytes, value_labels) = prepare_df(outdf,verbose=verbose)
 
     # cols and rows
     (rows, cols) = size(df)
@@ -624,15 +624,11 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
     end
     chunks = ceil(Int32, rlen * rows / maxbuffer)
     nobschunk = chunks == 1 ? nobschunk = rows : ceil(Int32, rows / (chunks - 1))
-    # for i = 1:chunks
-    #     from = 1 + (i-1)*nobschunk
-    #     to = min(from + nobschunk - 1, rows)
-    #     write(outdta,write_chunks(@views(df[from:to, :]), datatypes, typelist))
-    # end
-    for i in 1:size(df,1)
-        write(outdta,join(collect(df[i,:])))
+    for i = 1:chunks
+        from = 1 + (i-1)*nobschunk
+        to = min(from + nobschunk - 1, rows)
+        write(outdta,write_chunks(@views(df[from:to, :]), datatypes, typelist))
     end
-
     write(outdta,"</data>")
 
     # strL section - no strLs
@@ -721,61 +717,9 @@ function prepare_df(outdf; verbose=verbose)
     datatypes = Stella.dtypes(df)
     (typelist, numbytes) = Stella.get_types(df)
     vlabels = Stella.get_value_labels(df)
-    nms = names(df)
 
-    for i = 1:size(df,2)
-        println(i, "\t", nms[i], "\t", datatypes[i], "\t",typelist[i] < 2045 ? " " : Stella.missingval[typelist[i]] )
-        if isa(df[:,i], CategoricalArray)
-            if eltype2(df[:,i]) == String
-                df[!,i] = reinterpret(UInt32, Int32[ismissing(v) ? 2_147_483_621 : v for v in df[:,i].refs])
-            else
-                df[!,i] = convert(Vector{UInt8}, datatypes[i][ismissing(v) ? Stella.missingval[typelist[i]] : unwrap(v) for v in df[:,i]])
-            end
-        elseif datatypes[i] == String
-            df[!,i] = codeunits.([ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))) for v in df[:,i]])
-        elseif datatypes[i] == Date
-            df[!,i] = reinterpret(UInt32, Int32[ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1)) for v in df[:,i]])
-        elseif datatypes[i] == DateTime
-            df[!,i] = reinterpret(UInt64, Float64[ismissing(v) ? 8.989e307 : Dates.value(v - DateTime(1960,1,1)) for v in df[:,i]])
-        elseif datatypes[i] == Int8
-            df[!,i] = reinterpret(UInt8, Int8[ismissing(v) ? 101 : v for v in df[:,i]])
-        elseif datatypes[i] == Int16
-            df[!,i] = reinterpret(UInt16, Int16[ismissing(v) ? 32_741 : v for v in df[:,i]])
-        elseif datatypes[i] == Int32
-            df[!,i] = reinterpret(UInt32, Int32[ismissing(v) ? 2_147_483_621 : v for v in df[:,i]])
-        elseif datatypes[i] == Float32
-            df[!,i] = reinterpret(UInt32, Float32[ismissing(v) ? 1.702e38 : v for v in df[:,i]])
-        elseif datatypes[i] == Float64
-            df[!,i] = reinterpret(UInt64, Float64[ismissing(v) ? 8.989e307 : v for v in df[:,i]])
-        end
-    end
-
-    return df, typelist, numbytes, vlabels
+    return df, datatypes, typelist, numbytes, vlabels
 end
-
-function get_loc(df,datatypes,typelist,len)
-    bytesize = Dict(
-        65526 => 8,
-        65527 => 4,
-        65528 => 4,
-        65529 => 2,
-        65530 => 1,
-    )
-    s = ones(Int64,size(df,2))
-    e = ones(Int64,size(df,2))
-
-    for i = 1:size(df,2)
-        if i > 1
-            s[i] = s[i-1] + (typelist[i-1] < 2045 ? typelist[i-1] : bytesize[typelist[i-1]])
-        end
-        e[i] = s[i] + (typelist[i] < 2045 ? typelist[i] : bytesize[typelist[i]]) - 1
-    end
-    for i = 1:size(df,2)
-        println(i, " ", datatypes[i], " ", s[i], " ", e[i])
-    end
-    return (s,e)
-end
-
 
 function write_chunks(outdf, datatypes, typelist)
 
@@ -800,60 +744,6 @@ function write_chunks(outdf, datatypes, typelist)
         end
     end
     return take!(iobuf)
-
-    
-    # bytesize = Dict(
-    #     65526 => 8,
-    #     65527 => 4,
-    #     65528 => 4,
-    #     65529 => 2,
-    #     65530 => 1,
-    # )
-    
-    # # vec = Vector{UInt8}()
-    # # s = 1
-    # for dfrow in eachrow(outdf)
-    #     for (i,v) in enumerate(dfrow)
-    #         if isa(outdf[:,i], CategoricalArray)
-    #             if eltype2(outdf[:,i]) == String
-    #                 # write(iobuf, Int32(ismissing(v) ? 2_147_483_621 : outdf[:,i].pool.invindex[v]))
-    #                 vec[s[i]:e[i]] = reinterpret(UInt8,Int32[ismissing(v) ? 2_147_483_621 : outdf[:,i].pool.invindex[v]])
-    #                 # s += 4
-    #                 # append!(vec, reinterpret(UInt8,Int32[ismissing(v) ? 2_147_483_621 : outdf[:,i].pool.invindex[v]]))
-    #             else
-
-    #                 # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
-    #                 vec[s[i]:e[i]] = reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : unwrap(v)])
-    #                 # s += bytesize[typelist[i]]
-    #                 # append!(vec, reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : unwrap(v)]))
-    #         end
-    #         elseif datatypes[i] == String
-    #             # write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
-    #             vec[s[i]:e[i]] = codeunits(ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
-    #             # append!(vec, codeunits(ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v)))))
-    #             # s += typelist[i]
-    #         elseif datatypes[i] == Date
-    #             # write(iobuf, Int32(ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1))))
-    #             vec[s[i]:e[i]] = reinterpret(UInt8, Int32[ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1))])
-    #             # append!(vec, reinterpret(UInt8, Int32[ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1))]))
-    #             # s += 4
-    #         elseif datatypes[i] == DateTime
-    #             # write(iobuf, Float64(ismissing(v) ? typemax(Float64) : Dates.value(v - DateTime(1960,1,1))))
-    #             vec[s[i]:e[i]] = reinterpret(UInt8, Float64[ismissing(v) ? 8.989e307 : Dates.value(v - DateTime(1960,1,1))])
-    #             # append!(vec, reinterpret(UInt8, Float64[ismissing(v) ? 8.989e307 : Dates.value(v - DateTime(1960,1,1))]))
-    #             # s += 8
-    #         elseif datatypes[i] == Int8
-    #             # append!(vec, reinterpret(UInt8,Int8(ismissing(v) ? 101 : v )))
-    #             vec[s[i]] = reinterpret(UInt8,Int8(ismissing(v) ? 101 : v ))
-    #         else
-    #             # write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
-    #             vec[s[i]:e[i]] = reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : v])
-    #             # append!(vec, reinterpret(UInt8,datatypes[i][ismissing(v) ? missingval[typelist[i]] : v ]))
-    #             # s += bytesize[typelist[i]]
-    #         end
-    #     end
-    # end
-    # return vec
 
 end
 
