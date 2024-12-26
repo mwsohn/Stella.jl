@@ -471,7 +471,6 @@ end
 #######################################################################
 
 missingval = Dict(
-    65530 => 101,
     65529 => 32_741,
     65528 => 2_147_483_621,
     65527 => 1.702e38,
@@ -527,7 +526,8 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
     outdta = open(fn,"w")
 
     # prepare the dataframe
-    (df, datatypes, typelist, numbytes, value_labels) = prepare_df(outdf,verbose=verbose)
+    (noexp, datatypes, typelist, numbytes, value_labels) = prepare_df(outdf,verbose=verbose)
+    df = outdf
 
     # cols and rows
     (rows, cols) = size(df)
@@ -627,7 +627,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
     for i = 1:chunks
         from = 1 + (i-1)*nobschunk
         to = min(from + nobschunk - 1, rows)
-        write(outdta,write_chunks(@views(df[from:to, :]), datatypes, typelist))
+        write(outdta,write_chunks(@views(df[from:to, :]), datatypes, typelist, noexp))
     end
     write(outdta,"</data>")
 
@@ -702,33 +702,39 @@ function prepare_df(outdf; verbose=verbose)
     end
 
     # subset
-    df = outdf[:,findall(x->x == true, [ notallowed[x] || allmiss[x] || lint64[x] ? false : true for x in 1:ncol(outdf)])]
+    # df = outdf[:,findall(x->x == true, [ notallowed[x] || allmiss[x] || lint64[x] ? false : true for x in 1:ncol(outdf)])]
+    noexp = [ notallowed[x] || allmiss[x] || lint64[x] ? true : false for x in 1:ncol(outdf)]
 
     # convert Bool to Int8 and Int64 to Int32
-    for v in names(df)
-        if eltype2(df[:, v]) == Bool
-            df[:,v] = convert(Vector{Union{Int8,Missing}}, df[:,v])
-        end
-        if eltype2(df[:,v]) == Int64
-            df[:,v] = convert(Vector{Union{Int64,Missing}}, df[:,v])
-        end
-    end
+    # for v in names(df)
+    #     if eltype2(df[:, v]) == Bool
+    #         df[:,v] = convert(Vector{Union{Int8,Missing}}, df[:,v])
+    #     end
+    #     if eltype2(df[:,v]) == Int64
+    #         df[:,v] = convert(Vector{Union{Int64,Missing}}, df[:,v])
+    #     end
+    # end
 
     datatypes = Stella.dtypes(df)
     (typelist, numbytes) = Stella.get_types(df)
     vlabels = Stella.get_value_labels(df)
 
-    return df, datatypes, typelist, numbytes, vlabels
+    return noexp, datatypes, typelist, numbytes, vlabels
 end
 
-function write_chunks(outdf, datatypes, typelist)
+function write_chunks(outdf, datatypes, typelist, noexp)
 
     iobuf = IOBuffer()
     for dfrow in eachrow(outdf)
         for (i,v) in enumerate(dfrow)
+            if noexp[i]
+                continue
+            end
             if isa(outdf[:,i], CategoricalArray)
                 if eltype2(outdf[:,i]) == String
                     write(iobuf, Int32(ismissing(v) ? 2_147_483_621 : outdf[:,i].pool.invindex[v]))
+                elseif datatypes[i] in (Bool, Int8)
+                    write(iobuf, Int8(ismissing(v) ? 101 : unwrap(v)))
                 else
                     write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : unwrap(v)))
                 end
@@ -738,6 +744,8 @@ function write_chunks(outdf, datatypes, typelist)
                 write(iobuf, Int32(ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1))))
             elseif datatypes[i] == DateTime
                 write(iobuf, Float64(ismissing(v) ? 8.989e307 : Dates.value(v - DateTime(1960,1,1))))
+            elseif datatypes[i] in (Bool, Int8)
+                write(iobuf, Int8(ismissing(v) ? 101 : v))
             else
                 write(iobuf, datatypes[i](ismissing(v) ? missingval[typelist[i]] : v))
             end
