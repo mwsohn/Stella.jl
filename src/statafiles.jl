@@ -383,7 +383,7 @@ function _read_dta(io, release, rlen, len, nvar, varlist, varlabels, typelist, f
 
         # for vectors without missing values, convert the vector to an appropirate type
         if sum(ismissing.(df[!, varlist[j]])) == 0
-            df[!, varlist[j]] = convert(Vector{eltype2(df[!, varlist[j]])), df[!, varlist[j]])
+            df[!, varlist[j]] = convert(Vector{eltype2(df[!, varlist[j]])}, df[!, varlist[j]])
         end
     end
 
