@@ -874,13 +874,11 @@ function varnameunique(varnames, name, len)
     end
 end
 
-function get_formats(outdf,noexp,typelist,len)
+function get_formats(df,noexp,typelist,len)
 
     fvec = String[]
+    outdf = @views(df[:,findall(x->x == false,noexp)])
     for i in 1:ncol(outdf)
-        if noexp[i]
-            continue
-        end
         if typelist[i] < 2045
             fmt = string("%-",typelist[i],"s")
             push!(fvec,string(fmt, repeat('\0',len - sizeof(fmt))))
