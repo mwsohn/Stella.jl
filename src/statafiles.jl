@@ -704,7 +704,7 @@ function prepare_df(outdf; verbose=verbose)
     # subset
     noexp = [ notallowed[x] || allmiss[x] || lint64[x] ? true : false for x in 1:ncol(outdf)]
 
-    datatypes = Stella.dtypes(outdf, noexp)
+    datatypes = deleteat!(Stella.dtypes(outdf), findall(x->x==true,noexp))
     (typelist, numbytes) = Stella.get_types(outdf, noexp)
     vlabels = Stella.get_value_labels(outdf, noexp)
 
@@ -744,12 +744,9 @@ function write_chunks(outdf, noexp, datatypes, typelist)
 
 end
 
-function dtypes(outdf, noexp)
+function dtypes(outdf)
     t = []
     for i in 1:ncol(outdf)
-        if noexp[i]
-            continue
-        end
         if isa(outdf[:,i], CategoricalArray)
             typ = eltype2(outdf[:,i])
             if typ == String
