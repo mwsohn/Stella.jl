@@ -864,7 +864,7 @@ function varnameunique(varnames, name, len)
     end
 end
 
-function get_formats(df,typelist,len)
+function get_formats(outdf,typelist,len)
 
     fvec = String[]
     for i in 1:ncol(outdf)
