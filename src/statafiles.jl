@@ -773,7 +773,7 @@ function getmaxbytes(s::AbstractArray)
     return maximum(sizeof.(skipmissing(s)))
 end
 
-function get_types(outdf, noexp)
+function get_types(df, noexp)
 
     bytesize = Dict(
         65526 => 8,
@@ -782,6 +782,8 @@ function get_types(outdf, noexp)
         65529 => 2,
         65530 => 1,
     )
+
+    outdf = @views(df[:, findall(x -> x == false, noexp)])
 
     tlist = zeros(Int32,ncol(outdf))
     numbytes = zeros(Int32,ncol(outdf))
