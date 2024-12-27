@@ -831,7 +831,7 @@ end
 function get_varnames(outdf,noexp,len)
 
     varstring = String[]
-    for v in names(outdf)
+    for (i,v) in enumerate(names(outdf))
         if noexp[i]
             continue
         end
