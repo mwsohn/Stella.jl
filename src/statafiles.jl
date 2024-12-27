@@ -526,11 +526,10 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
     outdta = open(fn,"w")
 
     # prepare the dataframe
-    (noexp, datatypes, typelist, numbytes, value_labels) = prepare_df(outdf,verbose=verbose)
+    (df, datatypes, typelist, numbytes, value_labels) = prepare_df(outdf,verbose=verbose)
 
     # cols and rows
-    (rows, cols) = size(outdf)
-    cols -= sum(noexp)
+    (rows, cols) = size(df)
 
     # -----------------------------------------------------
     # release 118 format parameters
@@ -578,7 +577,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
     # variable names
     m[4] = Int64(position(outdta))
     write(outdta,"<varnames>")
-    write(outdta, get_varnames(outdf,noexp,len_varname))
+    write(outdta, get_varnames(df,len_varname))
     write(outdta,"</varnames>")
 
     # sortlist
@@ -590,19 +589,19 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
     # formats - no formats for now
     m[6] = Int64(position(outdta))
     write(outdta,"<formats>")
-    write(outdta,get_formats(outdf,noexp,typelist,len_format))
+    write(outdta,get_formats(df,typelist,len_format))
     write(outdta,"</formats>")
 
     # value label names
     m[7] = Int64(position(outdta))
     write(outdta,"<value_label_names>")
-    write(outdta,get_label_names(outdf,noexp,len_labelname))
+    write(outdta,get_label_names(df, len_labelname))
     write(outdta,"</value_label_names>")
 
     # variable labels
     m[8] = Int64(position(outdta))
     write(outdta,"<variable_labels>")
-    write(outdta,get_variable_labels(outdf,noexp,len_varlabel))
+    write(outdta,get_variable_labels(df, len_varlabel))
     write(outdta,"</variable_labels>")
 
     # characteristics - nothing to output
@@ -627,7 +626,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
     for i = 1:chunks
         from = 1 + (i-1)*nobschunk
         to = min(from + nobschunk - 1, rows)
-        write(outdta,write_chunks(@views(outdf[from:to, :]), noexp, datatypes, typelist))
+        write(outdta,write_chunks(@views(df[from:to, :]), datatypes, typelist))
     end
     write(outdta,"</data>")
 
@@ -702,23 +701,20 @@ function prepare_df(outdf; verbose=verbose)
     end
 
     # subset
-    noexp = [ notallowed[x] || allmiss[x] || lint64[x] ? true : false for x in 1:ncol(outdf)]
+    df = outdf[:, findall(x -> x == true, [ notallowed[x] || allmiss[x] || lint64[x] ? false : true for x in 1:ncol(outdf)])]
 
-    datatypes = deleteat!(Stella.dtypes(outdf), findall(x->x==true,noexp))
-    (typelist, numbytes) = Stella.get_types(outdf, noexp)
-    vlabels = Stella.get_value_labels(outdf, noexp)
+    datatypes = Stella.dtypes(df)
+    (typelist, numbytes) = Stella.get_types(df)
+    vlabels = Stella.get_value_labels(df)
 
-    return noexp, datatypes, typelist, numbytes, vlabels
+    return df, datatypes, typelist, numbytes, vlabels
 end
 
-function write_chunks(outdf, noexp, datatypes, typelist)
+function write_chunks(outdf, datatypes, typelist)
 
     iobuf = IOBuffer()
     for dfrow in eachrow(outdf)
         for (i,v) in enumerate(dfrow)
-            if noexp[i]
-                continue
-            end
             if isa(outdf[:,i], CategoricalArray)
                 if eltype2(outdf[:,i]) == String
                     write(iobuf, Int32(ismissing(v) ? 2_147_483_621 : outdf[:,i].pool.invindex[v]))
@@ -773,7 +769,7 @@ function getmaxbytes(s::AbstractArray)
     return maximum(sizeof.(skipmissing(s)))
 end
 
-function get_types(df, noexp)
+function get_types(outdf)
 
     bytesize = Dict(
         65526 => 8,
@@ -782,8 +778,6 @@ function get_types(df, noexp)
         65529 => 2,
         65530 => 1,
     )
-
-    outdf = @views(df[:, findall(x -> x == false, noexp)])
 
     tlist = zeros(Int32,ncol(outdf))
     numbytes = zeros(Int32,ncol(outdf))
@@ -824,19 +818,13 @@ function get_types(df, noexp)
         end
     end
 
-    deleteat!(tlist, findall(x->x==true, noexp))
-    deleteat!(numbytes, findall(x->x==true, noexp))
-
     return (tlist, numbytes)
 end
 
-function get_varnames(outdf,noexp,len)
+function get_varnames(outdf, len)
 
     varstring = String[]
-    for (i,v) in enumerate(names(outdf))
-        if noexp[i]
-            continue
-        end
+    for v in names(outdf)
 
         # first letter must be A-Z, a-z, or _
         # rest of the variable name can include A-Z, a-z, 0-9, or _
@@ -876,10 +864,9 @@ function varnameunique(varnames, name, len)
     end
 end
 
-function get_formats(df,noexp,typelist,len)
+function get_formats(df,typelist,len)
 
     fvec = String[]
-    outdf = @views(df[:,findall(x->x == false,noexp)])
     for i in 1:ncol(outdf)
         if typelist[i] < 2045
             fmt = string("%-",typelist[i],"s")
@@ -900,13 +887,10 @@ function get_formats(df,noexp,typelist,len)
     return join(fvec,"")
 end
 
-function get_label_names(outdf,noexp,len)
+function get_label_names(outdf,len)
 
     lvec = String[]
     for i in 1:size(outdf,2)
-        if noexp[i]
-            continue
-        end
         if isa(outdf[:,i], CategoricalArray) && eltype2(outdf[:,i]) == String
             lblname = string("fmt",i)
             push!(lvec,string(lblname, repeat('\0',len - sizeof(lblname))))
@@ -917,24 +901,18 @@ function get_label_names(outdf,noexp,len)
     return join(lvec,"")
 end
 
-function get_variable_labels(outdf, noexp, len)
+function get_variable_labels(outdf, len)
     lbls = labels(outdf)
     for i in 1:length(lbls)
-        if noexp[i]
-            continue
-        end
         lbls[i] = string(lbls[i], repeat('\0', len - sizeof(lbls[i])))
     end
     return join(lbls,"")
 end
 
-function get_value_labels(outdf, noexp)
+function get_value_labels(outdf)
 
     iobf = IOBuffer()
     for (j,v) in enumerate(propertynames(outdf))
-        if noexp[j]
-            continue
-        end
         if isa(outdf[:,v], CategoricalArray) && eltype2(outdf[:,v]) == String
 
             invindex = outdf[:,v].pool.invindex
