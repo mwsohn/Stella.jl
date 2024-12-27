@@ -291,9 +291,7 @@ function _read_dta(io, release, rlen, len, nvar, varlist, varlabels, typelist, f
 
         df[!, varlist[j]] = alloc_array(typelist[j], fmtlist[j], len)
 
-        # len == number of observation in the batch
         for i in 1:len
-
             seek(io, numskip[j] + (i - 1) * rlen)
 
             if 0 <= typelist[j] < 2045
@@ -348,7 +346,7 @@ function _read_dta(io, release, rlen, len, nvar, varlist, varlabels, typelist, f
                     # convert it to Julia date
                     df[i, j] = Date(1960, 1, 1) + Dates.Day(dataitemi32)
                 elseif fmtlist[j][1:3] == "%tc" || fmtlist[j][1:3] == "%tC"
-                    df[i, j] = DateTime(1960, 1, 1, 0, 0, 0) + Dates.Millisecond(dataitemi32)
+                    df[i, j] = DateTime(1960, 1, 1) + Dates.Millisecond(dataitemi32)
                 else
                     df[i, j] = dataitemi32
                 end
@@ -364,11 +362,7 @@ function _read_dta(io, release, rlen, len, nvar, varlist, varlabels, typelist, f
                 end
             elseif typelist[j] == 65530
                 dataitemi8 = read(io, Int8)
-                if dataitemi8 > 100
-                    df[i, j] = missing
-                else
-                    df[i, j] = dataitemi8
-                end
+                df[i, j] = dataitemi8 > 100 ? missing : dataitemi8
             end
         end
         # strls will be converted to categorical regardless of `categorize` option
@@ -389,7 +383,7 @@ function _read_dta(io, release, rlen, len, nvar, varlist, varlabels, typelist, f
 
         # for vectors without missing values, convert the vector to an appropirate type
         if sum(ismissing.(df[!, varlist[j]])) == 0
-            df[!, varlist[j]] = convert(Vector{nonmissingtype(eltype(df[!, varlist[j]]))}, df[!, varlist[j]])
+            df[!, varlist[j]] = convert(Vector{eltype2(df[!, varlist[j]])), df[!, varlist[j]])
         end
     end
 
