@@ -252,45 +252,6 @@ sd(x) = std(x)
 Is an alias of `size(x,1)`.
 """
 N(x) = size(x,1)
-# substat - pass functions to produce the stats by subframe
-# functions: mean, var, std, sum, count, kurtosis, skewness, median, percentiles, maximum, minimum
-#            cov, se
-
-
-"""
-    substat(df::DataFrame, varname::Symbol, groupvars::Array{Symbol,1}, func::Function)
-
-Produces a vector of the same length as the `df` that contains summary statistics of
-the `varname` column computed by `func` for each subgroup stratified by `groupvars`.
-Multiple columns can be used as `groupvar`'s if provided in an array of Symbols.
-Any function that can take one numeric vector as input can be used. Percentile functions
-such as those that take two arguments (e.g., `quantile(x,.25)` for a 25th percentile of x)
-should first be converted to a function that takes one argument (e.g, `p25(x) = quantile(x,.25)`).
-The following percentile functions are already defined: `p5`, `p10`, `p25`, 'p50', `p75`, and `p90`.
-This function emulates the Stata's `egen functions` such as `egen testmean = mean(test), by(groupvar)`.
-
-```
-julia> df[:testmean] = substat(df,:test, :class, mean)
-```
-"""
-function substat(df::DataFrame, varname::Symbol, groupvars::Vector{Symbol}, func::Function)
-
-    if (nonmissingtype(eltype(df[!,varname])) <: Number) == false
-        error("Only numeric variables are allowed.")
-    end
-
-    df2 = df[completecases(df[!,[varname]]), vcat(varname, groupvars)]
-    
-    df3 = combine(groupby(df2, groupvars), varname => func => Symbol(func))
-
-    df4 = hcat(DataFrame(___obs___ = 1:size(df,1)), df[!,groupvars])
-
-    df5 = leftjoin(df4, df3, on = groupvars)
-
-    sort!(df5,:___obs___)
-    return df5[!,Symbol(func)]
-end
-substat(df::DataFrame, varname::Symbol, groupvar::Symbol, func::Function) = substat(df,varname,[groupvar],func)
 
 #----------------------------------------------------------------------------
 # eform
@@ -348,10 +309,10 @@ function eform(glmout::StatsModels.TableRegressionModel)
 	coeftable2 = coeftable(glmout)
 
 	# 95% CI
-	if cox # need to allocate memory for confidence intervals
-        cv = 1.9599639845400576 # quantile(Normal(),0.975)
-        push!(coeftable2.cols, exp.(coeftable2.cols[1] .- cv .* coeftable2.cols[2])) # 95% CI Lower Bound
-        push!(coeftable2.cols, exp.(coeftable2.cols[1] .+ cv .* coeftable2.cols[2])) # 95% CI Upper Bound
+	if cox
+        cv = quantile(Normal(),0.975)
+        push!(coeftable2.cols, exp.(coeftable2.cols[1] .- cv .* coeftable2.cols[2]))
+        push!(coeftable2.cols, exp.(coeftable2.cols[1] .+ cv .* coeftable2.cols[2])) 
     else
         coeftable2.cols[5] = exp.(coeftable2.cols[5])
         coeftable2.cols[6] = exp.(coeftable2.cols[6])
@@ -408,7 +369,7 @@ function coeflab(d,l)
     end
 end
 
-# import GLM.coeftable
+import StatsBase.coeftable
 # function GLM.coeftable(r::StatsModels.RegressionModel)
 #     coeftable2 = coeftable(r)
 
@@ -863,10 +824,28 @@ end
 
 """
 	juliadate(::AbstractArray)
+    juliadate(::Real)
 
 converts SAS or stata date values to Julia Dates values.
 """
 function juliadate(sasdt::AbstractArray)
-    return Dates.Date.(Dates.UTD.(convert.(Int64,sasdt) .+ Dates.value(Date(1959,12,31))))
+    return Dates.Date.(Dates.UTD.(convert.(Int64,sasdt) .+ Dates.value(Date(1960,1,1))))
 end
+function juliadate(sasdt::Real)
+    return juliadate([Int64(sasdt)])[1]
+end
+
+"""
+	sasdate(::AbstractArray)
+    sasdate(::Real)
+
+Converts Julia Date values to SAS or stata values.
+"""
+function sasdate(juliadt::AbstractArray)
+    return Dates.value.(juliadt) .- Dates.value(Date(1960, 1, 1))
+end
+function sasdate(juliadt::Real)
+    return sasdate([juliadt])[1]
+end
+
 
