@@ -31,26 +31,23 @@ export  read_stata,  # read stata 13 and 14 files into DF
         ci,          # produce column index from column names
         nmissing,    # returns the number of missing values in an AbstractArray
         lift,        # converts missing values to false in a Boolean array
-        eq, lt, le, gt, ge, # alternative opreator functions that takes care of missing values
         dflist,      # list
-        dfmerge,     # merge two dataframes
         dfsample,    # select a sample from a df
-        univariate, univ, # univariate statistics in DF
+        univariate, univ, # univariate statistics
+        tab,         # n-way freq table based on FreqTables, NAs are allowed now
+        tabi,        # immediate tab for 2x2 array
         tabstat,     # unviariate statistics by subgroups
-        substat,     # attach univariate stat to original DF by subgroups
         xtile,       # create variable that classify a column into percentiles
         strval,      # convert floats or ints to strings
         chi2test, chi2,    # compute chisquare statistics from na.array
-        prepend_spaces, append_spaces, # create fixed length strings
+        # prepend_spaces, append_spaces, # create fixed length strings
         smallest, largest, # list smallest and largest values in a DA
-        pickone,     # create a binary variable that identifies one records in a subgroup
+        pickone!,     # create a binary variable that identifies one records in a subgroup
         p5, p10, p25, p50, p75, p90, p95, # percentiles
         cv,          # coefficient of variation, alias of variation()
         se,          # standard error, alias of sem()
-        tab,         # n-way freq table based on FreqTables, NAs are allowed now
-        tabprint,    # print a named array output from tab or freqtable
         tabstat,     # compute univariate statistics by subgroups
-        substat,     # create a dataarray of univariate statistics of one variable by subgroups
+        # substat,     # create a dataarray of univariate statistics of one variable by subgroups
         duplicates,  # report, drop, or tag duplicate rows
         destring,    # convert strings to numeric values in a DataArray
         destring!,   # in-place versionof destring
@@ -65,11 +62,11 @@ export  read_stata,  # read stata 13 and 14 files into DF
         ds,         # filenames according to type, length, or regex
         # getmaxwidth, # maximum length of a string variable
         eltype2,
-        # nulldeviance,  # nulldeviance for GLM models
         rowpct, colpct, cellpct, chi2, # freqtable functions
-        categorical!, uncategorical!, uncategorize, # functions to create CategoricalArrays or reverse them to their original values
-        identify_condition, identify_condition2, # used to identify conditions in claims files
-        rowtotal, rowfirst, rowlast, rowmean, rowsd, rowmin, rowmax, rowpctile, # mimics Stata's row egen functions
+        categorical!, uncategorical!, uncategorical, # functions to create CategoricalArrays or reverse them to their original values
+        # identify_condition, identify_condition2, # used to identify conditions in claims files
+        rowtotal, rowfirst, rowlast, rowmean, 
+        rowsd, rowmin, rowmax, rowpctile, 
         rowmedian, rowmiss, rownonmiss,
         values!,
         labels!,
@@ -83,9 +80,8 @@ abstract type Formula end
 ## Load files
 ##
 ##############################################################################
-include("alt_operators.jl")
 include("stella_tools.jl")
-include("DataFrame_tools.jl")
+include("df_tools.jl")
 include("labels.jl")
 include("tab.jl")
 include("t-test.jl")
