@@ -54,6 +54,14 @@ function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String},var3::Un
     _tab3(freqtable(indf, var1, var2, var3, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, decimals=decimals, summarize = summarize)
 end
 
+function tabi(a::AbstractArray)
+    if length(size(a)) == 2 && all(x -> x >= 2,a)
+        Stella._tab2(NamedArray(a))
+    end
+    error("Input array must be 2x2 and have at least two levels on each dimension.")
+end
+
+
 function _tab1(na::NamedArray; decimals = 4, sort = false)
  
     # do not output rows with zeros
