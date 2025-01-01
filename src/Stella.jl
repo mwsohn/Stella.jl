@@ -23,7 +23,6 @@ using DataFrames, DataAPI, Distributions, StatsBase, StatsAPI, GLM, Survival,
 ##############################################################################
 
 export  read_stata,  # read stata 13 and 14 files into DF
-        read_stata!, # read stata 13 and 14 files into DF
         write_stata, # Convert Julia DataFrame to Stata DTA file
         dfcompress, # compress DF
         acompress,  # compress a Vector
@@ -31,7 +30,6 @@ export  read_stata,  # read stata 13 and 14 files into DF
         ci,          # produce column index from column names
         nmissing,    # returns the number of missing values in an AbstractArray
         lift,        # converts missing values to false in a Boolean array
-        dflist,      # list
         dfsample,    # select a sample from a df
         univariate, univ, # univariate statistics
         tab,         # n-way freq table based on FreqTables, NAs are allowed now
@@ -47,7 +45,6 @@ export  read_stata,  # read stata 13 and 14 files into DF
         cv,          # coefficient of variation, alias of variation()
         se,          # standard error, alias of sem()
         tabstat,     # compute univariate statistics by subgroups
-        # substat,     # create a dataarray of univariate statistics of one variable by subgroups
         duplicates,  # report, drop, or tag duplicate rows
         destring,    # convert strings to numeric values in a DataArray
         destring!,   # in-place versionof destring
@@ -65,9 +62,13 @@ export  read_stata,  # read stata 13 and 14 files into DF
         rowpct, colpct, cellpct, chi2, # freqtable functions
         categorical!, uncategorical!, uncategorical, # functions to create CategoricalArrays or reverse them to their original values
         # identify_condition, identify_condition2, # used to identify conditions in claims files
+        # stats for variables on the same row
         rowtotal, rowfirst, rowlast, rowmean, 
         rowsd, rowmin, rowmax, rowpctile, 
         rowmedian, rowmiss, rownonmiss,
+        # subgroup stats
+        subtotal!, submean!, subsd!, submin!, submax!, subpctile!,
+        submedian!, submiss!, subnonmiss!,
         values!,
         labels!,
         labels2
