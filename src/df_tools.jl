@@ -878,4 +878,66 @@ function firstrow(df::AbstractDataFrame, groupids::Vector{Symbol})
     return df[keep.==true, :]
 end
 
+"""
+    subtotal!(::AbstractDataFrame, byvar, svar)
+    submean!(::AbstractDataFrame, byvar, svar)
+    subsd!(::AbstractDataFrame, byvar, svar)
+    submin!(::AbstractDataFrame, byvar, svar)
+    submax!(::AbstractDataFrame, byvar, svar)
+    subpctile!(::AbstractDataFrame, byvar, svar; p = 0.5)
+    submedian!(::AbstractDataFrame, byvar, svar)
+    submiss!(::AbstractDataFrame, byvar, svar)
+    subnonmiss!(::AbstractDataFrame, byvar, svar)
 
+Produce subgroup statistics for a single continuous variable `svar`
+and attaches the output values to the original dataframe.
+Subgroups are defined by `byvar`.
+"""
+function subtotal!(df::AbstractDataFrame, byvar, statvar::Union{Symbol,String})
+    cc = completecases(df, byvar)
+    newdf = combine(groupby(df[cc, :], byvar), statvar => sum => Symbol(string(statvar, "_total")))
+    leftjoin!(df, newdf, on=byvar, matchmissing=:equal, makeunique=:true)
+end
+function submean!(df::AbstractDataFrame, byvar, statvar::Union{Symbol,String})
+    cc = completecases(df, byvar)
+    newdf = combine(groupby(df[cc, :], byvar), statvar => mean => Symbol(string(statvar, "_mean")))
+    leftjoin!(df, newdf, on=byvar, matchmissing=:equal, makeunique=:true)
+end
+function subsd!(df::AbstractDataFrame, byvar, statvar::Union{Symbol,String})
+    cc = completecases(df, byvar)
+    newdf = combine(groupby(df[cc, :], byvar), statvar => std => Symbol(string(statvar, "_sd")))
+    leftjoin!(df, newdf, on=byvar, matchmissing=:equal, makeunique=:true)
+end
+function submin!(df::AbstractDataFrame, byvar, statvar::Union{Symbol,String})
+    cc = completecases(df, byvar)
+    newdf = combine(groupby(df[cc, :], byvar), statvar => minimum => Symbol(string(statvar, "_min")))
+    leftjoin!(df, newdf, on=byvar, matchmissing=:equal, makeunique=:true)
+end
+function submax!(df::AbstractDataFrame, byvar, statvar::Union{Symbol,String})
+    cc = completecases(df, byvar)
+    newdf = combine(groupby(df[cc, :], byvar), statvar => maximum => Symbol(string(statvar, "_max")))
+    leftjoin!(df, newdf, on=byvar, matchmissing=:equal, makeunique=:true)
+end
+function subpctile!(df::AbstractDataFrame, byvar, statvar::Union{Symbol,String}; p::Float64=0.5)
+    cc = completecases(df, byvar)
+    ptile(x) = StatsBase.percentile(skipmissing(x), p)
+    newdf = combine(groupby(df[cc, :], byvar), statvar => ptile => Symbol(string(statvar, "_", round(Int, p * 100), "pctile")))
+    leftjoin!(df, newdf, on=byvar, matchmissing=:equal, makeunique=:true)
+end
+function submedian!(df::AbstractDataFrame, byvar, statvar::Union{Symbol,String})
+    cc = completecases(df, byvar)
+    ptile50(x) = StatsBase.poercentile(skipmissing(x), 0.5)
+    newdf = combine(groupby(df[cc, :], byvar), statvar => ptile50 => Symbol(string(statvar, "_median")))
+    leftjoin!(df, newdf, on=byvar, matchmissing=:equal, makeunique=:true)
+end
+function submiss!(df::AbstractDataFrame, byvar, statvar::Union{Symbol,String})
+    cc = completecases(df, byvar)
+    newdf = combine(groupby(df[cc, :], byvar), statvar => nmissing => Symbol(string(statvar, "_miss")))
+    leftjoin!(df, newdf, on=byvar, matchmissing=:equal, makeunique=:true)
+end
+function subnonmiss!(df::AbstractDataFrame, byvar, statvar::Union{Symbol,String})
+    cc = completecases(df, byvar)
+    nonmissing(x) = length(x) - nmissing(x)
+    newdf = combine(groupby(df[cc, :], byvar), statvar => nonmissing => Symbol(string(statvar, "_nonmiss")))
+    leftjoin!(df, newdf, on=byvar, matchmissing=:equal, makeunique=:true)
+end
