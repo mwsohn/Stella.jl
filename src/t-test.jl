@@ -1,7 +1,7 @@
 #--------------------------------------------------------------------------
 # t-test
 #--------------------------------------------------------------------------
-struct TTReturn
+struct TTEST
     title::String
     colnms::Vector{String}
     array::Array
@@ -14,8 +14,9 @@ struct TTReturn
     p_right::Float64
     paired::Bool
     welch::Bool
+    sig::Float64
+    varname::String
 end
-#pvalue(x::TTReturn; tail=:both) = pvalue(TDist(x.dof), x.t; tail=tail)
 
 """
     ttest(df::DataFrame,varname::Symbol;byvar::Union{Nothing,Symbol}=nothing,sig=95,welch=false)
@@ -23,11 +24,11 @@ end
     ttest(df::DataFrame,varname::Symbol,μ0::Real;sig=95)
     ttest(var1::AbstractVector,var2::AbstractVector;paired::Bood=false,welch::Bool=false,sig=95)
 
-Performs one-way and two-way t tests and produces a summary table with t statistic,
+Performs one-sample and two-sample t tests and produces a summary table with t statistic,
 degree of freedom, and associated p-values. For paired t tests, specify `paired = true`.
 For two samples with unequal variances, use `welch = true` option.
 
-### Example 1: One sample t test comparing a variable to a value (μ under H₀)
+### Example 1: One-sample t test comparing a variable to a value (μ under H₀)
 
 ```
 julia> t = ttest(auto, :price, 25000)
@@ -43,7 +44,7 @@ Hₐ: diff < 25000                Hₐ: diff != 25000               Hₐ: diff >
 Pr(T < t) = 0.0000           Pr(|T| > |t|) = 0.0000           Pr(T > t) = 1.0000
 ```
 
-### Example 2: Two sample t test by groups (equal variances)
+### Example 2: Two-sample t test by groups (equal variances)
 
 ```
 julia> ttest(auto, :price, byvar = :foreign)
@@ -65,7 +66,7 @@ Hₐ: diff < 0                      Hₐ: diff != 0                     Hₐ: di
 Pr(T < t) = 0.3401           Pr(|T| > |t|) = 0.6802           Pr(T > t) = 0.6599
 ```
 
-### Example 3: Two sample t test with unequal variances
+### Example 3: Two-sample t test with unequal variances
 
 ```
 julia> ttest(auto,:price,by=:foreign, welch=true)
@@ -87,7 +88,7 @@ Hₐ: diff < 0                      Hₐ: diff != 0                     Hₐ: di
 Pr(T < t) = 0.3299           Pr(|T| > |t|) = 0.6599           Pr(T > t) = 0.6701
 ```
 
-### Example 4: Two sample paired t test comparing two variables
+### Example 4: Two-sample paired t test comparing two variables
 
 ```
 julia> ttest(fuel, :mpg1, :mpg2, paired = true)
@@ -107,7 +108,7 @@ Hₐ: diff < 0                   Hₐ: diff != 0                    Hₐ: diff >
 Pr(T < t) = 0.0232         Pr(|T| > |t|) = 0.0463         Pr(T > t) = 0.9768
 ```
 
-### Example 5: Two sample unpaired t test comparing two variables
+### Example 5: Two-sample unpaired t test comparing two variables
 
 ```
 julia> ttest(fuel, :mpg1, :mpg2)
@@ -130,7 +131,7 @@ Pr(T < t) = 0.0837         Pr(|T| > |t|) = 0.1673         Pr(T > t) = 0.9163
 ```
 
 """
-function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, table = true, sig = 95, welch = false)
+function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, sig = 95, welch = false)
     if by == nothing
         error("`by` is required.")
     end
@@ -147,9 +148,9 @@ function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, table = tru
     if length(val1) == 0 || length(val2) == 0
         error("On or both groups have zero observations")
     end
-    ttest(val1,val2,paired=false,welch=welch,sig=sig,levels=lev,table=table, labels=value_label(df,by), byvar = by)
+    ttest(val1,val2,paired=false,welch=welch,sig=sig,levels=lev, byvar = by)
 end
-function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = false, welch = false, labels = nothing, table = true)
+function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = false, welch = false)
 
     if paired == true
         df2 = DataFrames.dropmissing(df[:,[var1,var2]])
@@ -162,15 +163,13 @@ function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = fal
 
     length(x) > 0 && length(y) > 0 || error("One or both variables are empty")
 
-    return ttest(x,y,paired=paired,welch=welch,levels=[var1,var2], table = table, labels = nothing, byvar = by)
+    return ttest(x,y,paired=paired,welch=welch,levels=[var1,var2], sig = sig, byvar = by)
 end
 function ttest(x::AbstractVector,y::AbstractVector; 
     paired::Bool=false,
     welch::Bool=false,
     sig=95,
     levels=Any[:x,:y],
-    table=true,
-    labels=nothing,
     byvar = nothing)
 
     paired && length(x) != length(y) && error("Paired t test requires equal lengths in input vectors")
@@ -187,9 +186,9 @@ function ttest(x::AbstractVector,y::AbstractVector;
     end
 
     # compute standard errors and confidence intervals
-    N = Vector{Union{Missing,Int64}}(undef, 4)
+    N = Vector{Union{Missing,Int64}}(missing, 4)
     MEAN = Vector{Float64}(undef, 4)
-    SD = Vector{Union{Missing,Float64}}(undef, 4)
+    SD = Vector{Union{Missing,Float64}}(missing, 4)
     SE = Vector{Float64}(undef, 4)
     LB = Vector{Float64}(undef, 4)
     UB = Vector{Float64}(undef, 4)
@@ -217,36 +216,7 @@ function ttest(x::AbstractVector,y::AbstractVector;
     SE[4] = tt.stderr
     LB[4],UB[4] = StatsAPI.confint(tt)
 
-    if table == true
-
-        println(title)
-        N[4] = missing
-        SD[4] = missing
-        valuenames = labels == nothing ? levels : [labels[x] for x in levels]
-
-        pretty_table([N MEAN SD SE LB UB],
-            header=["N", "Mean", "SD", "SE", string(sig, "% LB"), string(sig, "% UB")],
-            row_labels = vcat(valuenames,"combined","diff"),
-            row_label_column_title = byvar == nothing ? "Variable" : string(byvar),
-            formatters = (ft_printf("%.5f",[2,3,4,5,6]),ft_printf("%.0f",[1]), ft_nomissing),
-            hlines = [0,1,3,4,5],
-            vlines = [1])
-
-        println("diff = mean(", valuenames[1],") - mean(", valuenames[2], ")")
-        println("H₀: diff = 0")
-        println("t = ", @sprintf("%.7f",tt.t), " (df = ", tt.df, ")\n")
-
-        pretty_table([pvalue(tt, tail=:left) pvalue(tt) pvalue(tt, tail=:right)],
-            header = ["Hₐ: diff < 0       ","       Hₐ: diff != 0       ","       Hₐ: diff > 0"],
-                # ["Pr(T < t)","Pr(|T| < |t|)","Pr(T > t)" ]),
-            formatters = (ft_printf("%.5f")),
-            alignment = [:l,:c,:r],
-            hlines = :none,
-            vlines = :none)
-
-        return nothing
-    else
-        return TTReturn(title,
+    return TTEST(title,
             ["Variable", "N", "Mean", "SD", "SE", string(sig,"% LB"), string(sig,"% UB")],
             [vcat(levels,"combined","diff"),N,MEAN,SD,SE,LB,UB],
             levels,
@@ -257,14 +227,15 @@ function ttest(x::AbstractVector,y::AbstractVector;
             pvalue(tt),
             pvalue(tt, tail = :right),
             paired,
-            welch)
-    end
+            welch,
+            sig,
+            "")
 end
-function ttest(df::DataFrame, varname::Symbol, μ0::Real; table = true)
+function ttest(df::DataFrame, varname::Symbol, μ0::Real; sig=95)
     v = collect(skipmissing(df[!,varname]))
-    ttest(v,μ0, table = table, varname = varname)
+    ttest(v,μ0, table = table, varname = varname, sig=sig)
 end
-function ttest(var::AbstractVector,μ0::Real = 0; table = true, varname = nothing)
+function ttest(var::AbstractVector,μ0::Real = 0; varname = nothing; sig = 95)
 
     N = length(var)
     if N == 0
@@ -280,39 +251,54 @@ function ttest(var::AbstractVector,μ0::Real = 0; table = true, varname = nothin
     SE = SD / sqrt(N)
     (LB, UB) = StatsAPI.confint(tt)
 
-    if table
-        println(title)
+    return TTEST(title,
+        ["Variable", "N", "Mean", "SD", "SE", string(sig,"% LB"), string(sig,"% UB")],
+        [["x"],[N],[MEAN],[SD],[SE],[LB],[UB]],
+        [],
+        tt.μ0,
+        tt.t,
+        tt.df,
+        pvalue(tt, tail = :left),
+        pvalue(tt),
+        pvalue(tt, tail = :right),
+        false,
+        false,
+        varname)
+end
+Base.show(io::IO,t::TTEST)
+    println(io,"\t",t.title,"\n")
 
-        pretty_table([N MEAN SD SE LB UB],
+    if t.title == "One-sample t test"
+        pretty_table(io, [N MEAN SD SE LB UB],
             header=["N", "Mean", "SD", "SE", "95% LB", "95% UB"],
-            row_labels= [varname == nothing ? "" : string(varname)],
+            row_labels= [t.varname == nothing ? "" : string(t.varname)],
             row_label_column_title="Variable",
             formatters=(ft_printf("%.5f", [2, 3, 4, 5, 6]), ft_printf("%.0f", [1])),
             hlines=[0, 1, 2],
             vlines=[1])
-
-        println("mean = mean(", varname, ")")
-        println("H₀: mean = ", μ0)
+        println("mean = mean(", t.varname, ")")
+        println("H₀: mean = ", t.μ0)
         println("t = ", @sprintf("%.7f", tt.t), " (df = ", tt.df, ")\n")
-
-        pretty_table([pvalue(tt, tail=:left) pvalue(tt) pvalue(tt, tail=:right)],
-            header=["Hₐ: diff < 0       ", "       Hₐ: diff != 0       ", "       Hₐ: diff > 0"],
-            formatters=(ft_printf("%.5f")),
-            alignment=[:l, :c, :r],
-            hlines=:none,
-            vlines=:none)
     else
-        return TTReturn(title,
-            ["Variable", "N", "Mean", "SD", "SE", string(sig,"% LB"), string(sig,"% UB")],
-            [["x"],[N],[MEAN],[SD],[SE],[LB],[UB]],
-            [],
-            tt.μ0,
-            tt.t,
-            tt.df,
-            pvalue(tt, tail = :left),
-            pvalue(tt),
-            pvalue(tt, tail = :right),
-            false,
-            false)
+        pretty_table(io,
+            [t.N t.MEAN t.SD t.SE t.LB t.UB],
+            header=["N", "Mean", "SD", "SE", string(t.sig, "% LB"), string(t.sig, "% UB")],
+            row_labels = vcat(levels,"combined","diff"),
+            row_label_column_title = byvar == nothing ? "Variable" : string(byvar),
+            formatters = (ft_printf("%.4f",[2,3,4,5,6]),ft_printf("%.0f",[1]), ft_nomissing),
+            hlines = [1,3,4],
+            vlines = [1])
+        println("diff = mean(", t.levels[1],") - mean(", t.levels[2], ")")
+        println("H₀: diff = 0")
+        println("t = ", @sprintf("%.7f",tt.t), " (df = ", tt.df, ")\n")
     end
+
+    pretty_table(io,
+        [pvalue(tt, tail=:left) pvalue(tt) pvalue(tt, tail=:right)],
+        header = ["Hₐ: diff < 0       ","       Hₐ: diff != 0       ","       Hₐ: diff > 0"],
+            # ["Pr(T < t)","Pr(|T| < |t|)","Pr(T > t)" ]),
+        formatters = (ft_printf("%.4f")),
+        alignment = [:l,:c,:r],
+        hlines = :none,
+        vlines = :none)
 end
