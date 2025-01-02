@@ -77,7 +77,7 @@ function anova(glmmodel)
         Distributions.ccdf(Distributions.FDist(mdf, rdf), F)
     )
 end
-
+import Base.show
 function Base.show(io::IO, a::AOV)
 
     pstr = a.pvalue < 0.0001 ? "< 0.0001" : @sprintf("%.4f", a.pvalue)
