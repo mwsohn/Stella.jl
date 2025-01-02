@@ -55,7 +55,7 @@ function anova(_df::DataFrame, dep::Symbol, cat::Symbol)
         [msbetween, mswithin, sstotal / dftotal],
         F,
         pvalue
-    )
+    );
 end
 function anova(glmmodel)
     tss = nulldeviance(glmmodel)
@@ -72,19 +72,19 @@ function anova(glmmodel)
         [(tss - rss) / mdf, rss / rdf, tss / tdf],
         F,
         Distributions.ccdf(Distributions.FDist(mdf, rdf), F)
-    )
+    );
 end
 function Base.show(io::IO, a::AOV)
     pstr = a.pvalue < 0.0001 ? "< 0.0001" : @sprintf("%.4f", a.pvalue)
     println("\nAnalysis of Variance\n")
-    # pretty_table(DataFrame(
-    #         Source=a.title, SS=a.ss, DF=a.df, MS=a.ms,
-    #         F=[a.F, missing, missing],
-    #         P=[pstr, missing, missing]
-    #     );
-    #     formatters=(ft_nomissing, ft_printf("%.3f", [2, 4, 5])),
-    #     hlines=[1, 3],
-    #     vlines=[1],
-    #     show_subheader=false
-    # )
+    pretty_table(DataFrame(
+            Source=a.title, SS=a.ss, DF=a.df, MS=a.ms,
+            F=[a.F, missing, missing],
+            P=[pstr, missing, missing]
+        );
+        formatters=(ft_nomissing, ft_printf("%.3f", [2, 4, 5])),
+        hlines=[1, 3],
+        vlines=[1],
+        show_subheader=false
+    )
 end
