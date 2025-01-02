@@ -76,7 +76,7 @@ function anova(glmmodel)
 end
 function Base.show(io::IO, a::AOV)
     pstr = a.pvalue < 0.0001 ? "< 0.0001" : @sprintf("%.4f", a.pvalue)
-    println("\nAnalysis of Variance\n")
+    println(io, "\nAnalysis of Variance\n")
     pretty_table(io, 
             DataFrame(
             Source=a.title, SS=a.ss, DF=a.df, MS=a.ms,
