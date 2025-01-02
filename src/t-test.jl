@@ -270,33 +270,33 @@ end
 Base.show(io::IO,t::TTEST)
     println(io,"\t",t.title,"\n")
 
-    if t.title == "One-sample t test"
-        pretty_table(io, 
-            [N MEAN SD SE LB UB],
-            header=["N", "Mean", "SD", "SE", "95% LB", "95% UB"],
-            row_labels= [t.varname == nothing ? "" : string(t.varname)],
-            row_label_column_title="Variable",
-            formatters=(ft_printf("%.5f", [2, 3, 4, 5, 6]), ft_printf("%.0f", [1])),
-            hlines=[0, 1, 2],
-            vlines=[1]
-        )
-        println("mean = mean(", t.varname, ")")
-        println("H₀: mean = ", t.μ0)
-        println("t = ", @sprintf("%.7f", tt.t), " (df = ", tt.df, ")\n")
-    else
-        pretty_table(io,
-            [t.N t.MEAN t.SD t.SE t.LB t.UB],
-            header=["N", "Mean", "SD", "SE", string(t.sig, "% LB"), string(t.sig, "% UB")],
-            row_labels = vcat(levels,"combined","diff"),
-            row_label_column_title = byvar == nothing ? "Variable" : string(byvar),
-            formatters = (ft_printf("%.4f",[2,3,4,5,6]),ft_printf("%.0f",[1]), ft_nomissing),
-            hlines = [1,3,4],
-            vlines = [1]
-        )
-        println("diff = mean(", t.levels[1],") - mean(", t.levels[2], ")")
-        println("H₀: diff = 0")
-        println("t = ", @sprintf("%.7f",tt.t), " (df = ", tt.df, ")\n")
-    end
+    # if t.title == "One-sample t test"
+    #     pretty_table(io, 
+    #         [N MEAN SD SE LB UB],
+    #         header=["N", "Mean", "SD", "SE", "95% LB", "95% UB"],
+    #         row_labels= [t.varname == nothing ? "" : string(t.varname)],
+    #         row_label_column_title="Variable",
+    #         formatters=(ft_printf("%.5f", [2, 3, 4, 5, 6]), ft_printf("%.0f", [1])),
+    #         hlines=[0, 1, 2],
+    #         vlines=[1]
+    #     )
+    #     println("mean = mean(", t.varname, ")")
+    #     println("H₀: mean = ", t.μ0)
+    #     println("t = ", @sprintf("%.7f", tt.t), " (df = ", tt.df, ")\n")
+    # else
+    #     pretty_table(io,
+    #         [t.N t.MEAN t.SD t.SE t.LB t.UB],
+    #         header=["N", "Mean", "SD", "SE", string(t.sig, "% LB"), string(t.sig, "% UB")],
+    #         row_labels = vcat(levels,"combined","diff"),
+    #         row_label_column_title = byvar == nothing ? "Variable" : string(byvar),
+    #         formatters = (ft_printf("%.4f",[2,3,4,5,6]),ft_printf("%.0f",[1]), ft_nomissing),
+    #         hlines = [1,3,4],
+    #         vlines = [1]
+    #     )
+    #     println("diff = mean(", t.levels[1],") - mean(", t.levels[2], ")")
+    #     println("H₀: diff = 0")
+    #     println("t = ", @sprintf("%.7f",tt.t), " (df = ", tt.df, ")\n")
+    # end
 
     pretty_table(io,
         [pvalue(tt, tail=:left) pvalue(tt) pvalue(tt, tail=:right)],
