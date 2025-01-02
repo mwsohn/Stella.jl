@@ -38,7 +38,6 @@ function anova(_df::DataFrame, dep::Symbol, cat::Symbol)
     n = length.(groups)
     ssbetween = sum(n .* (groupmean .- μ) .^ 2)
     sswithin = sum((n .- 1) .* groupvar)
-
     sstotal = ssbetween + sswithin
     dfbetween = k - 1
     dfwithin = sum(n) - k
@@ -46,9 +45,8 @@ function anova(_df::DataFrame, dep::Symbol, cat::Symbol)
     mswithin = sswithin / dfwithin
     msbetween = ssbetween / dfbetween
     F = msbetween / mswithin
-
     pvalue = Distributions.ccdf(Distributions.FDist(dfbetween, dfwithin), F)
-    pstr = pvalue < 0.0001 ? "< 0.0001" : @sprintf("%.4f", pvalue)
+    # pstr = pvalue < 0.0001 ? "< 0.0001" : @sprintf("%.4f", pvalue)
 
     return AOV(
         ["Between", "Within", "Total"],
@@ -58,7 +56,6 @@ function anova(_df::DataFrame, dep::Symbol, cat::Symbol)
         F,
         pvalue
     )
-
 end
 function anova(glmmodel)
     tss = nulldeviance(glmmodel)
@@ -77,18 +74,17 @@ function anova(glmmodel)
         Distributions.ccdf(Distributions.FDist(mdf, rdf), F)
     )
 end
-import Base.show
-function show(io::IO, a::AOV)
+function Base.show(io::IO, a::AOV)
     pstr = a.pvalue < 0.0001 ? "< 0.0001" : @sprintf("%.4f", a.pvalue)
     println("\nAnalysis of Variance\n")
-    pretty_table(DataFrame(
-            Source=a.title, SS=a.ss, DF=a.df, MS=a.ms,
-            F=[a.F, missing, missing],
-            P=[pstr, missing, missing]
-        );
-        formatters=(ft_nomissing, ft_printf("%.3f", [2, 4, 5])),
-        hlines=[1, 3],
-        vlines=[1],
-        show_subheader=false
-    )
+    # pretty_table(DataFrame(
+    #         Source=a.title, SS=a.ss, DF=a.df, MS=a.ms,
+    #         F=[a.F, missing, missing],
+    #         P=[pstr, missing, missing]
+    #     );
+    #     formatters=(ft_nomissing, ft_printf("%.3f", [2, 4, 5])),
+    #     hlines=[1, 3],
+    #     vlines=[1],
+    #     show_subheader=false
+    # )
 end
