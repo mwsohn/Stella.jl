@@ -233,7 +233,7 @@ function ttest(x::AbstractVector, y::AbstractVector;
 end
 function ttest(df::DataFrame, varname::Symbol, μ0::Real; sig=95)
     v = collect(skipmissing(df[!,varname]))
-    ttest(v,μ0, table = table, varname = varname, sig=sig)
+    ttest(v,μ0, varname = varname, sig=sig)
 end
 function ttest(var::AbstractVector, μ0::Real = 0; varname = nothing, sig = 95)
 
