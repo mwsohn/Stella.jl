@@ -272,7 +272,7 @@ function Base.show(io::IO, t::TTEST)
 
     if t.title == "One-sample t test"
         pretty_table(io, 
-            t.array,
+            t.array[:, 2:end],
             header=["N", "Mean", "SD", "SE", string(t.sig, "% LB"), string(t.sig, "% UB")],
             row_labels= [t.varname == nothing ? "" : string(t.varname)],
             row_label_column_title="Variable",
