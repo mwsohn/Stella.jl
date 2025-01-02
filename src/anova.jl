@@ -77,18 +77,16 @@ function anova(glmmodel)
         Distributions.ccdf(Distributions.FDist(mdf, rdf), F)
     )
 end
-function Base.show(io::IO, ::MIME"text/plain", a::AOV)
+function Base.show(io::IO, a::AOV)
 
     pstr = a.pvalue < 0.0001 ? "< 0.0001" : @sprintf("%.4f", a.pvalue)
 
-    outdf = DataFrame(
-        Source=a.title, SS=a.ss, DF=a.df, MS=a.ms,
-        F=[a.F, missing, missing],
-        P=[pstr, missing, missing]
-    )
-
-    println("\nOne-Way Analysis of Variance: \n")
-    pretty_table(outdf;
+    println("\nAnalysis of Variance\n")
+    pretty_table(DataFrame(
+            Source=a.title, SS=a.ss, DF=a.df, MS=a.ms,
+            F=[a.F, missing, missing],
+            P=[pstr, missing, missing]
+        );
         formatters=(ft_nomissing, ft_printf("%.3f", [2, 4, 5])),
         hlines=[1, 3],
         vlines=[1],
