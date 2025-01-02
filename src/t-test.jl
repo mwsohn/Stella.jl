@@ -264,7 +264,7 @@ function ttest(var::AbstractVector, μ0::Real = 0; varname = nothing, sig = 95)
         false,
         false,
         sig,
-        varname == nothing ? "x" : varname)
+        varname == nothing ? "x" : string(varname))
 
 end
 function Base.show(io::IO, t::TTEST)
