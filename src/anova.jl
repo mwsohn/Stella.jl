@@ -1,3 +1,12 @@
+struct AOV
+    title::Vector{String}
+    ss::Vector{Float64}
+    df::Vector{Int64}
+    ms::Vector{Float64}
+    F::Float64
+    pvalue::Float64
+end
+
 """
 	anova(::DataFrame, contvar::Symbol, groupvar::Symbol)
     anova(::StatsModels.TableRegressionModel)
@@ -86,12 +95,4 @@ function Base.show(io::IO, a::AOV)
         show_subheader=false
     )
 
-end
-struct AOV
-    title::Vector{String}
-    ss::Vector{Float64}
-    df::Vector{Int64}
-    ms::Vector{Float64}
-    F::Float64
-    pvalue::Float64
 end
