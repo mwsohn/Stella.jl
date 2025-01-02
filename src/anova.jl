@@ -80,7 +80,7 @@ function Base.show(io::IO, a::AOV)
     pretty_table(DataFrame(
             Source=a.title, SS=a.ss, DF=a.df, MS=a.ms,
             F=[a.F, missing, missing],
-            "P-Value"=[pstr, missing, missing]
+            Symbol("P-Value")=[pstr, missing, missing]
         );
         formatters=(ft_nomissing, ft_printf("%.3f", [2, 4, 5])),
         hlines=[1, 3],
