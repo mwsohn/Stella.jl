@@ -272,7 +272,7 @@ function Base.show(io::IO, t::TTEST)
 
     if t.title == "One-sample t test"
         pretty_table(io, 
-            [N MEAN SD SE LB UB],
+            t.array,
             header=["N", "Mean", "SD", "SE", "95% LB", "95% UB"],
             row_labels= [t.varname == nothing ? "" : string(t.varname)],
             row_label_column_title="Variable",
@@ -285,7 +285,7 @@ function Base.show(io::IO, t::TTEST)
         println("t = ", @sprintf("%.7f", tt.t), " (df = ", tt.df, ")\n")
     else
         pretty_table(io,
-            [t.N t.MEAN t.SD t.SE t.LB t.UB],
+            t.array,
             header=["N", "Mean", "SD", "SE", string(t.sig, "% LB"), string(t.sig, "% UB")],
             row_labels = vcat(levels,"combined","diff"),
             row_label_column_title = byvar == nothing ? "Variable" : string(byvar),
