@@ -78,7 +78,7 @@ function anova(glmmodel)
     )
 end
 import Base.show
-function Base.show(io::IO, a::AOV)
+function show(io::IO, a::AOV)
 
     pstr = a.pvalue < 0.0001 ? "< 0.0001" : @sprintf("%.4f", a.pvalue)
     println("\nAnalysis of Variance\n")
