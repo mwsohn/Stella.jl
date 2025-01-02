@@ -163,14 +163,14 @@ function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = fal
 
     length(x) > 0 && length(y) > 0 || error("One or both variables are empty")
 
-    return ttest(x,y,paired=paired,welch=welch,levels=[var1,var2], sig = sig, byvar = by)
+    return ttest(x, y, paired=paired, welch=welch, levels=[var1,var2], sig = sig)
 end
-function ttest(x::AbstractVector,y::AbstractVector; 
+function ttest(x::AbstractVector, y::AbstractVector; 
     paired::Bool=false,
     welch::Bool=false,
     sig=95,
     levels=Any[:x,:y],
-    byvar = nothing)
+    byvar=byvar)
 
     paired && length(x) != length(y) && error("Paired t test requires equal lengths in input vectors")
 
@@ -235,7 +235,7 @@ function ttest(df::DataFrame, varname::Symbol, μ0::Real; sig=95)
     v = collect(skipmissing(df[!,varname]))
     ttest(v,μ0, table = table, varname = varname, sig=sig)
 end
-function ttest(var::AbstractVector,μ0::Real = 0; varname = nothing; sig = 95)
+function ttest(var::AbstractVector, μ0::Real = 0; varname = nothing, sig = 95)
 
     N = length(var)
     if N == 0
