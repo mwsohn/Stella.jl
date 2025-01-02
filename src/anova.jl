@@ -1,11 +1,11 @@
 """
-	anova(df::DataFrame, contvar::Symbol, groupvar::Symbol; pval=false)
+	anova(::DataFrame, contvar::Symbol, groupvar::Symbol)
+    anova(::StatsModels.TableRegressionModel)
 
-Produces an one-way ANOVA table by default. `contvar' is a continous variable and `groupvar' is
-the group variable. If `pval = false` (default), you will have a DataFrame with ANOVA table values
-reutrned. With `pval = true`, this function will return the p-value in Float64.
+Produces an one-way ANOVA table. `contvar' is a continous variable and `groupvar' is
+the group variable. 
 """
-function anova(_df::DataFrame, dep::Symbol, cat::Symbol; pval = false)
+function anova(_df::DataFrame, dep::Symbol, cat::Symbol)
 
     # establish data
     df = _df[completecases(_df[:, [dep, cat]]), [dep, cat]]
@@ -39,27 +39,59 @@ function anova(_df::DataFrame, dep::Symbol, cat::Symbol; pval = false)
     F = msbetween / mswithin
 
     pvalue = Distributions.ccdf(Distributions.FDist(dfbetween, dfwithin), F)
-    pstr = pvalue < 0.0001 ? "< 0.0001" : @sprintf("%.5f", pvalue)
+    pstr = pvalue < 0.0001 ? "< 0.0001" : @sprintf("%.4f", pvalue)
+
+    return AOV(
+        ["Between", "Within", "Total"],
+        [ssbetween, sswithin, sstotal],
+        [dfbetween, dfwithin, dftotal],
+        [msbetween, mswithin, sstotal / dftotal],
+        F,
+        pvalue
+    )
+
+end
+function anova(glmmodel)
+    tss = nulldeviance(glmmodel)
+    rss = deviance(glmmodel)
+    mss = tss - rss
+    tdf = nobs(glmmodel) - 1
+    mdf = GLM.dof(glmmodel) - 1
+    rdf = tdf - mdf
+    F = (mss / mdf) / (rss / rdf)
+    return AOV(
+        ["Model", "Residual", "Total"],
+        [mss, rss, tss],
+        [mdf, rdf, tdf],
+        [(tss - rss) / mdf, rss / rdf, tss / tdf],
+        F,
+        Distributions.ccdf(Distributions.FDist(mdf, rdf), F)
+    )
+end
+function Base.show(io::IO, a::AOV)
+
+    pstr = a.pvalue < 0.0001 ? "< 0.0001" : @sprintf("%.4f", a.pvalue)
 
     outdf = DataFrame(
-        Source=["Between", "Within", "Total"],
-        DF=[dfbetween, dfwithin, dftotal],
-        SS=[ssbetween, sswithin, sstotal],
-        MS=[msbetween, mswithin, ""],
-        F=[F, missing, missing],
+        Source=a.title, SS=a.ss, DF=a.df, MS=a.ms,
+        F=[a.F, missing, missing],
         P=[pstr, missing, missing]
     )
 
-    if pval == false
-    	println("\nOne-Way Analysis of Variance: ", dep, " by ", cat)
-    	pretty_table(outdf; 
-		formatters=(ft_nomissing, ft_printf("%.4f", [3, 4, 5])),
-		hlines=[0,1,4],
-		vlines=[1],
-		show_subheader = false
-	)
-    else
-	    return (dfbetween, dfwithin, F, pvalue)
-    end
+    println("\nOne-Way Analysis of Variance: \n")
+    pretty_table(outdf;
+        formatters=(ft_nomissing, ft_printf("%.3f", [2, 4, 5])),
+        hlines=[1, 3],
+        vlines=[1],
+        show_subheader=false
+    )
 
+end
+struct AOV
+    title::Vector{String}
+    ss::Vector{Float64}
+    df::Vector{Int64}
+    ms::Vector{Float64}
+    F::Float64
+    pvalue::Float64
 end
