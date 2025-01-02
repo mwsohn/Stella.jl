@@ -233,7 +233,7 @@ function ttest(x::AbstractVector, y::AbstractVector;
 end
 function ttest(df::DataFrame, varname::Symbol, μ0::Real; sig=95)
     v = collect(skipmissing(df[!,varname]))
-    ttest(v,μ0, varname = varname, sig=sig)
+    ttest(v, μ0, varname = varname, sig=sig)
 end
 function ttest(var::AbstractVector, μ0::Real = 0; varname = nothing, sig = 95)
 
@@ -263,17 +263,17 @@ function ttest(var::AbstractVector, μ0::Real = 0; varname = nothing, sig = 95)
         pvalue(tt, tail = :right),
         false,
         false,
+        sig,
         varname == nothing ? "x" : varname)
 
 end
-
 function Base.show(io::IO, t::TTEST)
     println(io,"\t",t.title,"\n")
 
     if t.title == "One-sample t test"
         pretty_table(io, 
             t.array,
-            header=["N", "Mean", "SD", "SE", "95% LB", "95% UB"],
+            header=["N", "Mean", "SD", "SE", string(t.sig, "% LB"), string(t.sig, "% UB")],
             row_labels= [t.varname == nothing ? "" : string(t.varname)],
             row_label_column_title="Variable",
             formatters=(ft_printf("%.5f", [2, 3, 4, 5, 6]), ft_printf("%.0f", [1])),
