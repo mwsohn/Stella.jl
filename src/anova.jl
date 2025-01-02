@@ -79,7 +79,6 @@ function anova(glmmodel)
 end
 import Base.show
 function show(io::IO, a::AOV)
-
     pstr = a.pvalue < 0.0001 ? "< 0.0001" : @sprintf("%.4f", a.pvalue)
     println("\nAnalysis of Variance\n")
     pretty_table(DataFrame(
@@ -92,5 +91,4 @@ function show(io::IO, a::AOV)
         vlines=[1],
         show_subheader=false
     )
-
 end
