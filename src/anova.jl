@@ -77,10 +77,10 @@ function anova(glmmodel)
         Distributions.ccdf(Distributions.FDist(mdf, rdf), F)
     )
 end
-function Base.show(io::IO, a::AOV)
+
+function Base.show(a::AOV)
 
     pstr = a.pvalue < 0.0001 ? "< 0.0001" : @sprintf("%.4f", a.pvalue)
-
     println("\nAnalysis of Variance\n")
     pretty_table(DataFrame(
             Source=a.title, SS=a.ss, DF=a.df, MS=a.ms,
