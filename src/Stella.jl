@@ -73,9 +73,10 @@ export  read_stata,  # read stata 13 and 14 files into DF
         labels!,
         labels2
 
+export AOV
+
 abstract type Link end
 abstract type Formula end
-abstract type AOV end
 
 ##############################################################################
 ##
