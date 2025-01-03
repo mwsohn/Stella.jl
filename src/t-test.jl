@@ -282,7 +282,7 @@ function Base.show(io::IO, t::TTEST)
         )
         println(io, "\nmean = mean(", t.varname, ")")
         println(io, "H₀: mean = ", t.μ0)
-        println(io, "t = ", @sprintf("%.5f", t.t), " (df = ", round(t.dof, digits = 0), ")\n")
+        println(io, "t = ", @sprintf("%.5f", t.t), " (df = ", t.dof, ")\n")
     else
         pretty_table(io,
             t.array,
@@ -295,7 +295,7 @@ function Base.show(io::IO, t::TTEST)
         )
         println(io, "\ndiff = mean(", t.levels[1], ") - mean(", t.levels[2], ")")
         println(io, "H₀: diff = 0")
-        println(io, "t = ", @sprintf("%.5f", t.t), " (df = ", round(t.dof, digits=0), ")\n")
+        println(io, "t = ", @sprintf("%.5f", t.t), " (df = ", t.dof, ")\n")
     end
 
     pretty_table(io,
