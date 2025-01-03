@@ -270,8 +270,6 @@ end
 function Base.show(io::IO, t::TTEST)
     println(io,"\t",t.title,"\n")
 
-    println(t.array)
-
     if t.title == "One-sample t test"
         pretty_table(io, 
             t.array,
