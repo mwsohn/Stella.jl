@@ -217,8 +217,8 @@ function ttest(x::AbstractVector, y::AbstractVector;
     LB[4],UB[4] = StatsAPI.confint(tt)
 
     return TTEST(title,
-            ["Variable", "N", "Mean", "SD", "SE", string(sig,"% LB"), string(sig,"% UB")],
-            [vcat(levels,"combined","diff") N MEAN SD SE LB UB],
+            ["N", "Mean", "SD", "SE", string(sig,"% LB"), string(sig,"% UB")],
+            [N MEAN SD SE LB UB],
             levels,
             tt.μ0,
             tt.t,
