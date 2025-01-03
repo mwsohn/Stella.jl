@@ -299,7 +299,7 @@ function Base.show(io::IO, t::TTEST)
     end
 
     pretty_table(io,
-        [string("P = ", @sprintf("%.4f",t.p_left)), string("P = ", @sprintf("%.4f",t.p_twosided)), string("P = ", @sprintf("%.4f",t.p_right))],
+        [string("P = ", @sprintf("%.4f",t.p_left)) string("P = ", @sprintf("%.4f",t.p_twosided)) string("P = ", @sprintf("%.4f",t.p_right))],
         header = ["Hₐ: diff < 0       ","       Hₐ: diff != 0       ","       Hₐ: diff > 0"],
         # formatters = (ft_printf("%.4f")),
         alignment = [:l,:c,:r],
