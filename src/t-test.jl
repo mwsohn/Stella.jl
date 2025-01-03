@@ -282,7 +282,7 @@ function Base.show(io::IO, t::TTEST)
         )
         println(io, "\nmean = mean(", t.varname, ")")
         println(io, "H₀: mean = ", t.μ0)
-        println(io, "t = ", @sprintf("%.5f", t.t), " (df = ", t.dof, ")\n")
+        println(io, "t = ", @sprintf("%.5f", t.t), " (df = ", @sprintf("%.0f", t.dof), ")\n")
     else
         pretty_table(io,
             t.array,
@@ -295,13 +295,13 @@ function Base.show(io::IO, t::TTEST)
         )
         println(io, "\ndiff = mean(", t.levels[1], ") - mean(", t.levels[2], ")")
         println(io, "H₀: diff = 0")
-        println(io, "t = ", @sprintf("%.5f", t.t), " (df = ", t.dof, ")\n")
+        println(io, "t = ", @sprintf("%.5f", t.t), " (df = ", @sprintf("%.5f",t.dof), ")\n")
     end
 
     pretty_table(io,
-        [t.p_left t.p_twosided t.p_right],
+        [string("P = ", @sprintf("%.4f",t.p_left)), string("P = ", @sprintf("%.4f",t.p_twosided)), string("P = ", @sprintf("%.4f",t.p_right))],
         header = ["Hₐ: diff < 0       ","       Hₐ: diff != 0       ","       Hₐ: diff > 0"],
-        formatters = (ft_printf("%.4f")),
+        # formatters = (ft_printf("%.4f")),
         alignment = [:l,:c,:r],
         hlines = :none,
         vlines = :none
