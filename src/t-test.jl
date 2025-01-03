@@ -280,9 +280,9 @@ function Base.show(io::IO, t::TTEST)
             hlines=[0, 1, 2],
             vlines=[1]
         )
-        println("mean = mean(", t.varname, ")")
-        println("H₀: mean = ", t.μ0)
-        println("t = ", @sprintf("%.5f", t.t), " (df = ", Int64(t.dof), ")\n")
+        println(io, "mean = mean(", t.varname, ")")
+        println(io, "H₀: mean = ", t.μ0)
+        println(io, "t = ", @sprintf("%.5f", t.t), " (df = ", Int64(t.dof), ")\n")
     else
         pretty_table(io,
             t.array,
@@ -293,9 +293,9 @@ function Base.show(io::IO, t::TTEST)
             hlines = [1,3,4],
             vlines = [1]
         )
-        println("diff = mean(", t.levels[1],") - mean(", t.levels[2], ")")
-        println("H₀: diff = 0")
-        println("t = ", @sprintf("%.5f",t.t), " (df = ", Int64(t.dof), ")\n")
+        println(io, "diff = mean(", t.levels[1], ") - mean(", t.levels[2], ")")
+        println(io, "H₀: diff = 0")
+        println(io, "t = ", @sprintf("%.5f", t.t), " (df = ", Int64(t.dof), ")\n")
     end
 
     pretty_table(io,
