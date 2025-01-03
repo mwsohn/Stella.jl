@@ -210,9 +210,9 @@ function ttest(x::AbstractVector, y::AbstractVector;
     LB[3],UB[3] = StatsAPI.confint(OneSampleTTest(vcat(val[1],val[2])))
 
     # diff
-    N[4] = paired ? N[1] : 0 # not to be used
+    N[4] = paired ? N[1] : missing
     MEAN[4] = tt.xbar
-    SD[4] = paired ? tt.stderr*sqrt(N[4]) : 0.0 # not to be used
+    SD[4] = paired ? tt.stderr*sqrt(N[4]) : missing
     SE[4] = tt.stderr
     LB[4],UB[4] = StatsAPI.confint(tt)
 
@@ -287,7 +287,7 @@ function Base.show(io::IO, t::TTEST)
         pretty_table(io,
             t.array,
             header=t.colnms,
-            row_labels = vcat(levels,"combined","diff"),
+            row_labels = vcat(t.levels,"combined","diff"),
             row_label_column_title = t.varname == nothing ? "Variable" : string(t.varname),
             formatters = (ft_printf("%.4f",[2,3,4,5,6]),ft_printf("%.0f",[1]), ft_nomissing),
             hlines = [1,3,4],
