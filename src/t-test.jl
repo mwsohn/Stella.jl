@@ -148,7 +148,7 @@ function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, sig = 95, w
     if length(val1) == 0 || length(val2) == 0
         error("On or both groups have zero observations")
     end
-    ttest(val1,val2,paired=false,welch=welch,sig=sig,levels=lev, byvar = by)
+    return ttest(val1,val2,paired=false,welch=welch,sig=sig,levels=lev)
 end
 function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = false, welch = false)
 
@@ -169,8 +169,7 @@ function ttest(x::AbstractVector, y::AbstractVector;
     paired::Bool=false,
     welch::Bool=false,
     sig=95,
-    levels=Any[:x,:y],
-    byvar=byvar)
+    levels=Any[:x,:y])
 
     paired && length(x) != length(y) && error("Paired t test requires equal lengths in input vectors")
 
@@ -268,7 +267,7 @@ function ttest(var::AbstractVector, μ0::Real = 0; varname = nothing, sig = 95)
 
 end
 function Base.show(io::IO, t::TTEST)
-    println(io,"\t",t.title,"\n")
+    println(io,"\n",t.title,"\n")
 
     if t.title == "One-sample t test"
         pretty_table(io, 
