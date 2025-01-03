@@ -288,7 +288,7 @@ function Base.show(io::IO, t::TTEST)
             t.array,
             header=t.colnms,
             row_labels = vcat(levels,"combined","diff"),
-            row_label_column_title = varname == nothing ? "Variable" : string(varname),
+            row_label_column_title = t.varname == nothing ? "Variable" : string(t.varname),
             formatters = (ft_printf("%.4f",[2,3,4,5,6]),ft_printf("%.0f",[1]), ft_nomissing),
             hlines = [1,3,4],
             vlines = [1]
