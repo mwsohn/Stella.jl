@@ -163,7 +163,7 @@ function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = fal
 
     length(x) > 0 && length(y) > 0 || error("One or both variables are empty")
 
-    return ttest(x, y, paired=paired, welch=welch, levels=[var1,var2], sig = sig)
+    return ttest(x, y, paired=paired, welch=welch, levels=[var1,var2], sig = sig, by = nothing)
 end
 function ttest(x::AbstractVector, y::AbstractVector; 
     paired::Bool=false,
