@@ -229,7 +229,7 @@ function ttest(x::AbstractVector, y::AbstractVector;
             paired,
             welch,
             sig,
-            byvar)
+            by)
 end
 function ttest(df::DataFrame, varname::Symbol, μ0::Real; sig=95)
     v = collect(skipmissing(df[!,varname]))
