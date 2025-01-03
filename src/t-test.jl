@@ -148,7 +148,7 @@ function ttest(df::DataFrame, varname::Symbol; by::Symbol = nothing, sig = 95, w
     if length(val1) == 0 || length(val2) == 0
         error("On or both groups have zero observations")
     end
-    return ttest(val1,val2,paired=false,welch=welch,sig=sig,levels=lev)
+    return ttest(val1,val2,paired=false,welch=welch,sig=sig,levels=lev, by = by)
 end
 function ttest(df::DataFrame, var1::Symbol, var2::Symbol; sig = 95, paired = false, welch = false)
 
@@ -169,7 +169,8 @@ function ttest(x::AbstractVector, y::AbstractVector;
     paired::Bool=false,
     welch::Bool=false,
     sig=95,
-    levels=Any[:x,:y])
+    levels=Any[:x,:y],
+    by = by)
 
     paired && length(x) != length(y) && error("Paired t test requires equal lengths in input vectors")
 
@@ -228,7 +229,7 @@ function ttest(x::AbstractVector, y::AbstractVector;
             paired,
             welch,
             sig,
-            "")
+            byvar)
 end
 function ttest(df::DataFrame, varname::Symbol, μ0::Real; sig=95)
     v = collect(skipmissing(df[!,varname]))
@@ -287,7 +288,7 @@ function Base.show(io::IO, t::TTEST)
             t.array,
             header=t.colnms,
             row_labels = vcat(levels,"combined","diff"),
-            row_label_column_title = byvar == nothing ? "Variable" : string(byvar),
+            row_label_column_title = varname == nothing ? "Variable" : string(varname),
             formatters = (ft_printf("%.4f",[2,3,4,5,6]),ft_printf("%.0f",[1]), ft_nomissing),
             hlines = [1,3,4],
             vlines = [1]
