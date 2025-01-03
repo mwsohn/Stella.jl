@@ -218,7 +218,7 @@ function ttest(x::AbstractVector, y::AbstractVector;
 
     return TTEST(title,
             ["Variable", "N", "Mean", "SD", "SE", string(sig,"% LB"), string(sig,"% UB")],
-            [vcat(levels,"combined","diff"),N,MEAN,SD,SE,LB,UB],
+            [vcat(levels,"combined","diff") N MEAN SD SE LB UB],
             levels,
             tt.μ0,
             tt.t,
@@ -252,8 +252,8 @@ function ttest(var::AbstractVector, μ0::Real = 0; varname = nothing, sig = 95)
     (LB, UB) = StatsAPI.confint(tt)
 
     return TTEST(title,
-        ["Variable", "N", "Mean", "SD", "SE", string(sig,"% LB"), string(sig,"% UB")],
-        [["x"],[N],[MEAN],[SD],[SE],[LB],[UB]],
+        ["N", "Mean", "SD", "SE", string(sig,"% LB"), string(sig,"% UB")],
+        [[N] [MEAN] [SD] [SE] [LB] [UB]],
         [],
         tt.μ0,
         tt.t,
@@ -270,10 +270,12 @@ end
 function Base.show(io::IO, t::TTEST)
     println(io,"\t",t.title,"\n")
 
+    println(t.array)
+
     if t.title == "One-sample t test"
         pretty_table(io, 
-            t.array[:, 2:end],
-            header=["N", "Mean", "SD", "SE", string(t.sig, "% LB"), string(t.sig, "% UB")],
+            t.array,
+            header=t.colnms,
             row_labels= [t.varname == nothing ? "" : string(t.varname)],
             row_label_column_title="Variable",
             formatters=(ft_printf("%.5f", [2, 3, 4, 5, 6]), ft_printf("%.0f", [1])),
@@ -282,11 +284,11 @@ function Base.show(io::IO, t::TTEST)
         )
         println("mean = mean(", t.varname, ")")
         println("H₀: mean = ", t.μ0)
-        println("t = ", @sprintf("%.7f", tt.t), " (df = ", tt.df, ")\n")
+        println("t = ", @sprintf("%.5f", t.t), " (df = ", Int64(t.dof), ")\n")
     else
         pretty_table(io,
             t.array,
-            header=["N", "Mean", "SD", "SE", string(t.sig, "% LB"), string(t.sig, "% UB")],
+            header=t.colnms,
             row_labels = vcat(levels,"combined","diff"),
             row_label_column_title = byvar == nothing ? "Variable" : string(byvar),
             formatters = (ft_printf("%.4f",[2,3,4,5,6]),ft_printf("%.0f",[1]), ft_nomissing),
@@ -295,11 +297,11 @@ function Base.show(io::IO, t::TTEST)
         )
         println("diff = mean(", t.levels[1],") - mean(", t.levels[2], ")")
         println("H₀: diff = 0")
-        println("t = ", @sprintf("%.7f",tt.t), " (df = ", tt.df, ")\n")
+        println("t = ", @sprintf("%.5f",t.t), " (df = ", Int64(t.dof), ")\n")
     end
 
     pretty_table(io,
-        [pvalue(tt, tail=:left) pvalue(tt) pvalue(tt, tail=:right)],
+        [t.p_left t.p_twosided t.p_right],
         header = ["Hₐ: diff < 0       ","       Hₐ: diff != 0       ","       Hₐ: diff > 0"],
         formatters = (ft_printf("%.4f")),
         alignment = [:l,:c,:r],
