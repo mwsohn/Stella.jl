@@ -119,7 +119,7 @@ function anova(glmmodel)
 end
 function Base.show(io::IO, a::AOV)
     n = length(a.ss)
-    pstr = [ x < 0.0001 ? "< 0.0001" : @sprintf("%.4f", x) for x in a.pvalue ]
+    pstr = [ x < 0.0001 ? "< 0.0001" : @sprintf("%.4f", x) for x in skipmissing(a.pvalue) ]
     println(io, "\nAnalysis of Variance\n")
     pretty_table(io, 
             DataFrame(
@@ -128,7 +128,7 @@ function Base.show(io::IO, a::AOV)
             DF=a.df, 
             MS=a.ms,
             F=a.F,
-            P=pstr
+            P=vcat(pstr, missing, missing)
         );
         formatters=(ft_nomissing, ft_printf("%.3f", [2, 4, 5])),
         hlines=[1, n-1],
