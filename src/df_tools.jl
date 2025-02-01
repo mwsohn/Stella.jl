@@ -684,8 +684,8 @@ function destring!(df::DataFrame,strvars; newvars::Vector{Symbol} = [], force=tr
 end
 
 """
-    xtile(da::AbstractArray;nq::Int = 4, lower::Bool = false, cutoffs::Union{Nothing,AbstractVector} = nothing)
-    xtile(df::DataFrame,varname::Symbol;nq::Int = 4, lower::Bool = false, cutoffs::Union{Nothing,AbstractVector} = nothing)
+    xtile(da::AbstractArray;nq::Int = 4, lower::Bool = true, cutoffs::Union{Nothing,AbstractVector} = nothing)
+    xtile(df::DataFrame,varname::Symbol;nq::Int = 4, lower::Bool = true, cutoffs::Union{Nothing,AbstractVector} = nothing)
 
 Create a DataArray{Int8,1} that identifies `nq` categories based on values in `da`.
 The default `nq` is 4. `cutoffs` vector can be provided to make custom categories.
@@ -696,7 +696,7 @@ will be computed. `lower = true` will make the threshold values to go in the low
 julia> df[:agecat] = xtile(df[:age], nq = 3)
 ```
 """
-function xtile(da::AbstractArray ; nq::Int = 4, lower::Bool = false, cutoffs::Union{Nothing,AbstractVector} = nothing)
+function xtile(da::AbstractArray ; nq::Int = 4, lower::Bool = true, cutoffs::Union{Nothing,AbstractVector} = nothing)
 
     if nq == 1
         error("`nq` must be greater than 1")
