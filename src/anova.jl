@@ -79,7 +79,7 @@ function anova(_df::AbstractDataFrame, fm; type = :se)
         DF,
         MSS,
         [ i <= length(MSS) - 2 ? MSS[i] / rms : missing for i in 1:length(MSS)],
-        [ i <= length(MSS) - 2 ? ccdf(FDist(rdf, DF[i]), MSS[i] / rms) : missing for i in 1:length(MSS)]
+        [ i <= length(MSS) - 2 ? ccdf(FDist(DF[i], rdf), MSS[i] / rms) : missing for i in 1:length(MSS)]
     );
 end
 function SSTypeI(XX,nlev)
@@ -114,7 +114,7 @@ function anova(glmmodel)
         [mdf, rdf, tdf],
         [(tss - rss) / mdf, rss / rdf, tss / tdf],
         [F, missing, missing],
-        [Distributions.ccdf(Distributions.FDist(mdf, rdf), F), missing, missing]
+        [Distributions.ccdf(Distributions.FDist(mdf,rdf), F), missing, missing]
     );
 end
 function Base.show(io::IO, a::AOV)
@@ -131,7 +131,7 @@ function Base.show(io::IO, a::AOV)
             P=vcat(pstr, missing, missing)
         );
         formatters=(ft_nomissing, ft_printf("%.3f", [2, 4, 5])),
-        hlines=[1, n-1],
+        hlines=[1, n],
         vlines=[1],
         show_subheader=false
     )
