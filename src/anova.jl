@@ -52,7 +52,7 @@ function anova(_df::AbstractDataFrame, dep::Symbol, cat1::Symbol, cat2::Symbol; 
     end
     return anova(_df, fm, type = type, interaction=interaction)
 end
-function anova(_df::AbstractDataFrame, fm::Formula; type = :se)
+function anova(_df::AbstractDataFrame, fm::FormulaTerm; type = :se)
     dep = fm.lhs.sym
     cats = Vector{Symbol}()
     nlev = Vector{Int}()
