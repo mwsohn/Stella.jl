@@ -50,12 +50,11 @@ function anova(_df::AbstractDataFrame, dep::Symbol, cat1::Symbol, cat2::Symbol; 
     else
         fm = @eval @formula($dep ~ 1 + $cat1 + $cat2)
     end
-    return anova(_df, fm, type = type, interaction=interaction)
+    return anova(_df, fm, type = type)
 end
 function anova(_df::AbstractDataFrame, fm; type = :se)
     dep = fm.lhs.sym
     intercept = isa(fm.rhs[1], ConstantTerm) && fm.rhs[1].n == 1 ? true : false
-    end
     # To DO:
     # 2. interaction term
     # 3. partial SS or Type II SS
@@ -88,12 +87,9 @@ function anova(_df::AbstractDataFrame, fm; type = :se)
     MSS = SS ./ DF
     rms = MSS[end-1]
     
-    if interaction
-        iterm = string(cats[1], " & ", cats[2])
-        Source = ["Model", string(cats[1]), string(cats[2]), iterm, "Residual", "Total"]
-    else
-        Source = ["Model", string(cats[1]), string(cats[2]), "Residual", "Total"]
-    end
+    Source = interaction ? 
+        ["Model", string(cats[1]), string(cats[2]), string(cats[1], " & ", cats[2]), "Residual", "Total"] :
+        ["Model", string(cats[1]), string(cats[2]), "Residual", "Total"]
 
     return AOV(
         Source,
