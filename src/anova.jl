@@ -87,8 +87,10 @@ function anova(_df::AbstractDataFrame, fm; type = :se)
     rdf = tdf - mdf
     MSS = SS ./ DF
     rms = MSS[end-1]
+    
     if interaction
-        Source = ["Model", string(cats[1]), string(cats[2]), string(cats[1], " \& ", cats[2]), "Residual", "Total"]
+        iterm = string(cats[1], " & ", cats[2])
+        Source = ["Model", string(cats[1]), string(cats[2]), iterm, "Residual", "Total"]
     else
         Source = ["Model", string(cats[1]), string(cats[2]), "Residual", "Total"]
     end
