@@ -86,6 +86,7 @@ function anova(_df::AbstractDataFrame, fm; type = :se)
     tdf = nrow(df2) - 1
     mdf = sum(nlev) - length(nlev)
     DF = vcat(mdf, nlev .- 1, tdf - mdf, tdf )
+    println(SS," --- ", DF)
     rdf = tdf - mdf
     MSS = SS ./ DF
     rms = MSS[end-1]
