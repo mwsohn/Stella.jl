@@ -86,7 +86,6 @@ function anova(_df::AbstractDataFrame, fm; type = :se)
     tdf = nrow(df2) - 1
     mdf = sum(nlev) - length(nlev)
     DF = vcat(mdf, nlev .- 1, tdf - mdf, tdf )
-    println(SS," --- ", DF)
     rdf = tdf - mdf
     MSS = SS ./ DF
     rms = MSS[end-1]
@@ -109,7 +108,7 @@ function SSTypeI(XX,nlev)
     A = copy(XX)
     (r,c) = size(A)
     n = length(nlev)
-    SS = zeros(Float64,r)
+    SS = zeros(Float64,n+3)
     sweep!(A,1)
     SS[n+3] = copy(A[r,c])
     pos = 2
