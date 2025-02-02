@@ -87,7 +87,11 @@ function anova(_df::AbstractDataFrame, fm; type = :se)
     rdf = tdf - mdf
     MSS = SS ./ DF
     rms = MSS[end-1]
-    Source = interaction ? ["Model", string(cats[1]), string(cats[2]), string(cats[1]," & ", cats[2]), "Residual", "Total"] : ["Model", string(cats[1]), string(cats[2]), "Residual", "Total"]
+    if interaction
+        Source = ["Model", string(cats[1]), string(cats[2]), string(cats[1], " & ", cats[2]), "Residual", "Total"]
+    else
+        Source = ["Model", string(cats[1]), string(cats[2]), "Residual", "Total"]
+    end
 
     return AOV(
         Source,
@@ -96,7 +100,7 @@ function anova(_df::AbstractDataFrame, fm; type = :se)
         MSS,
         [ i <= length(MSS) - 2 ? MSS[i] / rms : missing for i in 1:length(MSS)],
         [ i <= length(MSS) - 2 ? ccdf(FDist(DF[i], rdf), MSS[i] / rms) : missing for i in 1:length(MSS)]
-    );
+    )
 end
 function SSTypeI(XX,nlev)
     A = copy(XX)
