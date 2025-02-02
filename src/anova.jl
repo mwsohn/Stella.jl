@@ -62,6 +62,9 @@ function anova(_df::AbstractDataFrame, fm; type = :se)
     nlev = Vector{Int}()
     interaction = false
     for i = 1:length(fm.rhs)
+        if i == 1 && intercept
+            continue
+        end
         if length(terms(fm.rhs[i])) == 1
             push!(cats,fm.rhs[i].sym)
             push!(nlev,length(unique(skipmissing(_df[:,cats[i]]))))
