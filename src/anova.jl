@@ -54,16 +54,31 @@ function anova(_df::AbstractDataFrame, dep::Symbol, cat1::Symbol, cat2::Symbol; 
 end
 function anova(_df::AbstractDataFrame, fm; type = :se)
     dep = fm.lhs.sym
+    intercept = isa(fm.rhs[1], ConstantTerm) && fm.rhs[1].n == 1 ? true : false
+    end
+    # To DO:
+    # 2. interaction term
+    # 3. partial SS or Type II SS
     cats = Vector{Symbol}()
     nlev = Vector{Int}()
+    interaction = false
     for i = 1:length(fm.rhs)
-        push!(cats,fm.rhs[i].sym)
-        push!(nlev,length(unique(skipmissing(_df[:,cats[i]]))))
+        if length(terms(fm.rhs[i])) == 1
+            push!(cats,fm.rhs[i].sym)
+            push!(nlev,length(unique(skipmissing(_df[:,cats[i]]))))
+        elseif isa(fm.rhs[i], InteractionTerm) && length(terms(fm.rhs[i])) == 2
+            interaction = true
+            push!(nlev,(nlev[1]-1)*(nlev[2]-1))
+        end
     end
     ba = completecases(_df[:,vcat(dep, cats)])
     df2 = _df[ba,vcat(dep, cats)]
     mm = modelmatrix(fm,df2)
-    X = hcat(ones(Float64,size(mm,1)), mm, df2[:,dep])
+    if intercept
+        X = hcat(mm, df2[:,dep])
+    else
+        X = hcat(ones(Float64, size(mm, 1)), mm, df2[:, dep])
+    end
     XX = X'X
     SS = type == :se ? SSTypeI(XX, nlev) : SSTypeII(XX, nlev)
     tdf = nrow(df2) - 1
@@ -72,9 +87,10 @@ function anova(_df::AbstractDataFrame, fm; type = :se)
     rdf = tdf - mdf
     MSS = SS ./ DF
     rms = MSS[end-1]
+    Source = interaction ? ["Model", string(cats[1]), string(cats[2]), string(cats[1]," & ", cats[2]), "Residual", "Total"] : ["Model", string(cats[1]), string(cats[2]), "Residual", "Total"]
 
     return AOV(
-        ["Model", string(cats[1]), string(cats[2]), "Residual", "Total"],
+        Source,
         SS,
         DF,
         MSS,
