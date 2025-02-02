@@ -70,7 +70,7 @@ function anova(_df::AbstractDataFrame, fm; type = :se)
             push!(nlev,length(unique(skipmissing(_df[:,cats[i]]))))
         elseif isa(fm.rhs[i], InteractionTerm) && length(terms(fm.rhs[i])) == 2
             interaction = true
-            push!(nlev,(nlev[1]-1)*(nlev[2]-1))
+            push!(nlev,(nlev[1]-1)*(nlev[2]-1)+1)
         end
     end
     ba = completecases(_df[:,vcat(dep, cats)])
