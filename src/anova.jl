@@ -104,7 +104,7 @@ function anova(_df::AbstractDataFrame, fm; type = 1)
 
 end
 function SSTypeI(XX,nlev)
-    A = copy(XX)
+    A = XX
     (r,c) = size(A)
     n = length(nlev)
     SS = zeros(Float64,n+3)
@@ -115,8 +115,8 @@ function SSTypeI(XX,nlev)
         sweep!(A,pos:(pos+v-2))
         pos += (v-1)
         SS[i+1] = SS[n+3] - A[r,c]
-        if i > 1
-            SS[i+1] -= sum(SS[2:i+1])
+        if i >= 2
+            SS[i+1] -= sum(SS[2:i])
         end
     end
     SS[1] = sum(SS[2:n+1])
