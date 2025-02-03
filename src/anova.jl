@@ -116,7 +116,7 @@ function SSTypeI(XX,nlev)
         pos += (v-1)
         SS[i+1] = SS[n+3] - A[r,c]
         if i >= 2
-            SS[i+1] -= sum(SS[2:i])
+            SS[i+1] -= SS[2]
         end
     end
     SS[1] = sum(SS[2:n+1])
