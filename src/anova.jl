@@ -17,7 +17,7 @@ the group variable.
 """
 function anova(_df::AbstractDataFrame, dep::Symbol, cat::Symbol)
     ba = completecases(_df[:,[dep,cat]])
-    df2 = df[ba,[dep, cat]]
+    df2 = _df[ba,[dep, cat]]
     fm = @eval @formula($dep ~ 1 + $cat)
     mm = modelmatrix(fm, df2)
     X = hcat(mm,df2[!, dep])
@@ -45,7 +45,7 @@ function anova(_df::AbstractDataFrame, dep::Symbol, cat::Symbol)
         [ pval, pval, missing, missing]
     );
 end
-function anova(_df::AbstractDataFrame, dep::Symbol, cat1::Symbol, cat2::Symbol; type = :se, interaction = false)
+function anova(_df::AbstractDataFrame, dep::Symbol, cat1::Symbol, cat2::Symbol; type = 1, interaction = false)
     if interaction
         fm = @eval @formula($dep ~ 1 + $cat1 + $cat2 + $cat1 * $cat2)
     else
@@ -56,9 +56,6 @@ end
 function anova(_df::AbstractDataFrame, fm; type = 1)
     dep = fm.lhs.sym
     intercept = isa(fm.rhs[1], ConstantTerm) && fm.rhs[1].n == 1 ? true : false
-    # To DO:
-    # 2. interaction term
-    # 3. partial SS or Type II SS
     cats = Vector{Symbol}()
     nlev = Vector{Int}()
     interaction = false
@@ -77,10 +74,9 @@ function anova(_df::AbstractDataFrame, fm; type = 1)
     ba = completecases(_df[:,vcat(dep, cats)])
     df2 = _df[ba,vcat(dep, cats)]
     mm = modelmatrix(fm,df2)
-    if intercept
-        X = hcat(mm, df2[:,dep])
-    else
-        X = hcat(ones(Float64, size(mm, 1)), mm, df2[:, dep])
+    X = hcat(mm, df2[:,dep])
+    if intercept == false
+        X = hcat(ones(Float64,size(X,1)),X)
     end
     XX = X'X
     SS = type == 1 ? SSTypeI(XX, nlev) : SSTypeII(XX, nlev)
