@@ -122,17 +122,13 @@ function SSTypeI(XX,nlev)
     return SS
 end
 function SSTypeII(XX,nlev)
-    A = copy(XX)
-    (r,c) = size(A)
+    (r,c) = size(XX)
     n = length(nlev)
     SS = zeros(Float64,n+3)
-    sweep!(A,1)
-    # TSS
-    SS[n+3] = copy(A[r,c])
-    # RSS
-    sweep!(A,2:n+1)
+    sweep!(XX,1)
+    SS[n+3] = copy(XX[r,c])
+    sweep!(XX,2:sum(nlev .- 1)+1)
     SS[n+2] = copy(A[r,c])
-    # invert factors
     pos = 2
     for (i,v) in enumerate(nlev)
         B = copy(A)
@@ -141,7 +137,6 @@ function SSTypeII(XX,nlev)
         SS[i+1] = B[r,c] - SS[n+2]
     end
     sweep!(A,2:n,true)
-    # MSS
     SS[1] = A[r,c] - SS[n+2]
     return SS
 end
