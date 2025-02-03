@@ -130,7 +130,7 @@ function SSTypeII(XX,nlev)
     # TSS
     SS[n+3] = copy(A[r,c])
     # RSS
-    sweep!(A,2:n)
+    sweep!(A,2:n+1)
     SS[n+2] = copy(A[r,c])
     # invert factors
     pos = 2
