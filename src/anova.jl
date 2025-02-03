@@ -37,6 +37,7 @@ function anova(_df::AbstractDataFrame, dep::Symbol, cat::Symbol)
     pval = ccdf(FDist(tdf - mdf, mdf), mms / rms)
 
     return AOV(
+        "One-Way",
         ["Model", string(cat), "Residual", "Total"],
         [MSS, MSS, RSS, TSS],
         [mdf, mdf, tdf - mdf, tdf],
@@ -113,7 +114,10 @@ function SSTypeI(XX,nlev)
     for (i,v) in enumerate(nlev)
         sweep!(A,pos:(pos+v-2))
         pos += (v-1)
-        SS[i+1] = SS[n+3] - A[r,c] - sum(SS[1:i+1])
+        SS[i+1] = SS[n+3] - A[r,c]
+        if i > 2
+            SS[i+1] -= sum(SS[2:i+1])
+        end
     end
     SS[1] = sum(SS[2:n+1])
     SS[n+2] = SS[n+3] - SS[1]
@@ -152,6 +156,7 @@ function anova(glmmodel)
     rdf = tdf - mdf
     F = (mss / mdf) / (rss / rdf)
     return AOV(
+        "Regression Model",
         ["Model", "Residual", "Total"],
         [mss, rss, tss],
         [mdf, rdf, tdf],
