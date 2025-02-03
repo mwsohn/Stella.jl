@@ -114,10 +114,7 @@ function SSTypeI(XX,nlev)
     for (i,v) in enumerate(nlev)
         sweep!(A,pos:(pos+v-2))
         pos += (v-1)
-        SS[i+1] = SS[n+3] - A[r,c]
-        if i >= 2
-            SS[i+1] -= SS[2]
-        end
+        SS[i+1] = SS[n+3] - A[r,c] - sum(SS[1:i])
     end
     SS[1] = sum(SS[2:n+1])
     SS[n+2] = SS[n+3] - SS[1]
