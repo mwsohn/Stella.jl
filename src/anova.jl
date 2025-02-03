@@ -136,7 +136,7 @@ function SSTypeII(XX,nlev)
         pos += (v-1)
         SS[i+1] = B[r,c] - SS[n+2]
     end
-    sweep!(XX,2:n,true)
+    sweep!(XX, 2:sum(nlev .- 1)+1, true)
     SS[1] = XX[r,c] - SS[n+2]
     return SS
 end
