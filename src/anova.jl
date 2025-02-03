@@ -142,7 +142,7 @@ function SSTypeII(XX,nlev)
     end
     sweep!(A,2:n,true)
     # MSS
-    SS[1] = A[r,c] - rss
+    SS[1] = A[r,c] - SS[n+2]
     return SS
 end
 
