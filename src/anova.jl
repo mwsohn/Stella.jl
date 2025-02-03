@@ -1,4 +1,5 @@
 struct AOV
+    type::String
     title::Vector{String}
     ss::Vector{Float64}
     df::Vector{Int64}
@@ -52,7 +53,7 @@ function anova(_df::AbstractDataFrame, dep::Symbol, cat1::Symbol, cat2::Symbol; 
     end
     return anova(_df, fm, type = type)
 end
-function anova(_df::AbstractDataFrame, fm; type = :se)
+function anova(_df::AbstractDataFrame, fm; type = 1)
     dep = fm.lhs.sym
     intercept = isa(fm.rhs[1], ConstantTerm) && fm.rhs[1].n == 1 ? true : false
     # To DO:
@@ -82,7 +83,7 @@ function anova(_df::AbstractDataFrame, fm; type = :se)
         X = hcat(ones(Float64, size(mm, 1)), mm, df2[:, dep])
     end
     XX = X'X
-    SS = type == :se ? SSTypeI(XX, nlev) : SSTypeII(XX, nlev)
+    SS = type == 1 ? SSTypeI(XX, nlev) : SSTypeII(XX, nlev)
     tdf = nrow(df2) - 1
     mdf = sum(nlev) - length(nlev)
     DF = vcat(mdf, nlev .- 1, tdf - mdf, tdf )
@@ -95,6 +96,7 @@ function anova(_df::AbstractDataFrame, fm; type = :se)
         ["Model", string(cats[1]), string(cats[2]), "Residual", "Total"]
 
     return AOV(
+        type == 1 ? "Type I" : "Type II",
         Source,
         SS,
         DF,
@@ -121,6 +123,29 @@ function SSTypeI(XX,nlev)
     SS[n+2] = SS[n+3] - SS[1]
     return SS
 end
+function SSTypeII(XX,nlev)
+    A = copy(XX)
+    (r,c) = size(A)
+    n = length(nlev)
+    SS = zeros(Float64,n+3)
+    sweep!(A,1)
+    # TSS
+    SS[n+3] = copy(A[r,c])
+    # RSS
+    sweep!(A,2:n)
+    SS[n+2] = copy(A[r,c])
+    # invert factors
+    for (i,v) in enumerate(nlev)
+        B = copy(A)
+        sweep!(B,pos:(pos+v-2),true)
+        pos += (v-1)
+        SS[i+1] = B[r,c] - SS[n+2]
+    end
+    sweep!(A,2:n,true)
+    # MSS
+    SS[1] = A[r,c] - rss
+    return SS
+end
 
 function anova(glmmodel)
     tss = nulldeviance(glmmodel)
@@ -142,7 +167,7 @@ end
 function Base.show(io::IO, a::AOV)
     n = length(a.ss)
     pstr = [ x < 0.0001 ? "< 0.0001" : @sprintf("%.4f", x) for x in skipmissing(a.pvalue) ]
-    println(io, "\nAnalysis of Variance\n")
+    println(io, "\nAnalysis of Variance (",a.type,")\n")
     pretty_table(io, 
             DataFrame(
             Source=a.title, 
