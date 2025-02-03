@@ -16,6 +16,7 @@ Produces an one-way ANOVA table. `contvar' is a continous variable and `groupvar
 the group variable. 
 """
 function anova(_df::AbstractDataFrame, dep::Symbol, cat::Symbol)
+    isa(_df[:,cat], CategoricalArray) || throw(ArgumentError("`cat` must be a Categorical Array"))
     ba = completecases(_df[:,[dep,cat]])
     df2 = _df[ba,[dep, cat]]
     fm = @eval @formula($dep ~ 1 + $cat)
@@ -66,6 +67,7 @@ function anova(_df::AbstractDataFrame, fm; type = 1)
         end
         if length(terms(fm.rhs[i])) == 1
             push!(cats,fm.rhs[i].sym)
+            isa(_df[:, cats[1]], CategoricalArray) || throw(ArgumentError(cats[i], " must be a Categorical Array"))
             push!(nlev,length(unique(skipmissing(_df[:,cats[i]]))))
         elseif isa(fm.rhs[i], InteractionTerm) && length(terms(fm.rhs[i])) == 2
             interaction = true
@@ -131,6 +133,7 @@ function SSTypeII(XX,nlev)
     sweep!(A,2:n)
     SS[n+2] = copy(A[r,c])
     # invert factors
+    pos = 2
     for (i,v) in enumerate(nlev)
         B = copy(A)
         sweep!(B,pos:(pos+v-2),true)
