@@ -48,12 +48,7 @@ function anova(_df::AbstractDataFrame, dep::Symbol, cat::Symbol)
     );
 end
 function anova(_df::AbstractDataFrame, dep::Symbol, cat1::Symbol, cat2::Symbol; type = 1, interaction = false)
-    if interaction
-        fm = @eval @formula($dep ~ 1 + $cat1 + $cat2 + $cat1 * $cat2)
-    else
-        fm = @eval @formula($dep ~ 1 + $cat1 + $cat2)
-    end
-    return anova(_df, fm, type = type)
+    return anova(_df, interaction ? @eval(@formula($dep ~ 1 + $cat1 + $cat2 + $cat1 * $cat2)) : @eval(@formula($dep ~ 1 + $cat1 + $cat2)), type=type)
 end
 function anova(_df::AbstractDataFrame, fm; type = 1)
     dep = fm.lhs.sym
@@ -95,7 +90,7 @@ function anova(_df::AbstractDataFrame, fm; type = 1)
         ["Model", string(cats[1]), string(cats[2]), "Residual", "Total"]
 
     return AOV(
-        type == 1 ? "Type I" : "Type II",
+        type == 1 ? "Type I" : "Type III",
         Source,
         SS,
         DF,
@@ -127,16 +122,16 @@ function SSTypeII(XX,nlev)
     SS = zeros(Float64,n+3)
     sweep!(XX,1)
     SS[n+3] = copy(XX[r,c])
-    sweep!(XX,2:sum(nlev .- 1)+1)
+    sweep!(XX,2:c-1)
     SS[n+2] = copy(XX[r,c])
     pos = 2
     for (i,v) in enumerate(nlev)
-        B = copy(XX)
-        sweep!(B,pos:(pos+v-2),true)
+        A = copy(XX)
+        sweep!(A,pos:(pos+v-2),true)
         pos += (v-1)
-        SS[i+1] = B[r,c] - SS[n+2]
+        SS[i+1] = A[r,c] - SS[n+2]
     end
-    sweep!(XX, 2:sum(nlev .- 1)+1, true)
+    sweep!(XX, 2:c-1, true)
     SS[1] = XX[r,c] - SS[n+2]
     return SS
 end
