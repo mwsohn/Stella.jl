@@ -48,7 +48,7 @@ function anova(_df::AbstractDataFrame, dep::Symbol, cat::Symbol)
     );
 end
 function anova(_df::AbstractDataFrame, dep::Symbol, cat1::Symbol, cat2::Symbol; type = 1, interaction = false)
-    return anova(_df, interaction ? @eval(@formula($dep ~ 1 + $cat1 + $cat2 + $cat1 * $cat2)) : @eval(@formula($dep ~ 1 + $cat1 + $cat2)), type=type)
+    return anova(_df, interaction ? @eval(@formula($dep ~ $cat1 + $cat2 + $cat1 * $cat2)) : @eval(@formula($dep ~ 1 + $cat1 + $cat2)), type=type)
 end
 function anova(_df::AbstractDataFrame, fm; type = 1)
     dep = fm.lhs.sym
@@ -77,7 +77,13 @@ function anova(_df::AbstractDataFrame, fm; type = 1)
         X = hcat(ones(Float64,size(X,1)),X)
     end
     XX = X'X
-    SS = type == 1 ? SSTypeI(XX, nlev) : SSTypeII(XX, nlev)
+    if type == 1
+        SS = SSTypeI(XX, nlev)
+    elseif type == 2
+        SS = SSTypeII(XX, nlev)
+    elseif type == 3
+        SS = SSTypeIII(XX, nlev)
+    end
     tdf = nrow(df2) - 1
     mdf = sum(nlev) - length(nlev)
     DF = vcat(mdf, nlev .- 1, tdf - mdf, tdf )
@@ -120,19 +126,26 @@ function SSTypeII(XX,nlev)
     (r,c) = size(XX)
     n = length(nlev)
     SS = zeros(Float64,n+3)
+    A = copy(XX)
+    # TSS
     sweep!(XX,1)
     SS[n+3] = copy(XX[r,c])
+    # RSS
     sweep!(XX,2:c-1)
     SS[n+2] = copy(XX[r,c])
     pos = 2
+    # MSS
+    SS[1] = XX[r, c] - SS[n+2]
+
+    # sweep again
+    sweep!(B,1:sum(nlev)-n)
     for (i,v) in enumerate(nlev)
-        A = copy(XX)
-        sweep!(A,pos:(pos+v-2),true)
+        A = copy(B)
+        sweep!(B,pos:(pos+v-2),true)
         pos += (v-1)
-        SS[i+1] = A[r,c] - SS[n+2]
+        SS[i+1] = B[r,c] - SS[n+2]
     end
     sweep!(XX, 2:c-1, true)
-    SS[1] = XX[r,c] - SS[n+2]
     return SS
 end
 
