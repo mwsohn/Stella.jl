@@ -135,17 +135,17 @@ function SSTypeII(XX,nlev)
     SS[n+2] = copy(XX[r,c])
     pos = 2
     # MSS
+    sweep!(XX, 2:c-1, true)
     SS[1] = XX[r, c] - SS[n+2]
 
     # sweep again
-    sweep!(A,1:sum(nlev)-n)
+    sweep!(A,1:sum(nlev) - nlev[3] -n - 1)
     for (i,v) in enumerate(nlev)
         B = copy(A)
         sweep!(B,pos:(pos+v-2),true)
         pos += (v-1)
         SS[i+1] = B[r,c] - SS[n+2]
     end
-    sweep!(XX, 2:c-1, true)
     return SS
 end
 
