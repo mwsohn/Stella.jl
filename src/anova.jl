@@ -99,7 +99,7 @@ function anova(_df::AbstractDataFrame, fm; type = 1)
         ["Model", string(cats[1]), string(cats[2]), "Residual", "Total"]
 
     return AOV(
-        Type
+        Type,
         Source,
         SS,
         DF,
