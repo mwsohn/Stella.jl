@@ -122,33 +122,68 @@ function SSTypeI(XX,nlev)
     SS[n+2] = SS[n+3] - SS[1]
     return SS
 end
-function SSTypeII(XX,nlev)
-    (r,c) = size(XX)
+function SSTypeII(XX, nlev)
+    (r, c) = size(XX)
     n = length(nlev)
-    SS = zeros(Float64,n+3)
+    SS = zeros(Float64, n + 3)
     A = copy(XX)
     # TSS
-    sweep!(XX,1)
-    SS[n+3] = copy(XX[r,c])
+    sweep!(XX, 1)
+    SS[n+3] = copy(XX[r, c])
     # RSS
-    sweep!(XX,2:c-1)
-    SS[n+2] = copy(XX[r,c])
-    pos = 2
+    sweep!(XX, 2:c-1)
+    SS[n+2] = copy(XX[r, c])
     # MSS
     sweep!(XX, 2:c-1, true)
     SS[1] = XX[r, c] - SS[n+2]
+    # SSAB
+    sweep!(XX, 2:sum(nlev[1:2])-1)
+    SS[n+1] = XX[r, c] - SS[n+2]
 
     # sweep again
-    sweep!(A,1:sum(nlev[1:2]) - 2)
-    rss = copy(A[r,c])
-    for (i,v) in enumerate(nlev)
+    sweep!(A, 1:sum(nlev[1:2])-1)
+    rss2 = copy(A[r, c])
+    pos = 2
+    for (i, v) in enumerate(nlev[1:2])
         B = copy(A)
-        sweep!(B,pos:(pos+v-2),true)
-        pos += (v-1)
-        SS[i+1] = B[r,c] - rss
+        sweep!(B, pos:(pos+v-2), true)
+        pos += (v - 1)
+        SS[i+1] = B[r, c] - rss2
     end
     return SS
 end
+function SSTypeIII(XX, nlev)
+    (r, c) = size(XX)
+    n = length(nlev)
+    SS = zeros(Float64, n + 3)
+    A = copy(XX)
+    # TSS
+    sweep!(XX, 1)
+    SS[n+3] = copy(XX[r, c])
+    # RSS
+    sweep!(XX, 2:c-1)
+    SS[n+2] = copy(XX[r, c])
+    # MSS
+    sweep!(XX, 2:c-1, true)
+    SS[1] = XX[r, c] - SS[n+2]
+    # SSAB
+    sweep!(XX, 2:sum(nlev[1:2])-1)
+    SS[n+1] = XX[r, c] - SS[n+2]
+
+    sweep!(A, 1:sum(nlev[1:2])-1)
+    rss2 = copy(A[r, c])
+    pos = 2
+    for (i, v) in enumerate(nlev[1:2])
+        # need to fix this part
+        B = copy(A)
+        sweep!(B, pos:(pos+v-2), true)
+        pos += (v - 1)
+        SS[i+1] = B[r, c] - rss2
+    end
+    return SS
+end
+
+
 
 function anova(glmmodel)
     tss = nulldeviance(glmmodel)
