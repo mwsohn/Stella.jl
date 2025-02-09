@@ -78,10 +78,13 @@ function anova(_df::AbstractDataFrame, fm; type = 1)
     end
     XX = X'X
     if type == 1
+        Type = "Type I"
         SS = SSTypeI(XX, nlev)
     elseif type == 2
+        Type = "Type II"
         SS = SSTypeII(XX, nlev)
     elseif type == 3
+        Type = "Type III"
         SS = SSTypeIII(XX, nlev)
     end
     tdf = nrow(df2) - 1
@@ -96,7 +99,7 @@ function anova(_df::AbstractDataFrame, fm; type = 1)
         ["Model", string(cats[1]), string(cats[2]), "Residual", "Total"]
 
     return AOV(
-        type == 1 ? "Type I" : "Type III",
+        Type
         Source,
         SS,
         DF,
