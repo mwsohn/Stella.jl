@@ -51,31 +51,29 @@ function anova(_df::AbstractDataFrame, dep::Symbol, cat1::Symbol, cat2::Symbol; 
     return anova(_df, interaction ? @eval(@formula($dep ~ $cat1 + $cat2 + $cat1 * $cat2)) : @eval(@formula($dep ~ 1 + $cat1 + $cat2)), type=type)
 end
 function anova(_df::AbstractDataFrame, fm; type = 1)
-    dep = fm.lhs.sym
-    intercept = isa(fm.rhs[1], ConstantTerm) && fm.rhs[1].n == 1 ? true : false
+
+    if type == 3
+        MF = ModelFrame(fm, _df, contrasts = Dict(:foreign => EffectsCoding(), :mpg3 => EffectsCoding()))
+    else
+        MF = ModelFrame(fm, _df, contrasts=Dict(:foreign => EffectsCoding(), :mpg3 => EffectsCoding()))
+    end
+
+    rhs = MF.f.rhs
     cats = Vector{Symbol}()
     nlev = Vector{Int}()
-    interaction = false
-    for i = 1:length(fm.rhs)
-        if i == 1 && intercept
-            continue
-        end
-        if length(terms(fm.rhs[i])) == 1
-            push!(cats,fm.rhs[i].sym)
-            isa(_df[:, cats[1]], CategoricalArray) || throw(ArgumentError(cats[i], " must be a Categorical Array"))
-            push!(nlev,length(unique(skipmissing(_df[:,cats[i]]))))
-        elseif isa(fm.rhs[i], InteractionTerm) && length(terms(fm.rhs[i])) == 2
-            interaction = true
-            push!(nlev,(nlev[1]-1)*(nlev[2]-1)+1)
+    for i = 2:length(rhs)
+        if isdefined(rhs,:sym)
+            push!(cats,rhs[i].sym)
+            push!(nlev, length(rhs[i].contrasts.levels))
+        else
+            (sy, len) = get_sym_lev(rhs[i].terms)
+            push!(nlev,len)
+            push!(cats,sy)
         end
     end
-    ba = completecases(_df[:,vcat(dep, cats)])
-    df2 = _df[ba,vcat(dep, cats)]
-    mm = modelmatrix(fm,df2)
-    X = hcat(mm, df2[:,dep])
-    if intercept == false
-        X = hcat(ones(Float64,size(X,1)),X)
-    end
+
+    MM = modelmatrix(MF)
+    X = hcat(MM, MM.data[1])
     XX = X'X
     if type == 1
         Type = "Type I"
@@ -93,14 +91,10 @@ function anova(_df::AbstractDataFrame, fm; type = 1)
     rdf = tdf - mdf
     MSS = SS ./ DF
     rms = MSS[end-1]
-    
-    Source = interaction ? 
-        ["Model", string(cats[1]), string(cats[2]), string(cats[1], " & ", cats[2]), "Residual", "Total"] :
-        ["Model", string(cats[1]), string(cats[2]), "Residual", "Total"]
 
     return AOV(
         Type,
-        Source,
+        vcat("Model", cats, "Residual", "Total"]),
         SS,
         DF,
         MSS,
@@ -185,8 +179,17 @@ function SSTypeIII(XX, nlev)
     end
     return SS
 end
-
-
+function get_sym_lev(terms)
+    vstr = ""
+    levs = 1
+    for i = 1:length(terms)
+        if isdefined(terms[i], :sym)
+            vstr = string(vstr, i > 1 ? " & " : "", terms[i].sym)
+            levs = levs * (length(terms[i].contrasts.levels) - 1)
+        end
+    end
+    return vstr, levs
+end
 
 function anova(glmmodel)
     tss = nulldeviance(glmmodel)
