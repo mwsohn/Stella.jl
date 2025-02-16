@@ -94,7 +94,7 @@ function anova(_df::AbstractDataFrame, fm; type = 1)
 
     return AOV(
         Type,
-        vcat("Model", cats, "Residual", "Total"]),
+        vcat("Model", cats, "Residual", "Total"),
         SS,
         DF,
         MSS,
