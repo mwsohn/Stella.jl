@@ -9,11 +9,38 @@ struct AOV
 end
 
 """
-	anova(::DataFrame, contvar::Symbol, groupvar::Symbol)
+	anova(::DataFrame, depvar::Symbol, groupvar::Symbol)
+	anova(::DataFrame, depvar::Symbol, groupvar1::Symbol, groupvar2::Symbol; type = 1, interaction = false)
+    anova(::DataFrame, fm::FormulaTerm; type=1)
     anova(::StatsModels.TableRegressionModel)
 
-Produces an one-way ANOVA table. `contvar' is a continous variable and `groupvar' is
-the group variable. 
+Performs an oneway and twoway ANOVA analysis. `depvar' is a continous variable and `groupvar1' and `groupvar2` are
+group variables. Currently, `anova` supports 2 different syntax. The first syntax requires specifying variable names, ANOVA type,
+and interaction directly as arguments. The second requires specifying a linear regression `formula` 
+(following StatsModels.jl @formula language) and ANOVA type. 
+
+## Options:
+
+* `df` - input data in AbstractDataFrame
+* `depvar` - dependent variable (Continous)
+* `groupvar`, `groupvar1`, `groupvar2` - independent variables. They must all be CategoricalArrays.
+* `fm` - formula
+* `type` - Type of ANOVA sums of squares. Currently, I, II, and III are supported. Specify 1 for I, 2 for II, etc. 
+    These types match the type produced in SAS GLM. Type I is the same as Stata `sequential` sums of squares and Type III
+    as `partial` sums of squares.
+* `interaction` - indicates whether an interaction terms should be included. In the second syntax where you specify a formula,
+    an interaction is included with `groupvar1 * groupvar2` as part of the formula or with `groupvar1 & groupvar2`.
+
+## Output:
+Output from `anova` is in a struct whose elements are:
+
+* type - Type of sums of squares
+* title - Row titles in the ANOVA table
+* ss - Sums of squares
+* df - Degress of freedom
+* ms - Mean sums of squares
+* F - F-statistic
+* pvalue - P-values
 """
 function anova(_df::AbstractDataFrame, dep::Symbol, cat::Symbol)
     isa(_df[:,cat], CategoricalArray) || throw(ArgumentError("`cat` must be a Categorical Array"))
@@ -51,6 +78,7 @@ function anova(_df::AbstractDataFrame, dep::Symbol, cat1::Symbol, cat2::Symbol; 
     return anova(_df, interaction ? @eval(@formula($dep ~ $cat1 + $cat2 + $cat1 * $cat2)) : @eval(@formula($dep ~ 1 + $cat1 + $cat2)), type=type)
 end
 function anova(_df::AbstractDataFrame, fm; type = 1)
+    # EffectsCoding requires that the variable is a CategoricalArray
     if type == 3
         MF = ModelFrame(fm, _df, contrasts=Dict(:foreign => EffectsCoding(), :mpg3 => EffectsCoding()))
     else
