@@ -116,7 +116,6 @@ function anova(_df::AbstractDataFrame, fm; type = 1)
     mdf = sum(nlev)
     DF = vcat(mdf, nlev, tdf - mdf, tdf)
     rdf = tdf - mdf
-    println(SS)
     MSS = SS ./ DF
     rms = MSS[end-1]
 
