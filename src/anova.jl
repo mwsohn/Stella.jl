@@ -41,6 +41,39 @@ Output is a struct whose elements are:
 * ms - Mean sums of squares
 * F - F-statistic
 * pvalue - P-values
+
+## Examples
+* `auto` dataset downloaded from https://vincentarelbundock.github.io/Rdatasets/csv/causaldata/auto.csv is used in this example. We want to
+examine whether car prices are different by domestic- vs foreign-made or by MPG tertiles.
+
+* create MPG tertiles based on auto.mpg and convert them into CategoricalArrays. `xtile` and `values!` functions are both part of the "unpublished" Stella.jl package.
+auto.mpg3 = xtile(auto, :mpg, nq = 3)
+values!(auto,:foreign, Dict(0 => "Domestic", 1 => "Foreign"))
+values!(auto,:mpg3, Dict(1 => "MPG Tertile 1", 2 => "MPG Tertile 2", 3 => "MPG Tertile 3"))
+
+### 1. Oneway ANOVA
+aov = anova(auto, :price, :mpg3)
+
+```
+julia> aov = anova(auto, :price, :mpg3)
+
+Analysis of Variance (One-Way)
+
+   Source │            SS  DF            MS      F       P 
+──────────┼────────────────────────────────────────────────
+    Model │ 136763694.954   2  68381847.477  9.743  0.0002
+     mpg3 │ 136763694.954   2  68381847.477  9.743  0.0002
+ Residual │ 498301701.168  71   7018333.819
+──────────┼────────────────────────────────────────────────
+    Total │ 635065396.122  73   8699525.974
+
+julia> aov.pvalue[1]
+0.00018235773127089433
+```
+
+
+
+
 """
 function anova(_df::AbstractDataFrame, dep::Symbol, cat::Symbol)
     isa(_df[:,cat], CategoricalArray) || throw(ArgumentError("`cat` must be a Categorical Array"))
