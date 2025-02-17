@@ -54,7 +54,7 @@ function anova(_df::AbstractDataFrame, dep::Symbol, cat::Symbol)
     len = size(XX)
     sweep!(A,1)
     TSS = copy(A[len...])
-    sweep!(A,2:(len-1))
+    sweep!(A,2:(len[1]-1))
     RSS = copy(A[len...])
     MSS = TSS - RSS
     mdf = len[1] - 2
