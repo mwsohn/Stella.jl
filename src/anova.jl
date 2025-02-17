@@ -75,10 +75,11 @@ function anova(_df::AbstractDataFrame, dep::Symbol, cat::Symbol)
     );
 end
 function anova(_df::AbstractDataFrame, dep::Symbol, cat1::Symbol, cat2::Symbol; type = 1, interaction = false)
+    isa(_df[:, cat1], CategoricalArray) || throw(ArgumentError("`cat1` must be a Categorical Array"))
+    isa(_df[:, cat2], CategoricalArray) || throw(ArgumentError("`cat2` must be a Categorical Array"))
     return anova(_df, interaction ? @eval(@formula($dep ~ $cat1 + $cat2 + $cat1 * $cat2)) : @eval(@formula($dep ~ 1 + $cat1 + $cat2)), type=type)
 end
 function anova(_df::AbstractDataFrame, fm; type = 1)
-    # EffectsCoding requires that the variable is a CategoricalArray
     if type == 3
         MF = ModelFrame(fm, _df, contrasts=Dict(:foreign => EffectsCoding(), :mpg3 => EffectsCoding()))
     else
@@ -90,6 +91,7 @@ function anova(_df::AbstractDataFrame, fm; type = 1)
     nlev = Vector{Int}()
     for i = 2:length(terms)
         if isdefined(terms[i], :sym)
+            isa(_df[:, terms[i].sym], CategoricalArray) || throw(ArgumentError("requires a Categorical Array"))
             push!(cats, terms[i].sym)
             push!(nlev, length(terms[i].contrasts.levels)-1)
         else
