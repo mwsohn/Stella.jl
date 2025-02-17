@@ -43,16 +43,41 @@ Output is a struct whose elements are:
 * pvalue - P-values
 
 ## Examples
-* `auto` dataset downloaded from https://vincentarelbundock.github.io/Rdatasets/csv/causaldata/auto.csv is used in this example. We want to
+We will sue `auto` dataset downloaded from https://vincentarelbundock.github.io/Rdatasets/csv/causaldata/auto.csv is used in this example. We want to
 examine whether car prices are different by domestic- vs foreign-made or by MPG tertiles.
 
-* create MPG tertiles based on auto.mpg and convert them into CategoricalArrays. `xtile` and `values!` functions are both part of the "unpublished" Stella.jl package.
-auto.mpg3 = xtile(auto, :mpg, nq = 3)
-values!(auto,:foreign, Dict(0 => "Domestic", 1 => "Foreign"))
-values!(auto,:mpg3, Dict(1 => "MPG Tertile 1", 2 => "MPG Tertile 2", 3 => "MPG Tertile 3"))
+We will create MPG tertiles based on auto.mpg and convert them into CategoricalArrays. `xtile` and `values!` functions are both part of the "unpublished" Stella.jl package.
+
+```
+julia> auto.mpg3 = xtile(auto, :mpg, nq = 3);
+
+julia> values!(auto,:foreign, Dict(0 => "Domestic", 1 => "Foreign"));
+
+julia> tab(auto, :foreign)
+──────────┬───────────────────────────
+  foreign │ Counts   Percent  Cum Pct 
+──────────┼───────────────────────────
+ Domestic │     52   70.2703  70.2703
+  Foreign │     22   29.7297    100.0
+──────────┼───────────────────────────
+    Total │     74     100.0    100.0
+──────────┴───────────────────────────
+
+julia> values!(auto,:mpg3, Dict(1 => "MPG Tertile 1", 2 => "MPG Tertile 2", 3 => "MPG Tertile 3"));
+
+julia> tab(auto, :mpg3)
+───────────────┬───────────────────────────
+          mpg3 │ Counts   Percent  Cum Pct 
+───────────────┼───────────────────────────
+ MPG Tertile 1 │     27   36.4865  36.4865
+ MPG Tertile 2 │     24   32.4324  68.9189
+ MPG Tertile 3 │     23   31.0811    100.0
+───────────────┼───────────────────────────
+         Total │     74     100.0    100.0
+───────────────┴───────────────────────────
+```
 
 ### 1. Oneway ANOVA
-aov = anova(auto, :price, :mpg3)
 
 ```
 julia> aov = anova(auto, :price, :mpg3)
@@ -70,6 +95,11 @@ Analysis of Variance (One-Way)
 julia> aov.pvalue[1]
 0.00018235773127089433
 ```
+### 2. Twoway ANOVA
+
+#### 1. Type I Sums of Squares, No interaction
+```
+julia> aov = anova(auto, :price, :foreign, :mpg3, type = 1)
 
 
 
@@ -108,8 +138,6 @@ function anova(_df::AbstractDataFrame, dep::Symbol, cat::Symbol)
     );
 end
 function anova(_df::AbstractDataFrame, dep::Symbol, cat1::Symbol, cat2::Symbol; type = 1, interaction = false)
-    isa(_df[:, cat1], CategoricalArray) || throw(ArgumentError("`cat1` must be a Categorical Array"))
-    isa(_df[:, cat2], CategoricalArray) || throw(ArgumentError("`cat2` must be a Categorical Array"))
     return anova(_df, interaction ? @eval(@formula($dep ~ $cat1 + $cat2 + $cat1 * $cat2)) : @eval(@formula($dep ~ 1 + $cat1 + $cat2)), type=type)
 end
 function anova(_df::AbstractDataFrame, fm; type = 1)
