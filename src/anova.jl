@@ -97,12 +97,123 @@ julia> aov.pvalue[1]
 ```
 ### 2. Twoway ANOVA
 
-#### 1. Type I Sums of Squares, No interaction
+#### 2.1. Type I Sums of Squares, No interaction
 ```
 julia> aov = anova(auto, :price, :foreign, :mpg3, type = 1)
 
+Analysis of Variance (Type I)
 
+   Source │            SS  DF            MS       F         P 
+──────────┼───────────────────────────────────────────────────
+    Model │ 154897061.512   3  51632353.837   7.527    0.0002
+  foreign │   1507382.657   1   1507382.657   0.220    0.6407
+     mpg3 │ 153389678.855   2  76694839.428  11.181  < 0.0001
+ Residual │ 480168334.610  70   6859547.637
+──────────┼───────────────────────────────────────────────────
+    Total │ 635065396.122  73   8699525.974
 
+julia> aov.pvalue[3] # P-value for mpg3
+6.112930853953449e-5
+```
+
+#### 2.2. Type II Sums of Squares, No interaction
+```
+julia> aov = anova(auto, :price, :foreign, :mpg3, type = 2)
+
+Analysis of Variance (Type II)
+
+   Source │            SS  DF            MS       F         P 
+──────────┼───────────────────────────────────────────────────
+    Model │ 154897061.512   3  51632353.837   7.527    0.0002
+  foreign │  18133366.558   1  18133366.558   2.644    0.1085
+     mpg3 │ 153389678.855   2  76694839.428  11.181  < 0.0001
+ Residual │ 480168334.610  70   6859547.637
+──────────┼───────────────────────────────────────────────────
+    Total │ 635065396.122  73   8699525.974
+
+julia> aov.pvalue[3] # P-value for mpg3
+6.112930853953449e-5
+```
+
+#### 2.3. Type I Sums of Squares, With Interaction
+```
+julia> aov = anova(auto, :price, :foreign, :mpg3, type = 1, interaction = true)
+
+Analysis of Variance (Type I)
+
+         Source │            SS  DF            MS       F         P 
+────────────────┼───────────────────────────────────────────────────
+          Model │ 156625170.566   5  31325034.113   4.452    0.0014
+        foreign │   1507382.657   1   1507382.657   0.214    0.6449
+           mpg3 │ 153389678.855   2  76694839.428  10.901  < 0.0001
+ foreign & mpg3 │   1728109.054   2    864054.527   0.123    0.8846
+       Residual │ 478440225.555  68   7035885.670
+────────────────┼───────────────────────────────────────────────────
+          Total │ 635065396.122  73   8699525.974
+
+julia> aov.pvalue[3] # P-value for mpg3
+7.829523220630382e-5
+```
+
+#### 2.4. Type II Sums of Squares, With Interaction
+```
+julia> aov = anova(auto, :price, :foreign, :mpg3, type = 2, interaction = true)
+
+Analysis of Variance (Type II)
+
+         Source │            SS  DF            MS       F         P 
+────────────────┼───────────────────────────────────────────────────
+          Model │ 156625170.566   5  31325034.113   4.452    0.0014
+        foreign │  18133366.558   1  18133366.558   2.577    0.1130
+           mpg3 │ 153389678.855   2  76694839.428  10.901  < 0.0001
+ foreign & mpg3 │   1728109.054   2    864054.527   0.123    0.8846
+       Residual │ 478440225.555  68   7035885.670
+────────────────┼───────────────────────────────────────────────────
+          Total │ 635065396.122  73   8699525.974
+
+julia> aov.pvalue[3] # P-value for mpg3
+7.829523220630382e-5
+```
+
+#### 2.5. Type III Sums of Squares, With Interaction
+```
+julia> aov = anova(auto, :price, :foreign, :mpg3, type = 3, interaction = true)
+
+Analysis of Variance (Type III)
+
+         Source │            SS  DF            MS      F       P 
+────────────────┼────────────────────────────────────────────────
+          Model │ 156625170.566   5  31325034.113  4.452  0.0014
+        foreign │  19148362.309   1  19148362.309  2.722  0.1036
+           mpg3 │ 129967822.960   2  64983911.480  9.236  0.0003
+ foreign & mpg3 │   1728109.054   2    864054.527  0.123  0.8846
+       Residual │ 478440225.555  68   7035885.670
+────────────────┼────────────────────────────────────────────────
+          Total │ 635065396.122  73   8699525.974
+
+julia> aov.pvalue[3] # P-value for mpg3
+0.0002828218888318445
+```
+
+#### 2.6. Type III Sums of Squares, With Interaction using Formula
+```
+julia> aov = anova(auto, @formula(price ~ foreign + mpg3 + foreign & mpg3), type=3)
+
+Analysis of Variance (Type III)
+
+         Source │            SS  DF            MS      F       P 
+────────────────┼────────────────────────────────────────────────
+          Model │ 156625170.566   5  31325034.113  4.452  0.0014
+        foreign │  19148362.309   1  19148362.309  2.722  0.1036
+           mpg3 │ 129967822.960   2  64983911.480  9.236  0.0003
+ foreign & mpg3 │   1728109.054   2    864054.527  0.123  0.8846
+       Residual │ 478440225.555  68   7035885.670
+────────────────┼────────────────────────────────────────────────
+          Total │ 635065396.122  73   8699525.974
+
+julia> aov.pvalue[3] # P-value for mpg3
+0.0002828218888318445
+```
 
 """
 function anova(_df::AbstractDataFrame, dep::Symbol, cat::Symbol)
