@@ -51,29 +51,28 @@ function anova(_df::AbstractDataFrame, dep::Symbol, cat1::Symbol, cat2::Symbol; 
     return anova(_df, interaction ? @eval(@formula($dep ~ $cat1 + $cat2 + $cat1 * $cat2)) : @eval(@formula($dep ~ 1 + $cat1 + $cat2)), type=type)
 end
 function anova(_df::AbstractDataFrame, fm; type = 1)
-
     if type == 3
-        MF = ModelFrame(fm, _df, contrasts = Dict(:foreign => EffectsCoding(), :mpg3 => EffectsCoding()))
+        MF = ModelFrame(fm, _df, contrasts=Dict(:foreign => EffectsCoding(), :mpg3 => EffectsCoding()))
     else
         MF = ModelFrame(fm, _df, contrasts=Dict(:foreign => EffectsCoding(), :mpg3 => EffectsCoding()))
     end
 
-    rhs = MF.f.rhs.terms
+    terms = MF.f.rhs.terms
     cats = Vector{Symbol}()
     nlev = Vector{Int}()
-    for i = 2:length(rhs)
-        if isdefined(rhs,:sym)
-            push!(cats,rhs[i].sym)
-            push!(nlev, length(rhs[i].contrasts.levels))
+    for i = 2:length(terms)
+        if isdefined(terms[i], :sym)
+            push!(cats, terms[i].sym)
+            push!(nlev, length(terms[i].contrasts.levels)-1)
         else
-            (sy, len) = get_sym_lev(rhs[i].terms)
-            push!(nlev,len)
-            push!(cats,sy)
+            (sy, len) = get_sym_lev(terms[i].terms)
+            push!(nlev, len)
+            push!(cats, Symbol(sy))
         end
     end
 
     MM = modelmatrix(MF)
-    X = hcat(MM, MM.data[1])
+    X = hcat(MM, MF.data[1])
     XX = X'X
     if type == 1
         Type = "Type I"
@@ -83,39 +82,54 @@ function anova(_df::AbstractDataFrame, fm; type = 1)
         SS = SSTypeII(XX, nlev)
     elseif type == 3
         Type = "Type III"
-        SS = SSTypeIII(XX, nlev)
+        SS = xSSTypeIII(XX, nlev)
     end
-    tdf = nrow(df2) - 1
-    mdf = sum(nlev) - length(nlev)
-    DF = vcat(mdf, nlev .- 1, tdf - mdf, tdf )
+    tdf = size(MM,1) - 1
+    mdf = sum(nlev)
+    DF = vcat(mdf, nlev, tdf - mdf, tdf)
     rdf = tdf - mdf
+    println(SS)
     MSS = SS ./ DF
     rms = MSS[end-1]
 
-    return AOV(
+    return Stella.AOV(
         Type,
-        vcat("Model", cats, "Residual", "Total"),
+        vcat("Model", string.(cats), "Residual", "Total"),
         SS,
         DF,
         MSS,
-        [ i <= length(MSS) - 2 ? MSS[i] / rms : missing for i in 1:length(MSS)],
-        [ i <= length(MSS) - 2 ? ccdf(FDist(DF[i], rdf), MSS[i] / rms) : missing for i in 1:length(MSS) ]
+        [i <= length(MSS) - 2 ? MSS[i] / rms : missing for i in 1:length(MSS)],
+        [i <= length(MSS) - 2 ? ccdf(FDist(DF[i], rdf), MSS[i] / rms) : missing for i in 1:length(MSS)]
     )
 
 end
-function SSTypeI(XX,nlev)
-    (r,c) = size(XX)
-    n = length(nlev)
-    SS = zeros(Float64,n+3)
-    sweep!(XX,1)
-    SS[n+3] = copy(XX[r,c])
-    pos = 2
-    for (i,v) in enumerate(nlev)
-        sweep!(XX,pos:(pos+v-2))
-        pos += (v-1)
-        SS[i+1] = SS[n+3] - XX[r,c] - sum(SS[1:i])
+function get_sym_lev(terms)
+    vstr = ""
+    levs = 1
+    for i = 1:length(terms)
+        if isdefined(terms[i], :sym)
+            vstr = string(vstr, i > 1 ? " & " : "", terms[i].sym)
+            levs = levs * (length(terms[i].contrasts.levels) - 1)
+        end
     end
+    return vstr, levs
+end
+function SSTypeI(XX, nlev)
+    (r, c) = size(XX)
+    n = length(nlev)
+    SS = zeros(Float64, n + 3)
+    # TSS
+    sweep!(XX, 1)
+    SS[n+3] = copy(XX[r, c])
+    pos = 2
+    for (i, v) in enumerate(nlev)
+        sweep!(XX, pos:(pos+v-1))
+        pos += v
+        SS[i+1] = SS[n+3] - XX[r, c] - sum(SS[1:i])
+    end
+    # MSS
     SS[1] = sum(SS[2:n+1])
+    # RSS
     SS[n+2] = SS[n+3] - SS[1]
     return SS
 end
@@ -134,61 +148,44 @@ function SSTypeII(XX, nlev)
     sweep!(XX, 2:c-1, true)
     SS[1] = XX[r, c] - SS[n+2]
     # SSAB
-    sweep!(XX, 2:sum(nlev[1:2])-1)
+    sweep!(XX, 2:sum(nlev[1:2])+1)
     SS[n+1] = XX[r, c] - SS[n+2]
 
-    # sweep again
-    sweep!(A, 1:sum(nlev[1:2])-1)
+    # SSA and SSB
+    sweep!(A, 1:sum(nlev[1:2])+1)
     rss2 = copy(A[r, c])
     pos = 2
     for (i, v) in enumerate(nlev[1:2])
         B = copy(A)
-        sweep!(B, pos:(pos+v-2), true)
-        pos += (v - 1)
+        sweep!(B, pos:(pos+v-1), true)
+        pos += v
         SS[i+1] = B[r, c] - rss2
     end
     return SS
 end
-function SSTypeIII(XX, nlev)
+function xSSTypeIII(XX, nlev)
     (r, c) = size(XX)
     n = length(nlev)
     SS = zeros(Float64, n + 3)
-    A = copy(XX)
     # TSS
     sweep!(XX, 1)
     SS[n+3] = copy(XX[r, c])
     # RSS
     sweep!(XX, 2:c-1)
     SS[n+2] = copy(XX[r, c])
+    A = copy(XX)
     # MSS
     sweep!(XX, 2:c-1, true)
     SS[1] = XX[r, c] - SS[n+2]
-    # SSAB
-    sweep!(XX, 2:sum(nlev[1:2])-1)
-    SS[n+1] = XX[r, c] - SS[n+2]
 
-    sweep!(A, 1:sum(nlev[1:2])-1)
-    rss2 = copy(A[r, c])
     pos = 2
-    for (i, v) in enumerate(nlev[1:2])
-        # need to fix this part
+    for (i, v) in enumerate(nlev)
         B = copy(A)
-        sweep!(B, pos:(pos+v-2), true)
-        pos += (v - 1)
-        SS[i+1] = B[r, c] - rss2
+        sweep!(B, pos:(pos+v-1), true)
+        pos += v
+        SS[i+1] = B[r, c] - RSS
     end
     return SS
-end
-function get_sym_lev(terms)
-    vstr = ""
-    levs = 1
-    for i = 1:length(terms)
-        if isdefined(terms[i], :sym)
-            vstr = string(vstr, i > 1 ? " & " : "", terms[i].sym)
-            levs = levs * (length(terms[i].contrasts.levels) - 1)
-        end
-    end
-    return vstr, levs
 end
 
 function anova(glmmodel)
