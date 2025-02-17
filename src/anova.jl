@@ -32,7 +32,7 @@ and interaction directly as arguments. The second requires specifying a linear r
     an interaction is included with `groupvar1 * groupvar2` as part of the formula or with `groupvar1 & groupvar2`.
 
 ## Output:
-Output from `anova` is in a struct whose elements are:
+Output is a struct whose elements are:
 
 * type - Type of sums of squares
 * title - Row titles in the ANOVA table
@@ -211,7 +211,7 @@ function xSSTypeIII(XX, nlev)
         B = copy(A)
         sweep!(B, pos:(pos+v-1), true)
         pos += v
-        SS[i+1] = B[r, c] - RSS
+        SS[i+1] = B[r, c] - SS[n+2]
     end
     return SS
 end
