@@ -62,7 +62,7 @@ function anova(_df::AbstractDataFrame, dep::Symbol, cat::Symbol)
     mms = MSS/mdf
     rms = RSS / (tdf - mdf)
     tms = TSS / tdf
-    pval = ccdf(FDist(tdf - mdf, mdf), mms / rms)
+    pval = ccdf(FDist(mdf, tdf - mdf), mms / rms)
 
     return AOV(
         "One-Way",
