@@ -144,7 +144,7 @@ function anova(_df::AbstractDataFrame, fm; type = 1)
     if type == 3
         MF = ModelFrame(fm, _df, contrasts=Dict(:foreign => EffectsCoding(), :mpg3 => EffectsCoding()))
     else
-        MF = ModelFrame(fm, _df, contrasts=Dict(:foreign => EffectsCoding(), :mpg3 => EffectsCoding()))
+        MF = ModelFrame(fm, _df, contrasts=Dict(:foreign => DummyCoding(), :mpg3 => DummyCoding()))
     end
 
     terms = MF.f.rhs.terms
