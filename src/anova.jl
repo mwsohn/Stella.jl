@@ -253,10 +253,6 @@ function anova(_df::AbstractDataFrame, dep::Symbol, cat1::Symbol, cat2::Symbol; 
 end
 function anova(_df::AbstractDataFrame, fm; type = 1)
     MF = ModelFrame(fm, _df, contrasts=Dict(:foreign => EffectsCoding(), :mpg3 => EffectsCoding()))
-    # else
-    #     MF = ModelFrame(fm, _df, contrasts=Dict(:foreign => DummyCoding(), :mpg3 => DummyCoding()))
-    # end
-
     terms = MF.f.rhs.terms
     cats = Vector{Symbol}()
     nlev = Vector{Int}()
