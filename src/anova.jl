@@ -348,13 +348,13 @@ function SSTypeII(XX, nlev)
 
     # SSA and SSB
     sweep!(A, 1:sum(nlev[1:2])+1)
-    rss2 = copy(A[r, c])
+    rss = copy(A[r, c])
     pos = 2
     for (i, v) in enumerate(nlev[1:2])
         B = copy(A)
         sweep!(B, pos:(pos+v-1), true)
         pos += v
-        SS[i+1] = B[r, c] - rss2
+        SS[i+1] = B[r, c] - rss
     end
     return SS
 end
