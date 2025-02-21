@@ -562,7 +562,6 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
 
     # -----------------------------------------------------
     # variable types
-    
     m[3] = Int64(position(outdta))
     write(outdta,"<variable_types>")
     write(outdta,UInt16.(typelist))
@@ -631,7 +630,6 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
     # value labels
     m[12] = Int64(position(outdta))
     write(outdta,"<value_labels>")
-    # write(outdta, get_value_labels(df))
     write(outdta,value_labels)
     write(outdta,"</value_labels>")
 
@@ -651,7 +649,6 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
     close(outdta)
 
 end
-
 
 function prepare_df(outdf; verbose=verbose)
 
@@ -910,13 +907,14 @@ function get_value_labels(outdf)
         if isa(outdf[:,v], CategoricalArray) && eltype2(outdf[:,v]) == String
 
             invindex = outdf[:,v].pool.invindex
-            n = length(invindex)
+            vindex = Dict(values(invindex) .=> keys(invindex))
+            n = length(vindex)
             off = zeros(Int32,n)
-            val = Int32.(sort(collect(values(invindex))))
+            val = Int32.(sort(collect(keys(vindex))))
             txt = ""
-            for (i,vv) in enumerate(keys(invindex))
+            for (i,vv) in enumerate(keys(vindex))
                 off[i] = sizeof(txt)
-                txt = string(txt, vv, '\0')
+                txt = string(txt, vindex[vv], '\0')
             end
             txtlen = sizeof(txt)
             len = 8 + 8*n + txtlen
