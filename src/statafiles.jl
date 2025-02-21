@@ -912,7 +912,7 @@ function get_value_labels(outdf)
             off = zeros(Int32,n)
             val = Int32.(sort(collect(keys(vindex))))
             txt = ""
-            for (i,vv) in enumerate(keys(vindex))
+            for (i,vv) in enumerate(val)
                 off[i] = sizeof(txt)
                 txt = string(txt, vindex[vv], '\0')
             end
