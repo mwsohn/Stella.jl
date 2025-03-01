@@ -104,10 +104,11 @@ function read_stata(fn::String; chunks::Int=10)
     valuelabels = Dict()
     numvlabels = 0
     for i in 1:nvar
-        valuelabels[i] = Symbol(strtonull(String(read(fh, len_labelname))))
-
-        # count the number of value labels
-        numvlabels = length(valuelabels)
+        vlab = strtonull(String(read(fh, len_labelname)))
+        if length(vlab) > 0
+            valuelabels[i] = vlab
+            numvlabels += 1
+        end
     end
 
     # variable labels
@@ -221,11 +222,11 @@ function read_stata(fn::String; chunks::Int=10)
     lblname_dict = Dict()
     for i in 1:nvar
         if length(varlabels[i]) > 0
-            variable_dict[varlist[i]] = varlabels[i]
+            variable_dict[i] = varlabels[i]
         end
 
         if haskey(value_labels, i)
-            lblname_dict[varlist[i]] = Symbol(value_labels[i])
+            lblname_dict[i] = Symbol(value_labels[i])
         end
     end
 
