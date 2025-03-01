@@ -101,7 +101,7 @@ function read_stata(fn::String; chunks::Int=10)
 
     # value label names
     skip(fh, 29) # </formats><value_label_names>
-    valuelabels = Vector{String}(undef, nvar)
+    valuelabels = Vector{Symbol}(undef, nvar)
     numvlabels = 0
     for i in 1:nvar
         valuelabels[i] = Symbol(strtonull(String(read(fh, len_labelname))))
