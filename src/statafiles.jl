@@ -366,6 +366,7 @@ function _read_dta(io, release, rlen, len, nvar, varlist, varlabels, typelist, f
         # for integer variables that have formats
         # convert them into CategoricalArrays with the appropriate value labels
         if typelist[j] in (65526, 65527, 65528, 65529, 65530) && haskey(lblname, varlist[j])
+            println(varlist[j], "  ", lblname[varlist[j]])
             values!(df, varlist[j], vallabels[lblname[varlist[j]]])
         end
 
