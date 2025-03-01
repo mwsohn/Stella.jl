@@ -183,12 +183,8 @@ function read_stata(fn::String; chunks::Int=10)
     end
 
     # read value labels
-    # loop through all value labels
-    # define a Dict first
-
     value_labels = Dict()
 
-    # numvlabels is defined above at the header section
     for i in 1:numvlabels
 
         skipstr = String(read(fh, 5))
@@ -270,9 +266,6 @@ function read_stata(fn::String; chunks::Int=10)
     return rdf
 end
 
-# function read_labels(fn::String)
-# 	return read_stata(fn,read_labels=true)
-# end
 function _read_dta(io, release, rlen, len, nvar, varlist, varlabels, typelist, fmtlist, lblname, vallabels, numskip, strls)
 
     df = DataFrame()
@@ -365,14 +358,14 @@ function _read_dta(io, release, rlen, len, nvar, varlist, varlabels, typelist, f
                 df[i, j] = dataitemi8 > 100 ? missing : dataitemi8
             end
         end
-        # strls will be converted to categorical regardless of `categorize` option
+        # strls will be converted to CategoricalArrays
         if typelist[j] == 32768
             categorical!(df, varlist[j])
         end
 
         # for integer variables that have formats
         # convert them into CategoricalArrays with the appropriate value labels
-        if typelist[j] in (65528, 65529, 65530) && haskey(lblname, varlist[j])
+        if typelist[j] in (65526, 65527, 65528, 65529, 65530) && haskey(lblname, varlist[j])
             values!(df, varlist[j], vallabels[lblname[varlist[j]]])
         end
 
