@@ -110,7 +110,6 @@ function read_stata(fn::String; chunks::Int=10)
             numvlabels += 1
         end
     end
-    println(valuelabels)
 
     # variable labels
     skip(fh, 37) # </value_label_names><variable_labels>
@@ -226,8 +225,8 @@ function read_stata(fn::String; chunks::Int=10)
             variable_dict[i] = varlabels[i]
         end
 
-        if haskey(value_labels, i)
-            lblname_dict[i] = Symbol(value_labels[i])
+        if haskey(valuelabels, i)
+            lblname_dict[i] = Symbol(valuelabels[i])
         end
     end
 
