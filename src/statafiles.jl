@@ -104,7 +104,7 @@ function read_stata(fn::String; chunks::Int=10)
     valuelabels = Vector{String}(undef, nvar)
     numvlabels = 0
     for i in 1:nvar
-        valuelabels[i] = strtonull(String(read(fh, len_labelname)))
+        valuelabels[i] = Symbol(strtonull(String(read(fh, len_labelname))))
 
         # count the number of value labels
         if length(valuelabels[i]) > 0
@@ -192,7 +192,7 @@ function read_stata(fn::String; chunks::Int=10)
             break
         end
         len = read(fh, Int32)
-        labname = Symbol(strtonull(String(read(fh, len_labelname))))
+        labname = Symbol(strtonull(String(read(fh, len))))
 
         skip(fh, 3) # padding
         numvalues = read(fh, Int32) # number of entries
