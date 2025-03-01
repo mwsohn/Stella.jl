@@ -101,15 +101,13 @@ function read_stata(fn::String; chunks::Int=10)
 
     # value label names
     skip(fh, 29) 
-    valuelabels = Vector{Symbol}(undef, nvar)
+    valuelabels = Dict()
     numvlabels = 0
     for i in 1:nvar
         valuelabels[i] = Symbol(strtonull(String(read(fh, len_labelname))))
 
         # count the number of value labels
-        if length(string(valuelabels[i])) > 0
-            numvlabels += 1
-        end
+        numvlabels = length(valuelabels)
     end
 
     # variable labels
@@ -366,7 +364,6 @@ function _read_dta(io, release, rlen, len, nvar, varlist, varlabels, typelist, f
         # for integer variables that have formats
         # convert them into CategoricalArrays with the appropriate value labels
         if typelist[j] in (65526, 65527, 65528, 65529, 65530) && haskey(lblname, varlist[j])
-            println(varlist[j], "  ", lblname[varlist[j]])
             values!(df, varlist[j], vallabels[lblname[varlist[j]]])
         end
 
