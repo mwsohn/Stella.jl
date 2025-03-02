@@ -104,9 +104,8 @@ function read_stata(fn::String; chunks::Int=10)
     valuelabels = Vector{String}(undef, nvar)
     numvlabels = 0
     for i in 1:nvar
-        vlab = strtonull(String(read(fh, len_labelname)))
-        if length(vlab) > 0
-            valuelabels[i] = vlab
+        valuelabels[i] = strtonull(String(read(fh, len_labelname)))
+        if length(valuelabels[i]) > 0
             numvlabels += 1
         end
     end
@@ -226,7 +225,7 @@ function read_stata(fn::String; chunks::Int=10)
             variable_dict[i] = varlabels[i]
         end
 
-        if haskey(valuelabels, i)
+        if length(valuelabels[i]) > 0 #haskey(valuelabels, lblname[i])
             lblname_dict[i] = Symbol(valuelabels[i])
         end
     end
