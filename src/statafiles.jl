@@ -101,7 +101,7 @@ function read_stata(fn::String; chunks::Int=10)
 
     # value label names
     skip(fh, 29) 
-    valuelabels = Vector{String}("", nvar)
+    valuelabels = Vector{String}(undef, nvar)
     numvlabels = 0
     for i in 1:nvar
         vlab = strtonull(String(read(fh, len_labelname)))
@@ -113,7 +113,7 @@ function read_stata(fn::String; chunks::Int=10)
 
     # variable labels
     skip(fh, 37) # </value_label_names><variable_labels>
-    varlabels = Vector{String}("", nvar)
+    varlabels = Vector{String}(undef, nvar)
     for i in 1:nvar
         varlabels[i] = strtonull(String(read(fh, len_varlabel)))
     end
