@@ -216,6 +216,7 @@ function read_stata(fn::String; chunks::Int=10)
         end
         skip(fh, 6) # </lbl>
     end
+    
     println(value_labels)
 
     variable_dict = Dict()
