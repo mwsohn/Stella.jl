@@ -183,21 +183,23 @@ function read_stata(fn::String; chunks::Int=10)
     # read value labels
     value_labels = Dict()
     for i in 1:numvlabels
+
         skipstr = String(read(fh, 5))
         if skipstr != "<lbl>"
             break
         end
         len = read(fh, Int32)
-        labname = Symbol(strtonull(String(read(fh, len))))
+        labname = Symbol(strtonull(String(read(fh, 129))))
         skip(fh, 3) # padding
-        numvalues = read(fh, Int32) # number of entries
-        txtlen = read(fh, Int32) # length of value label text
+
+        numvalues = read(fh,Int32)
+        txtlen = read(fh, Int32)
         value_labels[labname] = Dict()
         offset = Vector{Int32}(undef, numvalues)
-        read!(fh, offset) # offset
+        read!(fh, offset)
         values = Vector{Int32}(undef, numvalues)
-        read!(fh, values) # values
-        valtext = String(read(fh, txtlen)) # text table
+        read!(fh, values)
+        valtext = String(read(fh, txtlen))
 
         for k in 1:numvalues
             if k == numvalues
@@ -209,7 +211,7 @@ function read_stata(fn::String; chunks::Int=10)
         end
         skip(fh, 6) # </lbl>
     end
-
+    
     variable_dict = Dict()
     lblname_dict = Dict()
     for i in 1:nvar
@@ -357,7 +359,6 @@ function _read_dta(io, release, rlen, len, nvar, varlist, varlabels, typelist, f
         # for integer variables that have formats
         # convert them into CategoricalArrays with the appropriate value labels
         if typelist[j] in (65528, 65529, 65530) && haskey(lblname, j)
-            println(vallabels[lblname[j]])
             values!(df, varlist[j], vallabels[lblname[j]])
         end
 
