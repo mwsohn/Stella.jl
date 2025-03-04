@@ -754,10 +754,10 @@ end
 
 converts vectors into CategoricalArrays
 """
-function categorical!(df::AbstractDataFrame,vv::Union{Symbol,Vector{Symbol}})
+function categorical!(df::AbstractDataFrame,vv::Union{Symbol,Vector{Symbol}}; ordered = true)
     for v in vcat(vv)
         if isa(df[:,v],CategoricalArray) == false
-            df[!,v] = categorical(df[!,v])
+            df[!,v] = categorical(df[!,v], ordered=ordered)
         end
     end
 end
