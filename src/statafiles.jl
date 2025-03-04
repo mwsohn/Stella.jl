@@ -374,7 +374,7 @@ function _read_dta(io, release, rlen, len, nvar, varlist, varlabels, typelist, f
         end
     end
 
-    return Stella.dfcompress(df)
+    return df # Stella.dfcompress(df)
 end
 
 function get_numbytes(typelist, nvar)
