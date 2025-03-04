@@ -7,18 +7,9 @@ function labels!(df::AbstractDataFrame,dd::Dict)
 end
 
 function values!(df::AbstractDataFrame,v::Union{Symbol,String},val::Union{Dict,NamedTuple}; ordered = true)
-
-    # if isa(df[:,v],CategoricalArray) 
-    #     # uncategorical!(df,v)
-    #     levels!(df[!, v], last.(sort(collect(val))))
-    # elseif nonmissingtype(eltype(df[:,v])) <: Integer
-    #     categorical!(df[!,v], ordered = ordered)
-    #     recode!(df[:,v],val...)
-    #     levels!(df[!,v], last.(sort(collect(val))))
-    # end
-    if isa(df[!, v], CategoricalArray)
-        levels!(df[!, v], last.(sort(collect(val))))
-    elseif nonmissingtype(eltype(df[:, v])) <: Integer
+    isa(df[!, v], CategoricalArray) && throw(ArgumentError("Already a Categorical Array. Use `levels!` to recode the level values"))
+        
+    if nonmissingtype(eltype(df[:, v])) <: Integer
         df[!, v] = recode(df[:, v], val...)
         df[!, v] = categorical(df[!, v], ordered=ordered)
     end
