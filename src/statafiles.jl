@@ -359,7 +359,8 @@ function _read_dta(io, release, rlen, len, nvar, varlist, varlabels, typelist, f
         # for integer variables that have formats
         # convert them into CategoricalArrays with the appropriate value labels
         if typelist[j] in (65528, 65529, 65530) && haskey(lblname, j)
-            Stella.values!(df, varlist[j], vallabels[lblname[j]], ordered=true)
+            df[!,varlist[j]] = recode(df[!,varlist[j]], vallabels[lblname[j]]...)
+            df[!,varlist[j]] = CategoricalArray(df[!,varlist[j]])
         end
 
         # variable label
@@ -373,7 +374,7 @@ function _read_dta(io, release, rlen, len, nvar, varlist, varlabels, typelist, f
         end
     end
 
-    return df # Stella.dfcompress(df)
+    return Stella.dfcompress(df)
 end
 
 function get_numbytes(typelist, nvar)
