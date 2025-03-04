@@ -360,7 +360,7 @@ function _read_dta(io, release, rlen, len, nvar, varlist, varlabels, typelist, f
         # convert them into CategoricalArrays with the appropriate value labels
         if typelist[j] in (65528, 65529, 65530) && haskey(lblname, j)
             # Stella.values!(df, varlist[j], vallabels[lblname[j]])
-            df[!,varlist[j]] = recode(df[!,varlist[j]], vallables[lblname[j]]...)
+            df[!,varlist[j]] = recode(df[!,varlist[j]], vallabels[lblname[j]]...)
             df[!,varlist[j]] = categorical(df,varlist[j])
         end
 
