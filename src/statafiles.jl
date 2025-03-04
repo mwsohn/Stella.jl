@@ -361,7 +361,7 @@ function _read_dta(io, release, rlen, len, nvar, varlist, varlabels, typelist, f
         if typelist[j] in (65528, 65529, 65530) && haskey(lblname, j)
             # Stella.values!(df, varlist[j], vallabels[lblname[j]])
             df[!,varlist[j]] = recode(df[!,varlist[j]], vallabels[lblname[j]]...)
-            df[!,varlist[j]] = categorical(df,varlist[j])
+            df[!,varlist[j]] = categorical(df[!,varlist[j]])
         end
 
         # variable label
