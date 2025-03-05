@@ -266,6 +266,7 @@ function read_stata(fn::String; chunks::Int=10)
         # for integer variables that have formats
         # convert them into CategoricalArrays with the appropriate value labels
         if typelist[j] in (65528, 65529, 65530) && haskey(lblname_dict, j)
+            println(value_labels[lblname_dict[j]])
             Stella.values!(rdf, varlist[j], value_labels[lblname_dict[j]])
         end
 
