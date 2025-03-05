@@ -249,7 +249,7 @@ function read_stata(fn::String; chunks::Int=10)
             write(io, read(fh, rlen * len))
             seek(io, 0)
 
-            rdf = vcat(rdf, _read_dta(io, release, rlen, len, nvar, varlist, variable_dict, typelist, fmtlist, lblname_dict, value_labels, numskip, strls))
+            rdf = vcat(rdf, _read_dta(io, release, rlen, len, nvar, varlist, typelist, fmtlist, numskip, strls))
         end
     end
 
@@ -260,13 +260,13 @@ function read_stata(fn::String; chunks::Int=10)
 
         # strls will be converted to CategoricalArrays
         if typelist[j] == 32768
-            categorical!(rdf, varlist[j])
+            Stella.categorical!(rdf, varlist[j])
         end
 
         # for integer variables that have formats
         # convert them into CategoricalArrays with the appropriate value labels
         if typelist[j] in (65528, 65529, 65530) && haskey(lblname_dict, j)
-            rdf[!,varlist[j]] = categorical(recode(rdf[!,varlist[j]], value_labels[lblname_dict[j]]...))
+            Stella.values!(rdf[!,varlist[j]], value_labels[lblname_dict[j]]...)
         end
 
         # variable label
@@ -283,7 +283,7 @@ function read_stata(fn::String; chunks::Int=10)
     return rdf
 end
 
-function _read_dta(io, release, rlen, len, nvar, varlist, varlabels, typelist, fmtlist, lblname, vallabels, numskip, strls)
+function _read_dta(io, release, rlen, len, nvar, varlist, typelist, fmtlist, numskip, strls)
 
     df = DataFrame()
 
