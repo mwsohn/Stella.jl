@@ -256,25 +256,28 @@ function read_stata(fn::String; chunks::Int=10)
     # close the file
     close(fh)
 
-    # strls will be converted to CategoricalArrays
-    if typelist[j] == 32768
-        categorical!(rdf, varlist[j])
-    end
+    for j in 1:ncol(rdf)
 
-    # for integer variables that have formats
-    # convert them into CategoricalArrays with the appropriate value labels
-    if typelist[j] in (65528, 65529, 65530) && haskey(lblname, j)
-        rdf[!,varlist[j]] = categorical(recode(rdf[!,varlist[j]], value_labels[lblname_dict[j]]...))
-    end
+        # strls will be converted to CategoricalArrays
+        if typelist[j] == 32768
+            categorical!(rdf, varlist[j])
+        end
 
-    # variable label
-    if haskey(varlabels, j)
-        TableMetadataTools.label!(rdf, varlist[j], variable_dict[j])
-    end
+        # for integer variables that have formats
+        # convert them into CategoricalArrays with the appropriate value labels
+        if typelist[j] in (65528, 65529, 65530) && haskey(lblname, j)
+            rdf[!,varlist[j]] = categorical(recode(rdf[!,varlist[j]], value_labels[lblname_dict[j]]...))
+        end
 
-    # for vectors without missing values
-    if sum(ismissing.(rdf[!, varlist[j]])) == 0
-        rdf[!, varlist[j]] = convert(Vector{eltype2(rdf[!, varlist[j]])}, rdf[!, varlist[j]])
+        # variable label
+        if haskey(varlabels, j)
+            TableMetadataTools.label!(rdf, varlist[j], variable_dict[j])
+        end
+
+        # for vectors without missing values
+        if sum(ismissing.(rdf[!, varlist[j]])) == 0
+            rdf[!, varlist[j]] = convert(Vector{eltype2(rdf[!, varlist[j]])}, rdf[!, varlist[j]])
+        end
     end
 
     return rdf
