@@ -271,7 +271,7 @@ function read_stata(fn::String; chunks::Int=10)
         # for integer variables that have formats
         # convert them into CategoricalArrays with the appropriate value labels
         if typelist[i] in (65528, 65529, 65530) && haskey(lblname_dict, i)
-            rdf[!, varlist[i]] = categorical(recode(rdf[!,varlist[i]], value_labels[lblname_dict[i]]...), ordered = ordered, compressed = true)
+            rdf[!, varlist[i]] = categorical(recode(rdf[!,varlist[i]], value_labels[lblname_dict[i]]...))
         end
 
         # variable label
