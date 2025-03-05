@@ -181,7 +181,7 @@ function read_stata(fn::String; chunks::Int=10)
     end
 
     # read value labels
-    value_labels = Dict{Int64,String}()
+    value_labels = Dict()
     for i in 1:numvlabels
 
         skipstr = String(read(fh, 5))
@@ -194,7 +194,7 @@ function read_stata(fn::String; chunks::Int=10)
 
         numvalues = read(fh,Int32)
         txtlen = read(fh, Int32)
-        value_labels[labname] = Dict()
+        value_labels[labname] = Dict{Int64,String}()
         offset = Vector{Int32}(undef, numvalues)
         read!(fh, offset)
         values = Vector{Int32}(undef, numvalues)
