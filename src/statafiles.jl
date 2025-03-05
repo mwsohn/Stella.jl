@@ -270,7 +270,7 @@ function read_stata(fn::String; chunks::Int=10)
         end
 
         # variable label
-        if haskey(varlabels, j)
+        if haskey(variable_dict, j)
             TableMetadataTools.label!(rdf, varlist[j], variable_dict[j])
         end
 
