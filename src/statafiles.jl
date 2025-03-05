@@ -268,7 +268,7 @@ function read_stata(fn::String; chunks::Int=10)
         if typelist[i] in (65528, 65529, 65530) && haskey(lblname_dict, i)
             # Stella.values!(rdf, varlist[i], value_labels[lblname_dict[i]])
             tmpvec = recode(rdf[!,varlist[i]], value_labels[lblname_dict[i]]...)
-            rdf[!,varlist[i]] = CategoricalArray{Union{Missing,String},UInt32}(tmpvec, ordered = true)
+            rdf[!,varlist[i]] = CategoricalArray{Union{Missing,String},UInt32}(tmpvec)
         end
 
         # variable label
