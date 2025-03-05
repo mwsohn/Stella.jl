@@ -263,11 +263,17 @@ function read_stata(fn::String; chunks::Int=10)
             Stella.categorical!(rdf, varlist[i])
         end
 
+        # for vectors without missing values
+        if sum(ismissing.(rdf[!, varlist[i]])) == 0
+            rdf[!, varlist[i]] = convert(Vector{eltype2(rdf[!, varlist[i]])}, rdf[!, varlist[i]])
+        end
+
         # for integer variables that have formats
         # convert them into CategoricalArrays with the appropriate value labels
         if typelist[i] in (65528, 65529, 65530) && haskey(lblname_dict, i)
             # Stella.values!(rdf, varlist[i], value_labels[lblname_dict[i]])
-            rdf[!,varlist[i]] = CategoricalArray{Union{Missing,String}}(recode(rdf[!,varlist[i]], value_labels[lblname_dict[i]]...))
+            rdf[!, varlist[i]] = recode(rdf[!,varlist[i]], value_labels[lblname_dict[i]]...)
+            # rdf[!,varlist[i]] = CategoricalArray{Union{Missing,String}}()
         end
 
         # variable label
@@ -275,10 +281,6 @@ function read_stata(fn::String; chunks::Int=10)
             TableMetadataTools.label!(rdf, varlist[i], variable_dict[i])
         end
 
-        # for vectors without missing values
-        if sum(ismissing.(rdf[!, varlist[i]])) == 0
-            rdf[!, varlist[i]] = convert(Vector{eltype2(rdf[!, varlist[i]])}, rdf[!, varlist[i]])
-        end
     end
 
     return rdf
