@@ -181,7 +181,7 @@ function read_stata(fn::String; chunks::Int=10)
     end
 
     # read value labels
-    value_labels = Dict()
+    value_labels = Dict{Int64,String}()
     for i in 1:numvlabels
 
         skipstr = String(read(fh, 5))
@@ -256,28 +256,27 @@ function read_stata(fn::String; chunks::Int=10)
     # close the file
     close(fh)
 
-    for j in 1:ncol(rdf)
+    for i in 1:ncol(rdf)
 
         # strls will be converted to CategoricalArrays
-        if typelist[j] == 32768
-            Stella.categorical!(rdf, varlist[j])
+        if typelist[i] == 32768
+            Stella.categorical!(rdf, varlist[i])
         end
 
         # for integer variables that have formats
         # convert them into CategoricalArrays with the appropriate value labels
-        if typelist[j] in (65528, 65529, 65530) && haskey(lblname_dict, j)
-            println(value_labels[lblname_dict[j]])
-            Stella.values!(rdf, varlist[j], value_labels[lblname_dict[j]])
+        if typelist[i] in (65528, 65529, 65530) && haskey(lblname_dict, i)
+            Stella.values!(rdf, varlist[i], value_labels[lblname_dict[i]])
         end
 
         # variable label
-        if haskey(variable_dict, j)
-            TableMetadataTools.label!(rdf, varlist[j], variable_dict[j])
+        if haskey(variable_dict, i)
+            TableMetadataTools.label!(rdf, varlist[i], variable_dict[i])
         end
 
         # for vectors without missing values
-        if sum(ismissing.(rdf[!, varlist[j]])) == 0
-            rdf[!, varlist[j]] = convert(Vector{eltype2(rdf[!, varlist[j]])}, rdf[!, varlist[j]])
+        if sum(ismissing.(rdf[!, varlist[i]])) == 0
+            rdf[!, varlist[i]] = convert(Vector{eltype2(rdf[!, varlist[i]])}, rdf[!, varlist[i]])
         end
     end
 
