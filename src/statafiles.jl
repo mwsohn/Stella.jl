@@ -271,7 +271,9 @@ function read_stata(fn::String; chunks::Int=10)
         # for integer variables that have formats
         # convert them into CategoricalArrays with the appropriate value labels
         if typelist[i] in (65528, 65529, 65530) && haskey(lblname_dict, i)
-            rdf[!, varlist[i]] = categorical(recode(rdf[!,varlist[i]], value_labels[lblname_dict[i]]...))
+            # values not included in the value labels will cause an error
+
+            rdf[!, varlist[i]] = categorical(recode2(rdf[!,varlist[i]], value_labels[lblname_dict[i]]))
         end
 
         # variable label
@@ -282,6 +284,10 @@ function read_stata(fn::String; chunks::Int=10)
     end
 
     return rdf
+end
+
+function recode2(vv::AbstractVector,dd::Dict)
+    return [ haskey(dd,vv[i]) ? dd[vv[i]] : string(vv[i]) for i in 1:length(vv)]
 end
 
 function _read_dta(io, release, rlen, len, nvar, varlist, typelist, fmtlist, numskip, strls)
