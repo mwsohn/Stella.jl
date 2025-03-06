@@ -286,10 +286,10 @@ function read_stata(fn::String; chunks::Int=10, keep_original = false)
 end
 
 function recode2(vv::AbstractVector,dd::Dict; keep_original = false)
-    if keep_original = true
+    if keep_original == true
         [ haskey(dd,vv[i]) ? string(vv[1], " ", dd[vv[i]]) : string(vv[i]) for i in 1:length(vv)]
     end
-    
+
     return [ haskey(dd,vv[i]) ? dd[vv[i]] : string(vv[i]) for i in 1:length(vv)]
 end
 
