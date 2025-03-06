@@ -7,7 +7,7 @@
 converts a stata datafile `fn` to Julia DataFrame. An original data file bigger than 100MB will be read in `chunks` (default = 10)
 to save memory. 
 """
-function read_stata(fn::String; chunks::Int=10, keep_original = false)
+function read_stata(fn::String; chunks::Int=10, keep_original = true)
 
     fh = open(fn, "r")
 
@@ -285,8 +285,8 @@ function read_stata(fn::String; chunks::Int=10, keep_original = false)
     return rdf
 end
 
-function recode2(vv::AbstractVector,dd::Dict; keep_original = false)
-    if keep_original == true
+function recode2(vv::AbstractVector,dd::Dict; keep_original = true)
+    if keep_original
         [ haskey(dd,vv[i]) ? string(vv[1], " ", dd[vv[i]]) : string(vv[i]) for i in 1:length(vv)]
     end
 
