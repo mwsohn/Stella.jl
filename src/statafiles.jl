@@ -287,7 +287,7 @@ end
 
 function recode2(vv::AbstractVector,dd::Dict; keep_original = true)
     if keep_original
-        return [ haskey(dd,vv[i]) ? string(vv[1], " ", dd[vv[i]]) : string(vv[i]) for i in 1:length(vv)]
+        return [ haskey(dd,vv[i]) ? string(vv[i], " ", dd[vv[i]]) : string(vv[i]) for i in 1:length(vv)]
     end
 
     return [ haskey(dd,vv[i]) ? dd[vv[i]] : string(vv[i]) for i in 1:length(vv)]
