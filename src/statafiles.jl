@@ -7,7 +7,7 @@
 converts a stata datafile `fn` to Julia DataFrame. An original data file bigger than 100MB will be read in `chunks` (default = 10)
 to save memory. 
 """
-function read_stata(fn::String; chunks::Int=10)
+function read_stata(fn::String; chunks::Int=10, keep_original = false)
 
     fh = open(fn, "r")
 
@@ -272,8 +272,7 @@ function read_stata(fn::String; chunks::Int=10)
         # convert them into CategoricalArrays with the appropriate value labels
         if typelist[i] in (65528, 65529, 65530) && haskey(lblname_dict, i)
             # values not included in the value labels will cause an error
-
-            rdf[!, varlist[i]] = categorical(recode2(rdf[!,varlist[i]], value_labels[lblname_dict[i]]))
+            rdf[!, varlist[i]] = categorical(recode2(rdf[!,varlist[i]], value_labels[lblname_dict[i]], keep_original = keep_original))
         end
 
         # variable label
@@ -286,7 +285,10 @@ function read_stata(fn::String; chunks::Int=10)
     return rdf
 end
 
-function recode2(vv::AbstractVector,dd::Dict)
+function recode2(vv::AbstractVector,dd::Dict; keep_original = false)
+    if keep_original
+        [ haskey(dd,vv[i]) ? string(vv[1], " ", dd[vv[i]]) : string(vv[i]) for i in 1:length(vv)]
+    end
     return [ haskey(dd,vv[i]) ? dd[vv[i]] : string(vv[i]) for i in 1:length(vv)]
 end
 
