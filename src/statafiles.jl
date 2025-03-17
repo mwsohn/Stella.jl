@@ -691,7 +691,7 @@ function prepare_df(outdf; verbose=verbose)
     end
 
     # subset
-    df = outdf[:, findall(x -> x == true, [ notallowed[x] || allmiss[x] || lint64[x] ? false : true for x in 1:ncol(outdf)])]
+    df = outdf # outdf[:, findall(x -> x == true, [ notallowed[x] || allmiss[x] || lint64[x] ? false : true for x in 1:ncol(outdf)])]
 
     datatypes = Stella.dtypes(df)
     (typelist, numbytes) = Stella.get_types(df)
