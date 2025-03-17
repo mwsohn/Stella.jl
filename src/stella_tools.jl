@@ -193,7 +193,7 @@ function tabstat(indf::AbstractDataFrame,
 		show_subheader = false,
 		vlines=[1])
         anov = anova(indf, var1, groupvar, pval=true)
-        println("One-way ANOVA: F(",anov[1],", ",anov[2],") = ",@sprintf("%.5f",anov[3]),", ", anov[4] < 0.00001 ? "P < 0.00001" : @sprintf("P = %.5f",anov[4]))
+        println("One-way ANOVA: F(",anov.df[1],", ",anov.df[3],") = ",@sprintf("%.5f",anov.F[1]),", ", anov.pvalue[1] < 0.00001 ? "P < 0.00001" : @sprintf("P = %.5f",anov.pvalue[1]))
     else
         return outdf[nz,:]
     end
@@ -583,7 +583,6 @@ CovarianceMatrices.jl package. Choose the function using the following symbols:
 Adjust option is set to `true` by default to obtain confidence intervals that are consistent with
 Stata or R values. If you want the original HC standard errors, set it to `false`.
 """
-
 function rconfint(m::StatisticalModel; adjust=true, vce = :hc1)
     coeft = rcoeftable(m, adjust=adjust, vce = vce)
     return hcat(coeft.cols[5], coeft.cols[6])
