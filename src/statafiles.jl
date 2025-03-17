@@ -689,7 +689,7 @@ function prepare_df(outdf; verbose=verbose)
     vlabels = Stella.get_value_labels(df)
 
     varnames = propertynames(df)
-    for i = 1:size(df,1)
+    for i = 1:size(df,2)
         println(varnames[i], " ", datatypes[i], " ", typelist[i], " ", numbytes[i])
     end
 
