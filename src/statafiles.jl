@@ -688,10 +688,10 @@ function prepare_df(outdf; verbose=verbose)
     (typelist, numbytes) = Stella.get_types(df)
     vlabels = Stella.get_value_labels(df)
 
-    varnames = propertynames(df)
-    for i = 1:size(df,2)
-        println(varnames[i], " ", datatypes[i], " ", typelist[i], " ", numbytes[i])
-    end
+    # varnames = propertynames(df)
+    # for i = 1:size(df,2)
+    #     println(varnames[i], " ", datatypes[i], " ", typelist[i], " ", numbytes[i])
+    # end
 
     return df, datatypes, typelist, numbytes, vlabels
 end
@@ -793,7 +793,7 @@ function get_types(outdf)
             elseif typ == String
                 maxlen = Stella.getmaxbytes(outdf[:,i])
                 if maxlen < 2045
-                    tlist[i] = maxlen
+                    tlist[i] = maxlen + 1 # one byte for the null terminator
                     numbytes[i] = tlist[i]
                 else
                     tlist[i] = 32768
