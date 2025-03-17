@@ -654,13 +654,10 @@ function prepare_df(outdf; verbose=verbose)
     # allowed variable types
     notallowed = [ in(x, [Bool, Int8, Int16, Int32, Int64, Float32, Float64, String, Date, DateTime]) ? false : true for x in Stella.dtypes(outdf)]
 
-    # empty variables
-    allmiss = [ sum(ismissing.(x)) == size(outdf,1) ? true : false for x in eachcol(outdf)]
-
     # large Int64 values that cannot be saved as Int32
     lint64 = falses(ncol(outdf))
     for i in 1:ncol(outdf)
-        if eltype2(outdf[:,i]) == Int64 && allmiss[i] == false
+        if eltype2(outdf[:,i]) == Int64
             tvec = collect(skipmissing(outdf[:,i]))
             if maximum(tvec) > 2_147_483_620 || minimum(tvec) < −2_147_483_647
                 lint64[i] = true
@@ -676,12 +673,6 @@ function prepare_df(outdf; verbose=verbose)
                 notallowed[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
             end
         end
-        if sum(allmiss) > 0
-            println("\n\nThese variables will NOT be exported because they are empty (100% missing).\n")
-            for (i, v) in enumerate(names(outdf))
-                allmiss[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
-            end
-        end
         if sum(lint64) > 0
             println("\n\nThese variables will be excluded variables because they are Int64 variables that contain values larger than Int32 can hold.\n")
             for (i, v) in enumerate(names(outdf))
@@ -691,7 +682,7 @@ function prepare_df(outdf; verbose=verbose)
     end
 
     # subset
-    df = outdf # outdf[:, findall(x -> x == true, [ notallowed[x] || allmiss[x] || lint64[x] ? false : true for x in 1:ncol(outdf)])]
+    df = outdf[:, findall(x -> x == true, [ notallowed[x] || lint64[x] ? false : true for x in 1:ncol(outdf)])]
 
     datatypes = Stella.dtypes(df)
     (typelist, numbytes) = Stella.get_types(df)
@@ -706,7 +697,7 @@ function write_chunks(outdf, datatypes, typelist)
     for dfrow in eachrow(outdf)
         for (i,v) in enumerate(dfrow)
             if isa(outdf[:,i], CategoricalArray)
-                if eltype2(outdf[:,i]) == String
+                if eltype2(outdf[:,i]) == String && datatypes[i] == Int32 
                     write(iobuf, Int32(ismissing(v) ? 2_147_483_621 : outdf[:,i].pool.invindex[v]))
                 elseif datatypes[i] in (Bool, Int8)
                     write(iobuf, Int8(ismissing(v) ? 101 : unwrap(v)))
@@ -727,7 +718,6 @@ function write_chunks(outdf, datatypes, typelist)
         end
     end
     return take!(iobuf)
-
 end
 
 function dtypes(outdf)
