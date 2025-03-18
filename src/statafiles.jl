@@ -883,11 +883,10 @@ function get_variable_labels(outdf, len)
     return join(lbls,"")
 end
 
-function get_value_labels(outdf, ca)
-
+function get_value_labels(outdf)
     iobf = IOBuffer()
     for (j,v) in enumerate(propertynames(outdf))
-        if ca[j] && eltype2(outdf[:,v]) == String
+        if isa(outdf[:,j], CategoricalArray) && eltype2(outdf[:,v]) == String
             invindex = outdf[:,v].pool.invindex
             vindex = Dict(values(invindex) .=> keys(invindex))
             n = length(vindex)
