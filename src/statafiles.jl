@@ -578,16 +578,16 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
     write(outdta,zeros(Int16, cols+1))
     write(outdta,"</sortlist>")
 
-    # formats - no formats for now
+    # formats
     m[6] = Int64(position(outdta))
     write(outdta,"<formats>")
-    write(outdta,get_formats(df,typelist,len_format))
+    write(outdta,get_formats(df, typelist, len_format))
     write(outdta,"</formats>")
 
     # value label names
     m[7] = Int64(position(outdta))
     write(outdta,"<value_label_names>")
-    write(outdta,get_label_names(df, len_labelname))
+    write(outdta,get_label_names(df, len_labelname, ca))
     write(outdta,"</value_label_names>")
 
     # variable labels
@@ -691,7 +691,7 @@ function write_chunks(outdf, datatypes, typelist, ca)
     for dfrow in eachrow(outdf)
         for (i,v) in enumerate(dfrow)
             if ca[i]
-                if eltype2(outdf[:,i]) == String 
+                if datatypes[i] == String 
                     write(iobuf, Int32(ismissing(v) ? 2_147_483_621 : outdf[:,i].pool.invindex[v]))
                 elseif datatypes[i] in (Bool, Int8)
                     write(iobuf, Int8(ismissing(v) ? 101 : unwrap(v)))
@@ -863,15 +863,13 @@ function get_formats(outdf,typelist,len)
     return join(fvec,"")
 end
 
-function get_label_names(outdf,len)
+function get_label_names(outdf,len, ca)
 
     lvec = String[]
     for i in 1:size(outdf,2)
-        if isa(outdf[:,i], CategoricalArray) && eltype2(outdf[:,i]) == String
+        if ca[i]
             lblname = string("fmt",i)
             push!(lvec,string(lblname, repeat('\0',len - sizeof(lblname))))
-        else
-            push!(lvec,repeat('\0',len))
         end
     end    
     return join(lvec,"")
@@ -885,12 +883,11 @@ function get_variable_labels(outdf, len)
     return join(lbls,"")
 end
 
-function get_value_labels(outdf)
+function get_value_labels(outdf, ca)
 
     iobf = IOBuffer()
     for (j,v) in enumerate(propertynames(outdf))
-        if isa(outdf[:,v], CategoricalArray) && eltype2(outdf[:,v]) == String
-
+        if ca[j] && eltype2(outdf[:,v]) == String
             invindex = outdf[:,v].pool.invindex
             vindex = Dict(values(invindex) .=> keys(invindex))
             n = length(vindex)
