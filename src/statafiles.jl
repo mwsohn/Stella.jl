@@ -691,7 +691,7 @@ function write_chunks(outdf, datatypes, typelist, ca)
     for dfrow in eachrow(outdf)
         for (i,v) in enumerate(dfrow)
             if ca[i]
-                if datatypes[i] == String 
+                if eltype2(outdf[:,i]) == String 
                     write(iobuf, Int32(ismissing(v) ? 2_147_483_621 : outdf[:,i].pool.invindex[v]))
                 elseif datatypes[i] in (Bool, Int8)
                     write(iobuf, Int8(ismissing(v) ? 101 : unwrap(v)))
