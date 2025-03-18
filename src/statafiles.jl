@@ -519,7 +519,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
     outdta = open(fn,"w")
 
     # prepare the dataframe
-    (df, datatypes, typelist, numbytes, value_labels) = prepare_df(outdf,verbose=verbose)
+    (df, datatypes, typelist, numbytes, value_labels, ca) = prepare_df(outdf,verbose=verbose)
 
     # cols and rows
     (rows, cols) = size(df)
@@ -618,7 +618,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
     for i = 1:chunks
         from = 1 + (i-1)*nobschunk
         to = min(from + nobschunk - 1, rows)
-        write(outdta,write_chunks(df[from:to, :], datatypes, typelist))
+        write(outdta,write_chunks(df[from:to, :], datatypes, typelist, ca))
     end
     write(outdta,"</data>")
 
@@ -651,16 +651,16 @@ end
 
 function prepare_df(outdf; verbose=verbose)
 
-    # allowed variable types
-    notallowed = [ in(x, [Bool, Int8, Int16, Int32, Int64, Float32, Float64, String, Date, DateTime]) ? false : true for x in Stella.dtypes(outdf)]
-
-    # large Int64 values that cannot be saved as Int32
-    lint64 = falses(ncol(outdf))
+    # some types of variables cannot be ported to Stata
+    # large Int64 values that cannot be saved as Int32 cannot be ported either
+    notallowed = falses(size(outdf,2))
     for i in 1:ncol(outdf)
-        if eltype2(outdf[:,i]) == Int64
+        if !in(eltype2(outdf[:,i]), [Bool, Int8, Int16, Int32, Float32, Float64, String, Date, DateTime])
+            notallowed[i] = true
+        elseif eltype2(outdf[:,i]) == Int64
             tvec = collect(skipmissing(outdf[:,i]))
             if maximum(tvec) > 2_147_483_620 || minimum(tvec) < −2_147_483_647
-                lint64[i] = true
+                notallowed[i] = true
             end
         end
     end
@@ -668,36 +668,31 @@ function prepare_df(outdf; verbose=verbose)
     # report exclusions
     if verbose
         if sum(notallowed) > 0
-            println("\n\nThese variables will NOT be exported because of their data types:\n")
+            println("\n\nThese variables will NOT be exported because Stata does not allow their data types:\n")
             for (i, v) in enumerate(names(outdf))
                 notallowed[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
-            end
-        end
-        if sum(lint64) > 0
-            println("\n\nThese variables will be excluded variables because they are Int64 variables that contain values larger than Int32 can hold.\n")
-            for (i, v) in enumerate(names(outdf))
-                lint64[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
             end
         end
     end
 
     # subset
-    df = outdf[:, findall(x -> x == true, [ notallowed[x] || lint64[x] ? false : true for x in 1:ncol(outdf)])]
+    df = outdf[:, findall(x -> x == true, notallowed)]
 
     datatypes = Stella.dtypes(df)
+    ca = [ isa(x,CategoricalArray) ? true : false for x in eachcol(df)]
     (typelist, numbytes) = Stella.get_types(df)
     vlabels = Stella.get_value_labels(df)
 
-    return df, datatypes, typelist, numbytes, vlabels
+    return df, datatypes, typelist, numbytes, vlabels, ca
 end
 
-function write_chunks(outdf, datatypes, typelist)
+function write_chunks(outdf, datatypes, typelist, ca)
 
     iobuf = IOBuffer()
     for dfrow in eachrow(outdf)
         for (i,v) in enumerate(dfrow)
-            if isa(outdf[:,i], CategoricalArray)
-                if eltype2(outdf[:,i]) == String && datatypes[i] == Int32 
+            if ca[i]
+                if eltype2(outdf[:,i]) == String 
                     write(iobuf, Int32(ismissing(v) ? 2_147_483_621 : outdf[:,i].pool.invindex[v]))
                 elseif datatypes[i] in (Bool, Int8)
                     write(iobuf, Int8(ismissing(v) ? 101 : unwrap(v)))
