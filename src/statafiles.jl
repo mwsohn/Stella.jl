@@ -657,7 +657,8 @@ function prepare_df(outdf; verbose=verbose)
     for i in 1:ncol(outdf)
         if !in(eltype2(outdf[:,i]), [Bool, Int8, Int16, Int32, Float32, Float64, String, Date, DateTime])
             notallowed[i] = true
-        elseif eltype2(outdf[:,i]) == Int64
+        end
+        if eltype2(outdf[:,i]) == Int64
             tvec = collect(skipmissing(outdf[:,i]))
             if maximum(tvec) > 2_147_483_620 || minimum(tvec) < −2_147_483_647
                 notallowed[i] = true
