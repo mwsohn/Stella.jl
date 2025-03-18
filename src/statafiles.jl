@@ -667,17 +667,15 @@ function prepare_df(outdf; verbose=verbose)
     end
     
     # report exclusions
-    if verbose
-        if sum(notallowed) > 0
-            println("\n\nThese variables will NOT be exported because Stata does not allow their data types:\n")
-            for (i, v) in enumerate(names(outdf))
-                notallowed[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
-            end
+    if verbose && sum(notallowed) > 0
+        println("\n\nThese variables will NOT be exported because Stata does not allow their data types:\n")
+        for (i, v) in enumerate(names(outdf))
+            notallowed[i] && println(@sprintf("%-30s\t%-20s",v, eltype2(outdf[:,v])))
         end
     end
 
     # subset
-    df = outdf[:, findall(x -> x == true, notallowed)]
+    df = outdf[:, findall(x -> x == false, notallowed)]
 
     datatypes = Stella.dtypes(df)
     ca = [ isa(x,CategoricalArray) ? true : false for x in eachcol(df)]
