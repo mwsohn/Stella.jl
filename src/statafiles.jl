@@ -618,7 +618,7 @@ function write_stata(fn::String,outdf::AbstractDataFrame; maxbuffer = 10_000, ve
     for i = 1:chunks
         from = 1 + (i-1)*nobschunk
         to = min(from + nobschunk - 1, rows)
-        write(outdta,write_chunks(@views(df[from:to, :]), datatypes, typelist))
+        write(outdta,write_chunks(df[from:to, :], datatypes, typelist))
     end
     write(outdta,"</data>")
 
@@ -712,7 +712,7 @@ function write_chunks(outdf, datatypes, typelist)
             elseif datatypes[i] == String
                 write(iobuf, ismissing(v) ? repeat('\0', typelist[i]) : string(v, repeat('\0', typelist[i] - sizeof(v))))
             elseif datatypes[i] == Date
-                write(iobuf, Int32(ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1))))
+                write(iobuf, Int32(ismissing(v) ? 2_147_483_621 : Dates.value(v - Date(1960,1,1)))) # stata doesn't support Int64
             elseif datatypes[i] == DateTime
                 write(iobuf, Float64(ismissing(v) ? 8.989e307 : Dates.value(v - DateTime(1960,1,1))))
             elseif datatypes[i] in (Bool, Int8)
