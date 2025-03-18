@@ -655,7 +655,7 @@ function prepare_df(outdf; verbose=verbose)
     # large Int64 values that cannot be saved as Int32 cannot be ported either
     notallowed = falses(size(outdf,2))
     for i in 1:ncol(outdf)
-        if !in(eltype2(outdf[:,i]), [Bool, Int8, Int16, Int32, Float32, Float64, String, Date, DateTime])
+        if !in(eltype2(outdf[:,i]), [Bool, Int8, Int16, Int32, Int64, Float32, Float64, String, Date, DateTime])
             notallowed[i] = true
         end
         if eltype2(outdf[:,i]) == Int64
