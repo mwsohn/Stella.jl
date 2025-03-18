@@ -688,11 +688,6 @@ function prepare_df(outdf; verbose=verbose)
     (typelist, numbytes) = Stella.get_types(df)
     vlabels = Stella.get_value_labels(df)
 
-    # varnames = propertynames(df)
-    # for i = 1:size(df,2)
-    #     println(varnames[i], " ", datatypes[i], " ", typelist[i], " ", numbytes[i])
-    # end
-
     return df, datatypes, typelist, numbytes, vlabels
 end
 
@@ -735,6 +730,8 @@ function dtypes(outdf)
             else
                 push!(t, typ)
             end
+        elseif eltype2(outdf[:,i]) == Int64
+            push!(t, Int32)
         else
             push!(t, eltype2(outdf[:,i]))
         end
