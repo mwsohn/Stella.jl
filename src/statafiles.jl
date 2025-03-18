@@ -870,6 +870,8 @@ function get_label_names(outdf,len, ca)
         if ca[i]
             lblname = string("fmt",i)
             push!(lvec,string(lblname, repeat('\0',len - sizeof(lblname))))
+        else
+            push!(lvec, repeat("\0",len))
         end
     end    
     return join(lvec,"")
