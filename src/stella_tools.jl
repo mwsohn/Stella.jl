@@ -192,7 +192,8 @@ function tabstat(indf::AbstractDataFrame,
         row_label_column_title = label(indf,groupvar),
 		show_subheader = false,
 		vlines=[1])
-        anov = anova(indf, var1, groupvar, pval=true)
+        
+        anov = anova(indf, var1, groupvar)
         println("One-way ANOVA: F(",anov.df[1],", ",anov.df[3],") = ",@sprintf("%.5f",anov.F[1]),", ", anov.pvalue[1] < 0.00001 ? "P < 0.00001" : @sprintf("P = %.5f",anov.pvalue[1]))
     else
         return outdf[nz,:]
