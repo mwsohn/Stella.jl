@@ -50,7 +50,7 @@ export  read_stata,  # read stata 13 and 14 files into DF
         destring!,   # in-place versionof destring
         renvars!,    # change variable names to either lower or upper case
         eform,       # coeftable output to eform
-        anova,       # oneway ANOVA
+        # anova,       # oneway ANOVA
         pwcorr,      # pairwise correlations
         # ranksum,     # ranksum test
         # signrank,    # signed rank test
@@ -86,7 +86,7 @@ include("df_tools.jl")
 include("labels.jl")
 include("tab.jl")
 include("t-test.jl")
-include("anova.jl")
+# include("anova.jl")
 include("other.jl")
 include("statafiles.jl")
 
