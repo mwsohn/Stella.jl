@@ -10,9 +10,9 @@ using DataFrames, DataAPI, Distributions, StatsBase, StatsAPI, GLM, Survival,
         NamedArrays, HypothesisTests, DataStructures, FreqTables, ReadStat, 
         LinearAlgebra, Printf, Glob, Dates, Arrow, CategoricalArrays, 
         PooledArrays, PrettyTables, JLD2, Reexport, ROCAnalysis, Plots,
-        LROC, TableMetadataTools, SweepOperator
+        LogisticROC, TableMetadataTools, SweepOperator
 
-@reexport import LROC
+@reexport import LogisticROC
 @reexport import TableMetadataTools
 
 
