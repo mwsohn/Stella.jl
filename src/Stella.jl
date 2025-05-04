@@ -7,11 +7,12 @@ module Stella
 ################################################################################
 
 using DataFrames, DataAPI, Distributions, StatsBase, StatsAPI, GLM, Survival, 
-        NamedArrays, HypothesisTests, DataStructures, FreqTables, ReadStat, 
+        NamedArrays, HypothesisTests, DataStructures, FreqTables, 
         LinearAlgebra, Printf, Glob, Dates, Arrow, CategoricalArrays, 
-        PooledArrays, PrettyTables, JLD2, Reexport, ROCAnalysis, Plots,
-        LogisticROC, TableMetadataTools, SweepOperator
+        PooledArrays, PrettyTables, JLD2, Reexport, Plots,
+        LogisticROC, TableMetadataTools, SweepOperator, StataFiles
 
+@reexport import StataFiles
 @reexport import LogisticROC
 @reexport import TableMetadataTools
 
@@ -86,6 +87,5 @@ include("labels.jl")
 include("tab.jl")
 include("t-test.jl")
 include("other.jl")
-include("statafiles.jl")
 
 end
