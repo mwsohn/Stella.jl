@@ -31,6 +31,7 @@ ROCAnalysis = "f535d66d-59bb-5153-8d2b-ef0a426c6aff"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 LogisticROC = "6bf4ee07-1766-4a3a-9e7e-3ffe73513617"
 SweepOperator = "7522ee7d-7047-56d0-94d9-4bc626e7058d"
+StataFiles = "4250fffb-2d87-4dab-9cf8-12ba0ef8cdb9"
 
 [compat]
 
