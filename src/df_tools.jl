@@ -141,10 +141,9 @@ function eltype2(df::AbstractDataFrame,v::Symbol)
     return eltype2(df[:,v])
 end
 function eltype2(a::AbstractArray)
-    if eltype(a) == Missing && 
+    if eltype(a) == Missing
         return Missing
-    end
-    if isa(a, CategoricalArray)
+    elseif isa(a, CategoricalArray)
         return nonmissingtype(eltype(levels(a)))
     end
     return nonmissingtype(eltype(a))
