@@ -23,9 +23,7 @@ using DataFrames, DataAPI, Distributions, StatsBase, StatsAPI, GLM, Survival,
 ##
 ##############################################################################
 
-export  read_stata,  # read stata 13 and 14 files into DF
-        write_stata, # Convert Julia DataFrame to Stata DTA file
-        dfcompress, # compress DF
+export  dfcompress, # compress DF
         acompress,  # compress a Vector
         descr,        # list variables with Stata labels and value labels
         ci,          # produce column index from column names
