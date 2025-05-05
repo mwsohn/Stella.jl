@@ -567,34 +567,16 @@ function formula(o::Symbol,v::Vector{Symbol})
 end
 
 """
-    renvars!(df::DataFrame; vars::Array{Symbol,1}, case = "lower")
+    renvars!(df::DataFrame; vars::Vector{Symbol}, case = :lower)
 
 Rename column names in `vars` to either upper or lower cases. The default is to convert
-all columns to lower case names.
+all columns to lower case names. If `vars` is not specified, all variables will be renamed.
+Use `:upper` to rename variables to uppercase.
 """
-function renvars!(df::DataFrame; vars=[], case="lower")
-    numvar = length(vars)
-    symnames = propertynames(df)
-
-    if numvar == 0
-        varnames = propertynames(df)
-    else
-        varnames = propertynames(df[vars])
-    end
-
-    for nm in varnames
-
-        if case == "lower" || case == "LOWER"
-            newname = lowercase(string(nm))
-        elseif case == "upper" || case == "UPPER"
-            newname = uppercase(string(nm))
-        else
-            error(option," ", case," is not allowed.")
-        end
-        if nm != Symbol(newname)
-            rename!(df,nm => Symbol(newname))
-        end
-    end
+function renvars!(df::DataFrame; vars=[], case=:lower)
+    varnames = length(vars) ? names(df) : vars
+    f = (case == :lower ? lowercase : uppercase)
+    rename!(df, (varnames .=> f.(varnames))...)
 end
 
 """
