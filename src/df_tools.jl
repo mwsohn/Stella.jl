@@ -574,7 +574,7 @@ all columns to lower case names. If `vars` is not specified, all variables will 
 Use `:upper` to rename variables to uppercase.
 """
 function renvars!(df::DataFrame; vars=[], case=:lower)
-    varnames = length(vars) ? names(df) : vars
+    varnames = length(vars) == 0 ? names(df) : vars
     f = (case == :lower ? lowercase : uppercase)
     rename!(df, (varnames .=> f.(varnames))...)
 end
