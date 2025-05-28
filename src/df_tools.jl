@@ -619,38 +619,35 @@ missing values. If `force = false`, any vector containing non-numeric characters
 Use `replace = true` in `destring!` to replace the original string vector with a new converted numeric vector.
 If `replace` option is specified, `newvars` array is ignored.
 """
-function destring(da::AbstractArray; force=true)
-    if length(da) == 0
-        error("Input array is empty!")
-    end
-    if nonmissingtype(eltype(da)) <: Number
-        error("Input array is a numeric vector. No conversion needed.")
-    end
+function destring(da::AbstractArray; force=false)
+    length(da) == 0 && throw(ArgumentError("Input array is empty!"))
+    nonmissingtype(eltype(da)) != String && throw(ArgumentError("Input array is not a String vector."))
 
     # check if the values include any alphabetic characters or decimals
     isfloat = false
     alpha = false
-    da_safe = collect(skipmissing(da))
-    for i in length(da_safe)
-        if sum([isdigit(x) == false for x in da_safe[i]]) > 0
+
+    for str in skipmissing(da)
+        if any(isletter, str)
             alpha = true
+            println(alpha)
         end
-        if occursin(r"[,0-9]*\.[0-9]+",da_safe[i])
+        if match(r"\d+(\.\d+)?([eE][+-]?\d+)?", str) != nothing
             isfloat = true
         end
     end
 
     if alpha && force == false
-        error("Input array contains alphabetic letters. Use 'force=true' option to coerce conversion.")
+        throw(ArgumentError("Input array contains alphabetic letters. Use 'force=true' option to coerce conversion."))
     end
 
     T = isfloat ? Float64 : Int64
-    da2 = [ismissing(x) || x == "" ? missing : parse(T,x) for x in da]
+    da2 = [ismissing(x) || x == "" ? missing : (any(isletter, x) ? missing : parse(T, x)) for x in da]
 
-    return acompress(da2)
+    return Stella.acompress(da2)
 end
-destring(df::AbstractDataFrame,strvar::Symbol; force=true) = destring(df[:,strvar],force=force)
-function destring!(df::DataFrame,strvars; newvars::Vector{Symbol} = [], force=true, replace=false)
+destring(df::AbstractDataFrame,strvar::Symbol; force=false) = destring(df[:,strvar],force=force)
+function destring!(df::DataFrame,strvars; newvars::Vector{Symbol} = [], force=false, replace=false)
 
     if replace
         for v in strvars
