@@ -807,11 +807,11 @@ function rowmedian(df::AbstractDataFrame, vars::AbstractArray)
 end
 
 function rowmiss(df::AbstractDataFrame, vars::AbstractArray)
-    return sum.(ismissing.(eachrow(df[:, vars])))
+    return sum.(eachrow(ismissing.(df[:, vars])))
 end
 
 function rownonmiss(df::AbstractDataFrame, vars::AbstractArray)
-    return length(vars) .- sum.(ismissing.(eachrow(df[:, vars])))
+    return length(vars) .- sum.(eachrow(ismissing.(df[:, vars])))
 end
 
 function rowsd(df::AbstractDataFrame, vars::AbstractArray)
