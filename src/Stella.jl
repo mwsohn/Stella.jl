@@ -29,6 +29,7 @@ export  dfcompress, # compress DF
         ci,          # produce column index from column names
         nmissing,    # returns the number of missing values in an AbstractArray
         lift,        # converts missing values to false in a Boolean array
+        filter2,     # returns a boolean vector for use in selecting rows from a DataFrame
         dfsample,    # select a sample from a df
         univariate, univ, # univariate statistics
         tab,         # n-way freq table based on FreqTables, NAs are allowed now
