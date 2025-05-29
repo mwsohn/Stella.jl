@@ -5,6 +5,15 @@
 #
 #############################################################################
 """
+    filter2(func::Function,::AbstractDataFrame)
+
+Returns a Boolean vector that meets the inclusion criteria specified in `func`.
+"""
+function filter2(f::Function, df::AbstractDataFrame)
+    return [f(a) for a in eachrow(df)]
+end
+
+"""
     dfcompress(df::DataFrame)
 
 Reduce `df`'s memory use by changing the eltype of each column in the `df` to
