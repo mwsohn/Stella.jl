@@ -350,20 +350,6 @@ function ds(df::DataFrame,re::Regex)
 end
 
 
-"""
-    pickone!(df::DataFrame,groupvars::Vector{Symbol},newvar)
-
-Create a new column `newvar` that identifies one record in a set of rows
-identified by `groupvars` in the `df` DataFrame. This function creates
-a variable similar to the Stata command `egen byte pickone = tag(groupvar)`. 
-`groupvars` can be an array of column names or a single column name.
-"""
-function pickone!(df::DataFrame,groupvars::Vector{Symbol},newvar)
-    df[!,newvar] = zeros(Int8,size(df,1))
-    for subdf in groupby(df, groupvars)
-        subdf[1, newvar]=1
-    end
-end
 
 """
     duplicates(df::DataFrame, args::Symbol...; cmd::Symbol = :report)
@@ -832,15 +818,33 @@ function rowtotal(df::AbstractDataFrame, vars::AbstractArray)
     return [sum(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
 end
 
-function firstrow(df::AbstractDataFrame, gid::Symbol)
-    return combine(groupby(df, gid)) do sdf
-        sdf[1, :]
-    end
-end
-function firstrow(df::AbstractDataFrame, gids::Vector{Symbol})
+function keepone(df::AbstractDataFrame, gids::Vector{Symbol})
     return combine(groupby(df, gids)) do sdf
         sdf[1, :]
     end
+end
+function keepone(df::AbstractDataFrame, gid::Symbol)
+    return keepone(df, [gid])
+end
+
+"""
+    pickone(::DataFrame, ::Vector{Symbol})
+    pickone(::AbstractDataFrame, ::Symbol)
+
+Returns a vector that identifies one record in a set of rows
+identified by one or more group identifiers in a DataFrame. This function creates
+a variable similar to the Stata command `egen byte pickone = tag(groupvar)`. 
+`groupvars` can be an array of column names or a single column name.
+"""
+function pickone(df::AbstractDataFrame, groupvars::Vector{Symbol})
+    idx = falses(Int64, nrow(df))
+    combine(groupby(df, groupvars)) do subdf
+        idx[subdf.idx[1]] = true
+    end
+    return idx
+end
+function pickone(df::AbstractDataFrame, groupvar::Symbol)
+    return pickone(df, [groupvar])
 end
 
 """
