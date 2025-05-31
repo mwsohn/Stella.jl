@@ -110,9 +110,6 @@ function acompress(da::AbstractVector)
             end
         end
     end
-    if eltype_old == String
-        return strip(da)
-    end
     return da
 end
 
@@ -835,37 +832,15 @@ function rowtotal(df::AbstractDataFrame, vars::AbstractArray)
     return [sum(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
 end
 
-function firstrow(df::AbstractDataFrame, groupid::Symbol)
-    keep = falses(nrow(df))
-    for i = 1:nrow(df)
-        if i == 1 || df[i, groupid] != df[i-1, groupid]
-            keep[i] = true
-        end
+function firstrow(df::AbstractDataFrame, gid::Symbol)
+    return combine(groupby(df, gid)) do sdf
+        sdf[1, :]
     end
-    return df[keep.==true, :]
 end
-function firstrow(df::AbstractDataFrame, groupids::Vector{Symbol})
-    keep = falses(nrow(df))
-    diff = falses(length(groupids))
-    for i = 1:nrow(df)
-        if i == 1
-            keep[i] = true
-            continue
-        end
-
-        diff .= false
-        for gid in groupids
-            if df[i, gid] != df[i-1, gid]
-                diff[j] = true
-            end
-        end
-
-        if all(diff)
-            keep[i] = true
-        end
+function firstrow(df::AbstractDataFrame, gids::Vector{Symbol})
+    return combine(groupby(df, gids)) do sdf
+        sdf[1, :]
     end
-
-    return df[keep.==true, :]
 end
 
 """
