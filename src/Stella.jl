@@ -10,11 +10,12 @@ using DataFrames, DataAPI, Distributions, StatsBase, StatsAPI, GLM, Survival,
         NamedArrays, HypothesisTests, DataStructures, FreqTables, 
         LinearAlgebra, Printf, Glob, Dates, Arrow, CategoricalArrays, 
         PooledArrays, PrettyTables, JLD2, Reexport, Plots,
-        LogisticROC, TableMetadataTools, SweepOperator, StataFiles
+        LogisticROC, TableMetadataTools, SweepOperator, StataFiles, AnalysisOfVariance
 
 @reexport import StataFiles
 @reexport import LogisticROC
 @reexport import TableMetadataTools
+@reexport import AnalysisOfVariance
 
 
 ##############################################################################
