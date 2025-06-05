@@ -28,6 +28,9 @@ function tab(indf,var::Union{Symbol,String}; decimals=4, skipmissing=true, sort=
     end
     _tab1(freqtable(indf,var, skipmissing=skipmissing); decimals=decimals, sort=sort)
 end
+function tab(ivar::AbstractVector; decimals=4, skipmissing=true, sort=false)
+    _tab1(freqtable(ivar, skipmissing=skipmissing); decimals=decimals, sort=sort)
+end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows = -1, maxcols = 20, decimals=4, skipmissing=true, summarize = nothing)
     if in(string(var1),names(indf)) == false
         println("$var1 is not found in the input DataFrame.")
@@ -138,8 +141,8 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
         vlines = [1])
 
     testarray = na.array[rz[1:end-1],cz[1:end-1]]
-    (statistic, dof, pval) = Stella.chi2(testarray)
     if size(testarray,1) > 1 && size(testarray,2) > 1
+        (statistic, dof, pval) = Stella.chi2(testarray)
         println("Pearson chi-square = ", @sprintf("%.4f",statistic), " (", dof, "), p ", 
             pval < 0.0001 ? "< 0.0001" : string("= ",round(pval,sigdigits = 6)))
     end
