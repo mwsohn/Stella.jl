@@ -828,7 +828,7 @@ function keepone(df::AbstractDataFrame, gid::Symbol)
 end
 
 """
-    pickone(::DataFrame, ::Vector{Symbol})
+    pickone(::AbstractDataFrame, ::Vector{Symbol})
     pickone(::AbstractDataFrame, ::Symbol)
 
 Returns a vector that identifies one record in a set of rows
