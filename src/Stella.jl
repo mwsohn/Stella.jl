@@ -42,7 +42,7 @@ export  dfcompress, # compress DF
         # prepend_spaces, append_spaces, # create fixed length strings
         smallest, largest, # list smallest and largest values in a DA
         pickone,     # create a binary variable that identifies one record in a subgroup
-        keepone,     # creates a DF that contain one record from a subgroup
+        keepfirst, keeplast,     # creates a DF that contain one record from a subgroup
         p5, p10, p25, p50, p75, p90, p95, # percentiles
         cv,          # coefficient of variation, alias of variation()
         se,          # standard error, alias of sem()
