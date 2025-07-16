@@ -818,13 +818,29 @@ function rowtotal(df::AbstractDataFrame, vars::AbstractArray)
     return [sum(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
 end
 
-function keepone(df::AbstractDataFrame, gids::Vector{Symbol})
-    return combine(groupby(df, gids)) do sdf
-        sdf[1, :]
+"""
+    keepfirst(::AbstractDataFrame, groupvars; n = 1)
+
+Produces a subset of data containing the first `n` records from the input DataFrame
+sorted by `groupvars`.
+"""
+function keepfirst(df::AbstractDataFrame, groupvars; n=1)
+    return combine(groupby(sort(df, groupvars), groupvars)) do subdf
+        first(subdf, n)
     end
 end
-function keepone(df::AbstractDataFrame, gid::Symbol)
-    return keepone(df, [gid])
+
+"""
+    keeplast(::AbstractDataFrame, groupvars; n = 1)
+
+Produces a subset of data containing the last `n` records from the input DataFrame
+sorted by `groupvars`.
+"""
+
+function keeplast(df::AbstractDataFrame, groupvars; n=1)
+    return combine(groupby(sort(df, groupvars), groupvars)) do subdf
+        last(subdf, n)
+    end
 end
 
 """
