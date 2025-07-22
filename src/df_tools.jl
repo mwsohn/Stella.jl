@@ -775,27 +775,27 @@ produces an array that contains the statistics based on all variables in the Abs
 ignoring missing values. This is a Julia implementation of Stata "row" egen functions.
 """
 function rowfirst(df::AbstractDataFrame,vars::AbstractArray)
-    return [collect(skipmissing(x))[1] for x in eachrow(df[:,vars])]
+    return [length(collect(skipmissing(x))) == 0 ? missing : collect(skipmissing(x))[1] for x in eachrow(df[:, vars])]
 end
 
 function rowlast(df::AbstractDataFrame, vars::AbstractArray)
-    return [collect(skipmissing(x))[end] for x in eachrow(df[:, vars])]
+    return [length(collect(skipmissing(x))) == 0 ? missing : collect(skipmissing(x))[end] for x in eachrow(df[:, vars])]
 end
 
 function rowmax(df::AbstractDataFrame, vars::AbstractArray)
-    return [maximum(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
+    return [length(collect(skipmissing(x))) == 0 ? missing : maximum(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
 end
 
 function rowmin(df::AbstractDataFrame, vars::AbstractArray)
-    return [minimum(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
+    return [length(collect(skipmissing(x))) == 0 ? missing : minimum(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
 end
 
 function rowmean(df::AbstractDataFrame, vars::AbstractArray)
-    return [mean(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
+    return [length(collect(skipmissing(x))) == 0 ? missing : mean(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
 end
 
 function rowmedian(df::AbstractDataFrame, vars::AbstractArray)
-    return [median(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
+    return [length(collect(skipmissing(x))) == 0 ? missing : median(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
 end
 
 function rowmiss(df::AbstractDataFrame, vars::AbstractArray)
@@ -807,15 +807,16 @@ function rownonmiss(df::AbstractDataFrame, vars::AbstractArray)
 end
 
 function rowsd(df::AbstractDataFrame, vars::AbstractArray)
-    return [std(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
+    return [length(collect(skipmissing(x))) == 0 ? missing : std(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
 end
 
 function rowpctile(df::AbstractDataFrame, vars::AbstractArray, p::Float64 = 0.5)
-    return [quantile(collect(skipmissing(x)), p) for x in eachrow(df[:, vars])]
+    return [length(collect(skipmissing(x))) == 0 ? missing : quantile(collect(skipmissing(x)), p) for x in eachrow(df[:, vars])]
 end
 
 function rowtotal(df::AbstractDataFrame, vars::AbstractArray)
-    return [sum(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
+    return [length(collect(skipmissing(x))) == 0 ? 0 : sum(collect(skipmissing(x)))
+        for x in eachrow(df[:,vars]) ]
 end
 
 """
