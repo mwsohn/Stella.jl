@@ -759,23 +759,6 @@ function uncategorical(v::CategoricalArray)
 end
 
 """
-    rowfirst(df::AbstractDataFrame,vars::AbstractArray)
-    rowlast(df::AbstractDataFrame,vars::AbstractArray)
-    rowmax(df::AbstractDataFrame,vars::AbstractArray)
-    rowmin(df::AbstractDataFrame,vars::AbstractArray)
-    rowmean(df::AbstractDataFrame,vars::AbstractArray)
-    rowmedian(df::AbstractDataFrame,vars::AbstractArray)
-    rowmiss(df::AbstractDataFrame,vars::AbstractArray)
-    rownonmiss(df::AbstractDataFrame,vars::AbstractArray)
-    rowpctile(df::AbstractDataFrame,vars::AbstractArray,pct )
-    rowsd(df::AbstractDataFrame,vars::AbstractArray)
-	rowtotal(df::AbstractDataFrame,vars::AbstractArray)
-
-produces an array that contains the statistics based on all variables in the AbstractArray, 
-ignoring missing values. This is a Julia implementation of Stata "row" egen functions.
-"""
-
-"""
     rowfirst(df::AbstractDataFrame,vars::AbstractVector)
 
 Returns the first non-missing value of the row vector.
