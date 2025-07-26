@@ -774,47 +774,104 @@ end
 produces an array that contains the statistics based on all variables in the AbstractArray, 
 ignoring missing values. This is a Julia implementation of Stata "row" egen functions.
 """
-function rowfirst(df::AbstractDataFrame,vars::AbstractArray)
+
+"""
+    rowfirst(df::AbstractDataFrame,vars::AbstractVector)
+
+Returns the first non-missing value of the row vector.
+"""
+function rowfirst(df::AbstractDataFrame,vars::AbstractVector)
     return [length(collect(skipmissing(x))) == 0 ? missing : collect(skipmissing(x))[1] for x in eachrow(df[:, vars])]
 end
 
-function rowlast(df::AbstractDataFrame, vars::AbstractArray)
+"""
+    rowlast(df::AbstractDataFrame,vars::AbstractVector)
+
+Returns the last non-missing value of the row vector.
+"""
+function rowlast(df::AbstractDataFrame, vars::AbstractVector)
     return [length(collect(skipmissing(x))) == 0 ? missing : collect(skipmissing(x))[end] for x in eachrow(df[:, vars])]
 end
 
-function rowmax(df::AbstractDataFrame, vars::AbstractArray)
+"""
+    rowmax(df::AbstractDataFrame,vars::AbstractVector)
+
+Returns the maximum value of the row vector.
+"""
+function rowmax(df::AbstractDataFrame, vars::AbstractVector)
     return [length(collect(skipmissing(x))) == 0 ? missing : maximum(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
 end
 
-function rowmin(df::AbstractDataFrame, vars::AbstractArray)
+"""
+    rowmin(df::AbstractDataFrame,vars::AbstractVector)
+
+Returns the minimum value of the row vector.
+"""
+function rowmin(df::AbstractDataFrame, vars::AbstractVector)
     return [length(collect(skipmissing(x))) == 0 ? missing : minimum(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
 end
 
-function rowmean(df::AbstractDataFrame, vars::AbstractArray)
+"""
+    rowmean(df::AbstractDataFrame,vars::AbstractVector)
+
+Returns the mean value of the row vector.
+"""
+function rowmean(df::AbstractDataFrame, vars::AbstractVector)
     return [length(collect(skipmissing(x))) == 0 ? missing : mean(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
 end
 
-function rowmedian(df::AbstractDataFrame, vars::AbstractArray)
+"""
+    rowmmedian(df::AbstractDataFrame,vars::AbstractVector)
+
+Returns the median value of the row vector.
+"""
+function rowmedian(df::AbstractDataFrame, vars::AbstractVector)
     return [length(collect(skipmissing(x))) == 0 ? missing : median(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
 end
 
-function rowmiss(df::AbstractDataFrame, vars::AbstractArray)
+"""
+    rowmiss(df::AbstractDataFrame,vars::AbstractVector)
+
+Returns the number of missing values in the row vector.
+"""
+function rowmiss(df::AbstractDataFrame, vars::AbstractVector)
     return sum.(eachrow(ismissing.(df[:, vars])))
 end
 
-function rownonmiss(df::AbstractDataFrame, vars::AbstractArray)
+"""
+    rownonmiss(df::AbstractDataFrame,vars::AbstractVector)
+
+Returns the number of non-missing values in the row vector.
+"""
+function rownonmiss(df::AbstractDataFrame, vars::AbstractVector)
     return length(vars) .- sum.(eachrow(ismissing.(df[:, vars])))
 end
 
-function rowsd(df::AbstractDataFrame, vars::AbstractArray)
+"""
+    rowsd(df::AbstractDataFrame,vars::AbstractVector)
+
+Returns the standard deviation of the row vector.
+"""
+function rowsd(df::AbstractDataFrame, vars::AbstractVector)
     return [length(collect(skipmissing(x))) == 0 ? missing : std(collect(skipmissing(x))) for x in eachrow(df[:, vars])]
 end
 
-function rowpctile(df::AbstractDataFrame, vars::AbstractArray, p::Float64 = 0.5)
+"""
+    rowpctile(df::AbstractDataFrame,vars::AbstractVector, p::Float64 = 0.5)
+
+Returns the percentile value of the row vector. A third argument `p` (default = 0.5)
+is used to specify the desired percentile.
+"""
+function rowpctile(df::AbstractDataFrame, vars::AbstractVector, p::Float64=0.5)
     return [length(collect(skipmissing(x))) == 0 ? missing : quantile(collect(skipmissing(x)), p) for x in eachrow(df[:, vars])]
 end
 
-function rowtotal(df::AbstractDataFrame, vars::AbstractArray)
+"""
+    rowtotal(df::AbstractDataFrame,vars::AbstractVector)
+
+Returns the sum value of the row vector.
+"""
+function rowtotal(df::AbstractDataFrame, vars::AbstractVector)
     return [length(collect(skipmissing(x))) == 0 ? 0 : sum(collect(skipmissing(x)))
         for x in eachrow(df[:,vars]) ]
 end
