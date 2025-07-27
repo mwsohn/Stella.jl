@@ -844,7 +844,7 @@ Converts Julia Date values to SAS or stata values.
 function sasdate(juliadt::AbstractArray)
     return Dates.value.(juliadt) .- Dates.value(Date(1960, 1, 1))
 end
-function sasdate(juliadt::Real)
+function sasdate(juliadt::Date)
     return sasdate([juliadt])[1]
 end
 
