@@ -852,7 +852,7 @@ end
 """
     rowtotal(df::AbstractDataFrame,vars::AbstractVector)
 
-Returns the sum value of the row vector.
+Returns the sum of the row vector.
 """
 function rowtotal(df::AbstractDataFrame, vars::AbstractVector)
     return [length(collect(skipmissing(x))) == 0 ? 0 : sum(collect(skipmissing(x)))
