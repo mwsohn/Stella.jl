@@ -72,7 +72,9 @@ export  dfcompress, # compress DF
         submedian!, submiss!, subnonmiss!,
         values!,
         labels!,
-        labels2
+        labels2,
+        sasdate, # convert Julia Date to SAS date
+        juliadate # convert SAS date to Julia Date
 
 
 abstract type Link end
