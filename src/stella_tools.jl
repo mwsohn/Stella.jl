@@ -823,12 +823,12 @@ function humansize(bytes::Int64)
 end
 
 """
-	juliadate(::AbstractArray)
+	juliadate(::AbstractVector)
     juliadate(::Real)
 
 converts SAS or stata date values to Julia Dates values.
 """
-function juliadate(sasdt::AbstractArray)
+function juliadate(sasdt::AbstractVector)
     return Dates.Date.(Dates.UTD.(convert.(Int64,sasdt) .+ Dates.value(Date(1960,1,1))))
 end
 function juliadate(sasdt::Real)
@@ -836,12 +836,12 @@ function juliadate(sasdt::Real)
 end
 
 """
-	sasdate(::AbstractArray)
-    sasdate(::Real)
+	sasdate(::AbstractVector)
+    sasdate(::Date)
 
 Converts Julia Date values to SAS or stata values.
 """
-function sasdate(juliadt::AbstractArray)
+function sasdate(juliadt::AbstractVector)
     return Dates.value.(juliadt) .- Dates.value(Date(1960, 1, 1))
 end
 function sasdate(juliadt::Date)
