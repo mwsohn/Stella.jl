@@ -1,12 +1,17 @@
 """
-    tab(df::DataFrame,vars::Symbol...; labels = nothing, maxrows = -1, maxcols = 20, decimals=4)
-    tab(na::NamedArray; labels = nothing, maxrows = -1, maxcols = 20, decimals=4)
+    tab(df::DataFrame,vars::Symbol...; maxrows = -1, maxcols = 20, decimals=4, sort = true)
+    tab(na::NamedArray; maxrows = -1, maxcols = 20, decimals=3)
 
 Produce an one-way or two-way frequency table from a DataFrame or a NamedArray obtained from
 freqtable function. `tab` is mainly a wrapper for the excellent `FreqTables` package.
+
 Use `skipmissing = true` to obtain frequencies that include `missing` values.
-The returned table is a `NamedArray`. Frequencies are in an n-dimensional array `na.array`
-where `na` is the returned NamedArray. 
+
+For an one-way frequency table, the table can be
+ordered by the frequency by specifying `sort = true` as an option.
+
+For a two-way table, summary values of a continuous variable can be requested by specifying the variable name
+as an option `summrize = :var`.
 """
 function tab(na::NamedArray; skipmissing=true)
     
@@ -21,7 +26,7 @@ function tab(na::NamedArray; skipmissing=true)
         error("Crosstabs for more than 3 variables are not currently supported.")
     end
 end
-function tab(indf,var::Union{Symbol,String}; decimals=4, skipmissing=true, sort=false)
+function tab(indf,var::Union{Symbol,String}; decimals=3, skipmissing=true, sort=false)
     if in(string(var),names(indf)) == false
         println("$var is not found in the input DataFrame.")
         return nothing
@@ -31,7 +36,7 @@ end
 function tab(ivar::AbstractVector; decimals=4, skipmissing=true, sort=false)
     _tab1(freqtable(ivar, skipmissing=skipmissing); decimals=decimals, sort=sort)
 end
-function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows = -1, maxcols = 20, decimals=4, skipmissing=true, summarize = nothing)
+function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows = -1, maxcols = 20, decimals=3, skipmissing=true, summarize = nothing)
     if in(string(var1),names(indf)) == false
         println("$var1 is not found in the input DataFrame.")
         return nothing
