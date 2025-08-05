@@ -6,7 +6,7 @@ function labels!(df::AbstractDataFrame,dd::Dict)
     end
 end
 
-function values!(df::AbstractDataFrame,v::Union{Symbol,String},val::Union{Dict,NamedTuple}; ordered = true)
+function values!(df::AbstractDataFrame,v::Union{Symbol,String},val::Union{Dict,NamedTuple}; ordered = false)
     isa(df[!, v], CategoricalArray) && throw(ArgumentError("Already a Categorical Array. Use `levels!` to recode the level values"))
         
     if nonmissingtype(eltype(df[:, v])) <: Integer
