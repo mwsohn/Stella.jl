@@ -28,7 +28,7 @@ function tab(na::NamedArray; skipmissing=true)
 end
 function tab(indf,var::Union{Symbol,String}; decimals=3, skipmissing=true, sort=false)
     if in(string(var),names(indf)) == false
-        println("$var is not found in the input DataFrame.")
+        throw(ArgumentError("$var is not found in the input DataFrame."))
         return nothing
     end
     _tab1(freqtable(indf,var, skipmissing=skipmissing); decimals=decimals, sort=sort)
@@ -37,6 +37,10 @@ function tab(ivar::AbstractVector; decimals=4, skipmissing=true, sort=false)
     _tab1(freqtable(ivar, skipmissing=skipmissing); decimals=decimals, sort=sort)
 end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows = -1, maxcols = 20, decimals=3, skipmissing=true, summarize = nothing)
+    if summarize != nothing && isa(indf[:,summarize], CategoricalArray)
+        throw(ArgumentError("$summarize cannot be a CategoricalArray."))
+        return nothing
+    end
     if in(string(var1),names(indf)) == false
         println("$var1 is not found in the input DataFrame.")
         return nothing
