@@ -1,11 +1,11 @@
 """
-    tab(df::DataFrame,vars::Symbol...; maxrows = -1, maxcols = 20, decimals=4, sort = true)
+    tab(df::DataFrame,vars::Symbol...; maxrows = -1, maxcols = 20, decimals=4, sort = true, skipmissing=true)
     tab(na::NamedArray; maxrows = -1, maxcols = 20, decimals=3)
 
 Produce an one-way or two-way frequency table from a DataFrame or a NamedArray obtained from
 freqtable function. `tab` is mainly a wrapper for the excellent `FreqTables` package.
 
-Use `skipmissing = true` to obtain frequencies that include `missing` values.
+Use `skipmissing = false` to obtain frequencies that include `missing` values.
 
 For an one-way frequency table, the table can be
 ordered by the frequency by specifying `sort = true` as an option.
