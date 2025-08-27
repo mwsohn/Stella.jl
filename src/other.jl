@@ -68,12 +68,12 @@ using Survival
 
 Plots Kaplan-Meier estimates.
 """
-function kaplanmeier(df, event, by=nothing, kwargs...)
+function kaplanmeier(df, event, by=nothing, xlabel = "Analysis time", ylabel = "Survival estimates")
 
     plt = nothing
     if by == nothing
         km = fit(KaplanMeier, df[:, event])
-        plot(vcat(0, km.events.time), vcat(1.0, km.survival), linetype=:steppost, ylims=(0, 1), kwargs...)
+        plot(vcat(0, km.events.time), vcat(1.0, km.survival), linetype=:steppost, ylims=(0, 1))
         # return nothing
     else
 
@@ -87,18 +87,16 @@ function kaplanmeier(df, event, by=nothing, kwargs...)
                     vcat(1.0, kvec[1].survival),
                     linetype=:steppost,
                     ylims=(0, 1),
-                    xlabel="Analysis time",
-                    ylabel="Survival estimate",
-                    label=string(v),
-                    kwargs...)
+                    xlabel=xlabel,
+                    ylabel=ylabel,
+                    label=string(v))
 
             else
                 Plots.plot!(plt, vcat(0, kvec[i].events.time),
                     vcat(1.0, kvec[i].survival),
                     linetype=:steppost,
                     ylims=(0, 1),
-                    label=string(v),
-                    kwargs...)
+                    label=string(v))
 
             end
         end
