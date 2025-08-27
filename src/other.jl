@@ -64,11 +64,11 @@ end
 using Survival
 
 """
-    kaplanmeier(df, event; by = nothing)
+    kaplanmeier(df, event, by = nothing)
 
 Plots Kaplan-Meier estimates.
 """
-function kaplanmeier(df, event, by=nothing, xlabel = "Analysis time", ylabel = "Survival estimates")
+function kaplanmeier(df, event, by=nothing)
 
     plt = nothing
     if by == nothing
@@ -87,8 +87,8 @@ function kaplanmeier(df, event, by=nothing, xlabel = "Analysis time", ylabel = "
                     vcat(1.0, kvec[1].survival),
                     linetype=:steppost,
                     ylims=(0, 1),
-                    xlabel=xlabel,
-                    ylabel=ylabel,
+                    xlabel="Analysis time",
+                    ylabel="Survival estimates",
                     label=string(v))
 
             else
