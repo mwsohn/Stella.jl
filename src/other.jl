@@ -186,3 +186,88 @@ function logrank(df, event, by)
 
     return (o, e, size(df,1), chi2, dof, pval)
 end
+
+
+"""
+    st2ncc(::AbstractDataFrame, ev::EventTime; ncontrol = 1, matchvars=nothing)
+
+Creates a nested case-control design from a survival data. It requires an EventTime
+variable as defined in the Survival.jl package. The output data will be sorted
+by :_set and :_case. Options are:
+
+ncontrol - number of controls to find for each case
+matchvars - a vector of matching factors
+
+This function generates the following variables:
+
+_case - 1 for case and 0 for controls
+_set  - group (or set) ID
+_nset - number of variables in the group (or set)
+_time - time to event
+"""
+function st2ncc(df::AbstractDataFrame, ev; ncontrol=1, matchvars=nothing)
+
+    # obs number
+    df.__nrow = collect(1:nrow(df))
+    df._time = [x[ev].time for x in eachrow(df)]
+
+    # non-matches
+    nonmatch = 0
+
+    # empty output data
+    dfout = DataFrame()
+
+    # events
+    dfev = df[isevent.(df[:, ev]), :]
+    dfev._case = ones(Int8, nrow(dfev))
+    dfev._set = collect(1:nrow(dfev))
+
+    # iterate over all event rows
+    sort!(dfev, [ev])
+    for i = 1:nrow(dfev)
+
+        # row number
+        row = dfev[i, :__nrow]
+
+        # define a risk set
+        # 1. not self
+        # 2. those who have never experienced an event
+        # 3. those who have not experienced an event until the ev's eventtime
+        df2 = filter(x -> x._time == 0 || x._time > dfev[i, :_time], df)
+
+        # if there are matchvars
+        if matchvars != nothing
+            for m in matchvars
+                df2 = filter(x -> x[m] == dfev[i, m], df2)
+            end
+        end
+
+        # select controls randomly
+        if nrow(df2) == 0
+            # throw(ArgumentError,"The risk set is empty for row == ", row)
+            # println("Cannot find any controls for row == ", row)
+            nonmatch += 1
+            continue
+        end
+
+        if nrow(df2) > ncontrol
+            # random selection
+            rannum = rand(collect(1:nrow(df2)), ncontrol)
+            df2 = df2[rannum, :]
+        end
+
+        df2._set .= dfev._set[i]
+        df2._case .= 0
+        df2._time .= dfev._time[i]
+        dfout = vcat(dfout, df2)
+    end
+
+    # drop sets without any controls
+    println(nonmatch, " cases could not find any matches")
+    df2 = vcat(dfev, dfout)
+    subdf = select(combine(groupby(df2, :_set), nrow => :_nset), [:_set, :_nset])
+    df2 = leftjoin(subdf, df2, on=:_set)
+
+    # clean up and return
+    return select(sort!(df2, [:_set, :_case]), Not([:__nrow]))
+end
