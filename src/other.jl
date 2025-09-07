@@ -226,9 +226,6 @@ function st2ncc(df::AbstractDataFrame, ev; ncontrol=1, matchvars=nothing)
     sort!(dfev, [ev])
     for i = 1:nrow(dfev)
 
-        # row number
-        row = dfev[i, :__nrow]
-
         # define a risk set
         # 1. not self
         # 2. those who have never experienced an event
@@ -244,16 +241,13 @@ function st2ncc(df::AbstractDataFrame, ev; ncontrol=1, matchvars=nothing)
 
         # select controls randomly
         if nrow(df2) == 0
-            # throw(ArgumentError,"The risk set is empty for row == ", row)
-            # println("Cannot find any controls for row == ", row)
             nonmatch += 1
             continue
         end
 
         if nrow(df2) > ncontrol
             # random selection
-            rannum = rand(collect(1:nrow(df2)), ncontrol)
-            df2 = df2[rannum, :]
+            df2 = df2[rand(collect(1:nrow(df2)), ncontrol), :]
         end
 
         df2._set .= dfev._set[i]
@@ -263,10 +257,12 @@ function st2ncc(df::AbstractDataFrame, ev; ncontrol=1, matchvars=nothing)
     end
 
     # drop sets without any controls
-    println(nonmatch, " cases could not find any matches")
+    if nonmatch > 0
+        println(nonmatch, " cases could not find any matches")
+    end
     df2 = vcat(dfev, dfout)
-    subdf = select(combine(groupby(df2, :_set), nrow => :_nset), [:_set, :_nset])
-    df2 = fileter(x -> x._nset > 1, leftjoin(subdf, df2, on=:_set))
+    df3 = select(combine(groupby(df2, :_set), nrow => :_nset), [:_set, :_nset])
+    df2 = fileter(x -> x._nset > 1, leftjoin(df3, df2, on=:_set))
 
     # clean up and return
     return select(sort!(df2, [:_set, :_case]), Not([:__nrow]))
