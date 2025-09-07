@@ -259,7 +259,7 @@ function st2ncc(df::AbstractDataFrame, ev; ncontrol=1, matchvars=nothing)
     end
     df2 = vcat(dfev, dfout)
     df3 = select(combine(groupby(df2, :_set), nrow => :_nset), [:_set, :_nset])
-    df2 = leftjoin(df3[df3._nset > 1,:], df2, on=:_set)
+    df2 = leftjoin(df3[df3._nset .> 1,:], df2, on=:_set)
 
     # clean up and return
     return select(sort!(df2, [:_set, :_case]), Not([:__nrow,:_nset]))
