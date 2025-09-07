@@ -202,7 +202,6 @@ This function generates the following variables:
 
 _case - 1 for case and 0 for controls
 _set  - group (or set) ID
-_nset - number of variables in the group (or set)
 _time - time to event
 """
 function st2ncc(df::AbstractDataFrame, ev; ncontrol=1, matchvars=nothing)
@@ -223,13 +222,9 @@ function st2ncc(df::AbstractDataFrame, ev; ncontrol=1, matchvars=nothing)
     dfev._set = collect(1:nrow(dfev))
 
     # iterate over all event rows
-    sort!(dfev, [ev])
     for i = 1:nrow(dfev)
 
-        # define a risk set
-        # 1. not self
-        # 2. those who have never experienced an event
-        # 3. those who have not experienced an event until the ev's eventtime
+        # define a risk set consisting of those who have not experienced an event until the ev's eventtime
         df2 = filter(x -> x._time > dfev[i, :_time], df)
 
         # if there are matchvars
@@ -239,14 +234,14 @@ function st2ncc(df::AbstractDataFrame, ev; ncontrol=1, matchvars=nothing)
             end
         end
 
-        # select controls randomly
+        # no matches found
         if nrow(df2) == 0
             nonmatch += 1
             continue
         end
 
+        # select matches randomly
         if nrow(df2) > ncontrol
-            # random selection
             df2 = df2[rand(collect(1:nrow(df2)), ncontrol), :]
         end
 
@@ -257,13 +252,13 @@ function st2ncc(df::AbstractDataFrame, ev; ncontrol=1, matchvars=nothing)
     end
 
     # drop sets without any controls
+    df2 = vcat(dfev, dfout)
     if nonmatch > 0
         println(nonmatch, " cases could not find any matches")
+        df3 = select(combine(groupby(df2, :_set), nrow => :_nset), [:_set, :_nset])
+        df2 = filter(x -> x._nset > 1, leftjoin(df3, df2, on=:_set))
     end
-    df2 = vcat(dfev, dfout)
-    df3 = select(combine(groupby(df2, :_set), nrow => :_nset), [:_set, :_nset])
-    df2 = filter(x -> x._nset > 1, leftjoin(df3, df2, on=:_set))
 
     # clean up and return
-    return select(sort!(df2, [:_set, :_case]), Not([:__nrow]))
+    return select(sort!(df2, [:_set, :_case]), Not([:__nrow,:_nset]))
 end
