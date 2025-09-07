@@ -244,7 +244,7 @@ function st2ncc(df::AbstractDataFrame, ev; ncontrol=1, matchvars=nothing)
 
         # select matches randomly
         if nrow(df2) > ncontrol
-            df2 = df2[rand(collect(1:nrow(df2)), ncontrol), :]
+            df2 = df2[rand(1:nrow(df2), ncontrol), :]
         end
 
         df2._set .= dfev._set[i]
