@@ -230,7 +230,7 @@ function st2ncc(df::AbstractDataFrame, ev; ncontrol=1, matchvars=nothing)
         # 1. not self
         # 2. those who have never experienced an event
         # 3. those who have not experienced an event until the ev's eventtime
-        df2 = filter(x -> x._time == 0 || x._time > dfev[i, :_time], df)
+        df2 = filter(x -> x._time > dfev[i, :_time], df)
 
         # if there are matchvars
         if matchvars != nothing
