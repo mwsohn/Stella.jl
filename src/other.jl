@@ -226,7 +226,7 @@ function st2ncc(df::AbstractDataFrame, ev; ncontrol=1, matchvars=nothing)
     for i = 1:nrow(dfev)
 
         # define a risk set consisting of those who have not experienced an event until the ev's eventtime
-        df2 = filter(x -> x._time > dfev[i, :_time], df)
+        df2 = filter(x -> x[ev] > dfev[i, ev], df)
 
         # if there are matchvars
         if matchvars != nothing
