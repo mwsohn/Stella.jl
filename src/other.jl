@@ -207,8 +207,7 @@ _time - time to event
 """
 function st2ncc(df::AbstractDataFrame, ev; ncontrol=1, matchvars=nothing)
 
-    # obs number
-    df.__nrow = collect(1:nrow(df))
+    # time
     df._time = [x[ev].time for x in eachrow(df)]
 
     # non-matches
@@ -262,5 +261,5 @@ function st2ncc(df::AbstractDataFrame, ev; ncontrol=1, matchvars=nothing)
     df2 = leftjoin(df3[df3._nset .> 1,:], df2, on=:_set)
 
     # clean up and return
-    return select(sort!(df2, [:_set, :_case]), Not([:__nrow,:_nset]))
+    return sort(df2, [:_set, :_case])
 end
