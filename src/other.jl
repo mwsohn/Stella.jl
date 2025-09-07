@@ -202,6 +202,7 @@ This function generates the following variables:
 
 _case - 1 for case and 0 for controls
 _set  - group (or set) ID
+_nset - number of rows in the group (or set)
 _time - time to event
 """
 function st2ncc(df::AbstractDataFrame, ev; ncontrol=1, matchvars=nothing)
@@ -222,6 +223,7 @@ function st2ncc(df::AbstractDataFrame, ev; ncontrol=1, matchvars=nothing)
     dfev._set = collect(1:nrow(dfev))
 
     # iterate over all event rows
+    sort!(dfev,[ev])
     for i = 1:nrow(dfev)
 
         # define a risk set consisting of those who have not experienced an event until the ev's eventtime
@@ -252,12 +254,12 @@ function st2ncc(df::AbstractDataFrame, ev; ncontrol=1, matchvars=nothing)
     end
 
     # drop sets without any controls
-    df2 = vcat(dfev, dfout)
     if nonmatch > 0
-        println(nonmatch, " cases could not find any matches")
-        df3 = select(combine(groupby(df2, :_set), nrow => :_nset), [:_set, :_nset])
-        df2 = filter(x -> x._nset > 1, leftjoin(df3, df2, on=:_set))
+        println(nonmatch, " cases were dropped. No any matches were found.")
     end
+    df2 = vcat(dfev, dfout)
+    df3 = select(combine(groupby(df2, :_set), nrow => :_nset), [:_set, :_nset])
+    df2 = leftjoin(df3[df3._nset > 1,:], df2, on=:_set)
 
     # clean up and return
     return select(sort!(df2, [:_set, :_case]), Not([:__nrow,:_nset]))
