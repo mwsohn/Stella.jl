@@ -266,7 +266,7 @@ function st2ncc(df::AbstractDataFrame, ev; ncontrol=1, matchvars=nothing)
     println(nonmatch, " cases could not find any matches")
     df2 = vcat(dfev, dfout)
     subdf = select(combine(groupby(df2, :_set), nrow => :_nset), [:_set, :_nset])
-    df2 = leftjoin(subdf, df2, on=:_set)
+    df2 = fileter(x -> x._nset > 1, leftjoin(subdf, df2, on=:_set))
 
     # clean up and return
     return select(sort!(df2, [:_set, :_case]), Not([:__nrow]))
