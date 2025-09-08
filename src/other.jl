@@ -241,7 +241,7 @@ function st2ncc(df::AbstractDataFrame, ev; ncontrol=1, matchvars=nothing)
             continue
         end
 
-        # select matches randomly
+        # if df2 has more than ncontrol rows, select matches randomly
         if nrow(df2) > ncontrol
             df2 = df2[rand(1:nrow(df2), ncontrol), :]
         end
@@ -263,3 +263,4 @@ function st2ncc(df::AbstractDataFrame, ev; ncontrol=1, matchvars=nothing)
     # clean up and return
     return sort(df2, [:_set, :_case])
 end
+
