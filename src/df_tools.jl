@@ -173,14 +173,24 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
 
     # output dataframe
     dfv = DataFrame(Variable = cutlen.(string.(varnames), max_varlen))
-    dfv[!,:Eltype] = Vector{String}(undef,size(dfv,1))
+    dfv[!,:Atype] = Vector{String}(undef,nrow(dfv))
+    dfv[!,:Eltype] = Vector{String}(undef,nrow(dfv))
     if nmiss
-    	dfv[!,:Missing] = Vector{String}(undef,size(dfv,1))
+    	dfv[!,:Missing] = Vector{String}(undef,nrow(dfv))
     end
 
     dfv[!,:Description] = cutlen.(labels(df),max_descr)
 
     for (i,v) in enumerate(varnames)
+
+        # Atype
+        if isa(df[:,v], CategoricalArray)
+            dfv[i,:Atype] = "   CA"
+        elseif isa(df[:, v], PooledArray)
+            dfv[i, :Atype] = "   PA"
+        else
+            dfv[i,:Atype] = "     "
+        end
 
         # Eltype
         dfv[i,:Eltype] = etype(df,v)
@@ -193,7 +203,7 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
 
     end
 
-    header = ["Variable", "Eltype"]
+    header = ["Variable", "Atype", "Eltype"]
     alignment = [:l,:l]
 
     if nmiss
