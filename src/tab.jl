@@ -26,10 +26,13 @@ function tab(na::NamedArray; skipmissing=true)
         error("Crosstabs for more than 3 variables are not currently supported.")
     end
 end
-function tab(indf,var::Union{Symbol,String}; decimals=3, skipmissing=true, sort=false)
+function tab(indf,var::Union{Symbol,String}; decimals=3, skipmissing=true, sort=false, summarize=nothing)
     if in(string(var),names(indf)) == false
         throw(ArgumentError("$var is not found in the input DataFrame."))
         return nothing
+    end
+    if summarize != nothing
+        return tabstat(indf, summarize, var)
     end
     _tab1(freqtable(indf,var, skipmissing=skipmissing); decimals=decimals, sort=sort)
 end
