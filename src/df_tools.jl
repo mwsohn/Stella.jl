@@ -204,7 +204,7 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
     end
 
     header = ["Variable", "Atype", "Eltype"]
-    alignment = [:l,:l]
+    alignment = [:l,:l,:l]
 
     if nmiss
 	    header = vcat(header,"% Miss")
