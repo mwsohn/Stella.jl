@@ -193,7 +193,7 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
         end
 
         # Eltype
-        dfv[i,:Eltype] = etype(df,v)
+        dfv[i,:Eltype] = nonmissingtype(eltype(df[!,v]))
 
         # percent missing
         if nmiss
