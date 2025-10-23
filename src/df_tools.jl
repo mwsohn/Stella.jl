@@ -166,38 +166,38 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
     cutlen(str, len) = (length(str) > len ? string(str[1:len - 6],"~", str[len - 3:end]) : str)
 
     # get variable names
-    varnames = propertynames(df)
+    varnames = cutlen.(names(df), max_varlen)
     if length(varnames) == 0
         error("No variables in the input dataframe\n")
     end
 
     # output dataframe
-    dfv = DataFrame(Variable = cutlen.(string.(varnames), max_varlen))
-    dfv[!,:Atype] = Vector{String}(undef,nrow(dfv))
-    dfv[!,:Eltype] = Vector{String}(undef,nrow(dfv))
+    # dfv = DataFrame(Variable = cutlen.(string.(varnames), max_varlen))
+    atype = Vector{String}(undef,nrow(dfv))
+    Etype = Vector{String}(undef,nrow(dfv))
     if nmiss
-    	dfv[!,:Missing] = Vector{String}(undef,nrow(dfv))
+    	Nmiss = Vector{String}(undef,nrow(dfv))
     end
-    dfv[!,:Description] = cutlen.(labels(df),max_descr)
+    descrip = cutlen.(labels(df),max_descr)
 
     for (i,v) in enumerate(varnames)
 
         # Atype
         if isa(df[:,v], CategoricalArray)
-            dfv[i,:Atype] = "   CA"
+            atype[i] = "  CA"
         elseif isa(df[:, v], PooledArray)
-            dfv[i, :Atype] = "   PA"
+            atype[i] = "  PA"
         else
-            dfv[i,:Atype] = "     "
+            atype[i] = "    "
         end
 
         # Eltype
-        dfv[i,:Eltype] = etype(df,v)
+        Etype[i] = etype(df,v)
 
         # percent missing
         if nmiss
             _nmiss = nmissing(df[!,v])
-            dfv[i,:Missing] = string(round(100 * _nmiss/size(df,1),digits=1),"%")
+            Nmiss[i] = string(round(100 * _nmiss/size(df,1),digits=1),"%")
         end
 
     end
@@ -208,6 +208,9 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
     if nmiss
 	    header = vcat(header,"% Miss")
 	    alignment = vcat(alignment,:r)
+        vvec = [varnames,atype,Etype,Nmiss,descrip]
+    else
+        vvec = [varnames,atype,Etype,descrip]
     end
 
     header = vcat(header,"Description")
@@ -216,7 +219,7 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
     println("Number of observations: ", @sprintf("%12.0f",nrow(df)))
     println("Number of variables:    ", @sprintf("%12.0f",ncol(df)))
     
-    pretty_table(dfv,
+    pretty_table(vvec,
         alignment=alignment,
         header=header,
         crop=:none,
