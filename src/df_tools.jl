@@ -178,7 +178,6 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
     if nmiss
     	dfv[!,:Missing] = Vector{String}(undef,nrow(dfv))
     end
-
     dfv[!,:Description] = cutlen.(labels(df),max_descr)
 
     for (i,v) in enumerate(varnames)
@@ -193,7 +192,7 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
         end
 
         # Eltype
-        dfv[i,:Eltype] = nonmissingtype(eltype(df[!,v]))
+        dfv[i,:Eltype] = etype(df,v)
 
         # percent missing
         if nmiss
