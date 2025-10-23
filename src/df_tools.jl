@@ -167,16 +167,17 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
 
     # get variable names
     varnames = cutlen.(names(df), max_varlen)
-    if length(varnames) == 0
+    vlen = length(varnames)
+    if vlen == 0
         error("No variables in the input dataframe\n")
     end
 
     # output dataframe
     # dfv = DataFrame(Variable = cutlen.(string.(varnames), max_varlen))
-    atype = Vector{String}(undef,nrow(dfv))
-    Etype = Vector{String}(undef,nrow(dfv))
+    atype = Vector{String}(undef,vlen)
+    Etype = Vector{String}(undef,vlen)
     if nmiss
-    	Nmiss = Vector{String}(undef,nrow(dfv))
+    	Nmiss = Vector{String}(undef,vlen)
     end
     descrip = cutlen.(labels(df),max_descr)
 
