@@ -166,7 +166,7 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
     cutlen(str, len) = (length(str) > len ? string(str[1:len - 6],"~", str[len - 3:end]) : str)
 
     # get variable names
-    varnames = cutlen.(names(df), max_varlen)
+    varnames = names(df)
     vlen = length(varnames)
     if vlen == 0
         error("No variables in the input dataframe\n")
@@ -205,6 +205,7 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
 
     header = ["Variable", "Atype", "Eltype"]
     alignment = [:l,:l,:l]
+    varnames = cutlen.(varnames,max_varlen)
 
     if nmiss
 	    header = vcat(header,"% Miss")
