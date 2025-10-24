@@ -193,7 +193,7 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
         end
 
         # Eltype
-        Etype[i] = etype(df,i)
+        Etype[i] = etype(df,varnames[i])
 
         # percent missing
         if nmiss
