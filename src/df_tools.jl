@@ -221,7 +221,7 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
     println("Number of observations: ", @sprintf("%12.0f",nrow(df)))
     println("Number of variables:    ", @sprintf("%12.0f",ncol(df)))
     
-    pretty_table(vvec,
+    pretty_table(hcat(vvec),
         alignment=alignment,
         header=header,
         crop=:none,
