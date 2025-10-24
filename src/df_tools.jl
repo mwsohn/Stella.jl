@@ -172,33 +172,31 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
         error("No variables in the input dataframe\n")
     end
 
-    # output dataframe
-    # dfv = DataFrame(Variable = cutlen.(string.(varnames), max_varlen))
-    atype = Vector{String}(undef,vlen)
-    Etype = Vector{String}(undef,vlen)
+    # output
+    atype = []
+    Etype = []
     if nmiss
-    	Nmiss = Vector{String}(undef,vlen)
+    	Nmiss = []
     end
-    descrip = cutlen.(labels(df),max_descr)
 
     for i in 1:vlen
 
         # Atype
         if isa(df[:,i], CategoricalArray)
-            atype[i] = "  CA"
+            push!(atype, "  CA")
         elseif isa(df[:, i], PooledArray)
-            atype[i] = "  PA"
+            push!(atype, "  PA")
         else
-            atype[i] = "    "
+            push!(atype, "    ")
         end
 
         # Eltype
-        Etype[i] = etype(df,varnames[i])
+        push!(Etype, etype(df,varnames[i]))
 
         # percent missing
         if nmiss
             _nmiss = nmissing(df[!,i])
-            Nmiss[i] = string(round(100 * _nmiss/size(df,1),digits=1),"%")
+            push!(Nmiss, string(round(100 * _nmiss/size(df,1),digits=1),"%"))
         end
 
     end
@@ -206,35 +204,28 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
     header = ["Variable", "Atype", "Eltype"]
     alignment = [:l,:l,:l]
   
-    # if nmiss
-	#     header = vcat(header,"% Miss")
-	#     alignment = vcat(alignment,:r)
-    #     df = DataFrame(Variable = cutlen.(varnames,max_varlen),
-    #         Atype = atype,
-    #         Etype = Etype,
-    #         Nmiss = Nmiss,
-    #         Description = descrip)
-    # else
-    #     df = DataFrame(Variable=cutlen.(varnames, max_varlen),
-    #         Atype=atype,
-    #         Etype=Etype,
-    #         Description=descrip)
-    # end
+    if nmiss
+	    header = vcat(header,"% Miss")
+	    alignment = vcat(alignment,:r)
+        data = hcat(cutlen.(varnames, max_varlen), atype, Etype, Nmiss, cutlen.(labels(df), max_descr))
+    else
+        data = hcat(cutlen.(varnames, max_varlen), atype, Etype, cutlen.(labels(df), max_descr))
+    end
 
-    # header = vcat(header,"Description")
-	# alignment = vcat(alignment,:l)
+    header = vcat(header,"Description")
+	alignment = vcat(alignment,:l)
 
-    # println("Number of observations: ", @sprintf("%12.0f",nrow(df)))
-    # println("Number of variables:    ", @sprintf("%12.0f",ncol(df)))
+    println("Number of observations: ", @sprintf("%12.0f",nrow(df)))
+    println("Number of variables:    ", @sprintf("%12.0f",ncol(df)))
     
-    # pretty_table(df,
-    #     alignment=alignment,
-    #     header=header,
-    #     crop=:none,
-    #     vlines = [1],
-    #     formatters = (ft_nomissing),
-    #     show_row_number = true,
-    #     row_number_column_title = "Column")
+    pretty_table(data,
+        alignment=alignment,
+        header=header,
+        crop=:none,
+        vlines = [1],
+        formatters = (ft_nomissing),
+        show_row_number = true,
+        row_number_column_title = "Column")
 end
 
 function nmissing(s::AbstractArray)
