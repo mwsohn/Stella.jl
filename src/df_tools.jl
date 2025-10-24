@@ -174,6 +174,7 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
 
     Etype = map(x -> nonmissingtype(eltype(df[!,x])), names(df))
     atype = [isa(df[!, x], CategoricalArray) ? true : false for x in names(df)]
+    Nmiss = []
 
     for i in 1:vlen
 
