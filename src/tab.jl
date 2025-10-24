@@ -76,7 +76,7 @@ function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String},var3::Un
         for i in 1:n3
             println("\n\n", na.dimnames[3], " = ", vals[i], "\n")
 
-            _tab2(na[:, :, i]; maxrows=maxrows, maxcols=maxcols, decimals=decimals)
+            _tab2(na[:, :, i]; maxrows=maxrows, maxcols=maxcols)
         end
     else
         n3 = sort(unique(indf[!,var3]))
@@ -133,7 +133,7 @@ function _tab1(na::NamedArray; decimals = 4, sort = false)
         vlines=[1])
 end
 
-function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, summarize = nothing)
+function _tab2(na::NamedArray; maxrows = -1, maxcols = 20)
   
     # counts
     counts = na.array
