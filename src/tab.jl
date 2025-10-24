@@ -190,16 +190,16 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20)
 
     # margin stats
     gdf = groupby(indf[ba, :], var1)
-    var1df = combine(gdf, sumvar => length => :n, sumvar => mean => :mean, sumvar => std => :sd)
+    var1df = combine(gdf, nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
     nrows = size(var1df,1)
 
     gdf = groupby(indf[ba, :], var2)
-    var2df = combine(gdf, sumvar => length => :n, sumvar => mean => :mean, sumvar => std => :sd)
+    var2df = combine(gdf, nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
     ncols = size(var2df,1)
 
     # cell stats
     gdf = groupby(indf[ba,:],[var1,var2])
-    outdf = combine(gdf, sumvar => length => :n, sumvar => mean => :mean, sumvar => std => :sd)
+    outdf = combine(gdf, nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
 
     # value labels and "Total"
     rownames = vcat(collect(skipmissing(names(na)[1])), "Total")
