@@ -228,14 +228,14 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
     println("Number of observations: ", @sprintf("%12.0f",nrow(df)))
     println("Number of variables:    ", @sprintf("%12.0f",ncol(df)))
     
-    pretty_table(df,
-        alignment=alignment,
-        header=header,
-        crop=:none,
-        vlines = [1],
-        formatters = (ft_nomissing),
-        show_row_number = true,
-        row_number_column_title = "Column")
+    # pretty_table(df,
+    #     alignment=alignment,
+    #     header=header,
+    #     crop=:none,
+    #     vlines = [1],
+    #     formatters = (ft_nomissing),
+    #     show_row_number = true,
+    #     row_number_column_title = "Column")
 end
 
 function nmissing(s::AbstractArray)
