@@ -172,44 +172,31 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
         error("No variables in the input dataframe\n")
     end
 
-    # output
-    atype = []
-    Etype = []
-    if nmiss
-    	Nmiss = []
-    end
+    Etype = map(x -> nonmissingtype(eltype(df[!,x])), names(df))
+    atype = [isa(df[!, x], CategoricalArray) ? true : false for x in names(df)]
 
-    @time for i in 1:vlen
+    for i in 1:vlen
 
-        # Atype
-        if isa(df[:,i], CategoricalArray)
-            push!(atype, "  CA")
-        elseif isa(df[:, i], PooledArray)
-            push!(atype, "  PA")
-        else
-            push!(atype, "    ")
+        if atype[i]
+            Etype[i] = string(Etype[i]," (CA)")
         end
-
-        # Eltype
-        push!(Etype, etype(df,varnames[i]))
 
         # percent missing
         if nmiss
             _nmiss = nmissing(df[!,i])
             push!(Nmiss, string(round(100 * _nmiss/size(df,1),digits=1),"%"))
         end
-
     end
 
-    header = ["Variable", "Atype", "Eltype"]
+    header = ["Variable", "Eltype"]
     alignment = [:l,:l,:l]
   
     if nmiss
 	    header = vcat(header,"% Miss")
 	    alignment = vcat(alignment,:r)
-        data = hcat(cutlen.(varnames, max_varlen), atype, Etype, Nmiss, cutlen.(labels(df), max_descr))
+        data = hcat(cutlen.(varnames, max_varlen), Etype, Nmiss, cutlen.(labels(df), max_descr))
     else
-        data = hcat(cutlen.(varnames, max_varlen), atype, Etype, cutlen.(labels(df), max_descr))
+        data = hcat(cutlen.(varnames, max_varlen), Etype, cutlen.(labels(df), max_descr))
     end
 
     header = vcat(header,"Description")
