@@ -181,23 +181,23 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
     end
     descrip = cutlen.(labels(df),max_descr)
 
-    for (i,v) in enumerate(varnames)
+    for i in 1:vlen
 
         # Atype
-        if isa(df[:,v], CategoricalArray)
+        if isa(df[:,i], CategoricalArray)
             atype[i] = "  CA"
-        elseif isa(df[:, v], PooledArray)
+        elseif isa(df[:, i], PooledArray)
             atype[i] = "  PA"
         else
             atype[i] = "    "
         end
 
         # Eltype
-        Etype[i] = etype(df,v)
+        Etype[i] = etype(df,i)
 
         # percent missing
         if nmiss
-            _nmiss = nmissing(df[!,v])
+            _nmiss = nmissing(df[!,i])
             Nmiss[i] = string(round(100 * _nmiss/size(df,1),digits=1),"%")
         end
 
@@ -228,14 +228,14 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
     println("Number of observations: ", @sprintf("%12.0f",nrow(df)))
     println("Number of variables:    ", @sprintf("%12.0f",ncol(df)))
     
-    # pretty_table(df,
-    #     alignment=alignment,
-    #     header=header,
-    #     crop=:none,
-    #     vlines = [1],
-    #     formatters = (ft_nomissing),
-    #     show_row_number = true,
-    #     row_number_column_title = "Column")
+    pretty_table(df,
+        alignment=alignment,
+        header=header,
+        crop=:none,
+        vlines = [1],
+        formatters = (ft_nomissing),
+        show_row_number = true,
+        row_number_column_title = "Column")
 end
 
 function nmissing(s::AbstractArray)
