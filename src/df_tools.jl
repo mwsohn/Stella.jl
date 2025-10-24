@@ -229,7 +229,8 @@ function getmaxwidth(s::AbstractArray)
 	#     return 0
     # end
 	
-    return  maximum(length.(collect(skipmissing(s))))
+    # return  maximum(length.(collect(skipmissing(s))))
+    return maximum(length.(s))
 end
 
 """
