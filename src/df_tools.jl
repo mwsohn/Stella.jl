@@ -225,12 +225,7 @@ function getmaxwidth(s::AbstractArray)
 	    return maximum(length.(s.pool.levels))
     end
 	
-    # if nmissing(s) == size(s,1)
-	#     return 0
-    # end
-	
-    # return  maximum(length.(collect(skipmissing(s))))
-    return maximum(length.(s))
+    return  maximum(length.(collect(skipmissing(s))))
 end
 
 """
