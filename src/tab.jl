@@ -61,7 +61,7 @@ end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String},var3::Union{Symbol,String};
     maxrows=-1, maxcols=20, decimals=4, skipmissing=true, summarize=nothing)
     for v in (var1,var2,var3)
-        if in(string(v), names(indf))
+        if in(string(v), names(indf)) == false
             println("$v is not found in the input DataFrame.")
             return nothing
         end
