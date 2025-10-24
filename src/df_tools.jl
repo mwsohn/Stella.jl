@@ -205,14 +205,21 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
 
     header = ["Variable", "Atype", "Eltype"]
     alignment = [:l,:l,:l]
-    varnames = cutlen.(varnames,max_varlen)
+    varnames = 
 
     if nmiss
 	    header = vcat(header,"% Miss")
 	    alignment = vcat(alignment,:r)
-        vvec = [varnames,atype,Etype,Nmiss,descrip]
+        df = DataFrame(Variable = cutlen.(varnames,max_varlen),
+            Atype = atype,
+            Etype = Etype,
+            Nmiss = Nmiss,
+            Description = descrip)
     else
-        vvec = [varnames,atype,Etype,descrip]
+        df = DataFrame(Variable=cutlen.(varnames, max_varlen),
+            Atype=atype,
+            Etype=Etype,
+            Description=descrip)
     end
 
     header = vcat(header,"Description")
@@ -221,7 +228,7 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
     println("Number of observations: ", @sprintf("%12.0f",nrow(df)))
     println("Number of variables:    ", @sprintf("%12.0f",ncol(df)))
     
-    pretty_table(hcat(vvec),
+    pretty_table(df,
         alignment=alignment,
         header=header,
         crop=:none,
