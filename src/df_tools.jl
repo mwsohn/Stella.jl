@@ -179,7 +179,7 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
     	Nmiss = []
     end
 
-    for i in 1:vlen
+    @time for i in 1:vlen
 
         # Atype
         if isa(df[:,i], CategoricalArray)
