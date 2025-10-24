@@ -83,7 +83,7 @@ function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String},var3::Un
         for v in n3
             println("\n\n", var3, " = ", v, "\n")
 
-            _tab2summarize(indf, var1, var2, summarize; maxrows=-1, maxcols=20)
+            _tab2summarize(filter(x -> x[var3] == v, indf), var1, var2, summarize; maxrows=-1, maxcols=20)
         end
     end
 end
