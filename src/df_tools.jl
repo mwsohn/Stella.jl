@@ -122,7 +122,7 @@ function atype(df::DataFrame,v::Symbol)
     return missing
 end
 
-function etype(df::DataFrame,v::Symbol)
+function etype(df::DataFrame,v::Union{Symbol,String})
     # Eltype
     if typeof(df[!,v]) <: CategoricalArray
         eltyp = string(eltype(levels(df[!,v])))
