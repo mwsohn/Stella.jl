@@ -122,7 +122,7 @@ function atype(df::DataFrame,v::Symbol)
     return missing
 end
 
-function etype(df::DataFrame,v::Union{Symbol,String})
+function etype(df::DataFrame,v::Union{Symbol,String}; strlength = true)
     # Eltype
     if typeof(df[!,v]) <: CategoricalArray
         eltyp = string(eltype(levels(df[!,v])))
@@ -132,7 +132,11 @@ function etype(df::DataFrame,v::Union{Symbol,String})
     else
         eltyp = string(eltype2(df[!,v]))
         if in(eltyp,["String","AbstractString"])
-            eltyp = string("Str",getmaxwidth(df[!,v]))
+            if strlength
+                eltyp = string("Str",getmaxwidth(df[!,v]))
+            else
+                elttyp = "String"
+            end
         elseif eltyp == "Dates.Date"
             eltyp = "Date"
         elseif eltyp == "Dates.DateTime"
@@ -161,7 +165,7 @@ end
 Displays variables in a dataframe much like `showcols`. It can display variable labels and value labels.
 It mimics Stata's `describe` command. 
 """
-function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varlen = 15, max_descr = 40)
+function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varlen = 15, max_descr = 40, strlength = true)
 
     cutlen(str, len) = (length(str) > len ? string(str[1:len - 6],"~", str[len - 3:end]) : str)
 
@@ -172,7 +176,7 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
         error("No variables in the input dataframe\n")
     end
 
-    Etype = map(x -> string(etype(df,x)), names(df))
+    Etype = map(x -> string(etype(df,x)), names(df), strlength=strlength)
     atype = [isa(df[!, x], CategoricalArray) ? true : false for x in names(df)]
     Nmiss = []
 
