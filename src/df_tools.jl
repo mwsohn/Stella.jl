@@ -205,37 +205,36 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
 
     header = ["Variable", "Atype", "Eltype"]
     alignment = [:l,:l,:l]
-    varnames = 
+  
+    # if nmiss
+	#     header = vcat(header,"% Miss")
+	#     alignment = vcat(alignment,:r)
+    #     df = DataFrame(Variable = cutlen.(varnames,max_varlen),
+    #         Atype = atype,
+    #         Etype = Etype,
+    #         Nmiss = Nmiss,
+    #         Description = descrip)
+    # else
+    #     df = DataFrame(Variable=cutlen.(varnames, max_varlen),
+    #         Atype=atype,
+    #         Etype=Etype,
+    #         Description=descrip)
+    # end
 
-    if nmiss
-	    header = vcat(header,"% Miss")
-	    alignment = vcat(alignment,:r)
-        df = DataFrame(Variable = cutlen.(varnames,max_varlen),
-            Atype = atype,
-            Etype = Etype,
-            Nmiss = Nmiss,
-            Description = descrip)
-    else
-        df = DataFrame(Variable=cutlen.(varnames, max_varlen),
-            Atype=atype,
-            Etype=Etype,
-            Description=descrip)
-    end
+    # header = vcat(header,"Description")
+	# alignment = vcat(alignment,:l)
 
-    header = vcat(header,"Description")
-	alignment = vcat(alignment,:l)
-
-    println("Number of observations: ", @sprintf("%12.0f",nrow(df)))
-    println("Number of variables:    ", @sprintf("%12.0f",ncol(df)))
+    # println("Number of observations: ", @sprintf("%12.0f",nrow(df)))
+    # println("Number of variables:    ", @sprintf("%12.0f",ncol(df)))
     
-    pretty_table(df,
-        alignment=alignment,
-        header=header,
-        crop=:none,
-        vlines = [1],
-        formatters = (ft_nomissing),
-        show_row_number = true,
-        row_number_column_title = "Column")
+    # pretty_table(df,
+    #     alignment=alignment,
+    #     header=header,
+    #     crop=:none,
+    #     vlines = [1],
+    #     formatters = (ft_nomissing),
+    #     show_row_number = true,
+    #     row_number_column_title = "Column")
 end
 
 function nmissing(s::AbstractArray)
