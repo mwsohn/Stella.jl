@@ -176,7 +176,7 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
         error("No variables in the input dataframe\n")
     end
 
-    Etype = map(x -> string(etype(df,x)), names(df), strlength=strlength)
+    Etype = map(x -> string(etype(df, x, strlength=strlength)), names(df))
     atype = [isa(df[!, x], CategoricalArray) ? true : false for x in names(df)]
     Nmiss = []
 
