@@ -205,29 +205,34 @@ function _tab1summarize(indf,var,sumvar; skipmissing = false)
         vlines=[1])
 end
 
-function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20)
-    ba = completecases(indf[!,[var1,var2,sumvar]])
-    na = freqtable(indf[ba,:], var1, var2)
+function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmissing=nothing)
+    if skipmissing == true
+        ba = completecases(indf[!,[var1,var2,sumvar]])
+    else
+        ba = completecases(indf[!,[sumvar]])
+    end
+    indf2 = indf[ba,[var1,var2,sumvar]]
+    # na = freqtable(indf2, var1, var2)
 
     # margin stats
-    gdf = groupby(indf[ba, :], var1)
+    gdf = groupby(indf2, var1)
     var1df = combine(gdf, nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
-    nrows = size(var1df,1)
+    nrows = nrow(var1df)
 
-    gdf = groupby(indf[ba, :], var2)
+    gdf = groupby(indf2, var2)
     var2df = combine(gdf, nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
-    ncols = size(var2df,1)
+    ncols = nrow(var2df)
 
     # cell stats
-    gdf = groupby(indf[ba,:],[var1,var2])
+    gdf = groupby(indf2,[var1,var2])
     outdf = combine(gdf, nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
 
     # value labels and "Total"
-    rownames = vcat(collect(skipmissing(names(na)[1])), "Total")
+    rownames = vcat(string.(var1df[!,var1]), "Total")
     rownames2 = vcat([[x, " ", " "] for x in rownames]...)
 
     # colunm names
-    colnames = vcat(collect(skipmissing(names(na)[2])), "Total")
+    colnames = vcat(string.(var2df[!,var2]), "Total")
 
     # combine stats
     d = Any[outdf.mean outdf.sd outdf.n]'
@@ -259,7 +264,7 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20)
     # output
     pretty_table(e,
         row_labels=rownames2,
-        row_label_column_title=string(na.dimnames[1], " / ", na.dimnames[2]),
+        row_label_column_title=string(var1, " / ", var2),
         header=colnames,
         crop=:none,
         max_num_of_rows=maxrows,
