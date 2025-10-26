@@ -159,6 +159,8 @@ function eltype2(a::AbstractArray)
     return nonmissingtype(eltype(a))
 end
 
+eltypes(df::AbstractDataFrame) = map(x -> nonmissingtype(eltype(x)), eachcol(df))
+
 """
     descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false)
 
