@@ -188,14 +188,11 @@ function _tab1summarize(indf,var,sumvar; skipmissing = false, sort = false)
     if skipmissing == true
         ba = completecases(indf[!, [var, sumvar]])
     else
-        ba = completecases(indf[!,[var]])
+        ba = completecases(indf[!,[sumvar]])
     end
     indf2 = indf[ba,[var,sumvar]]
 
-    if sort == true
-        sort!(indf2, var)
-    end
-    odf = combine(groupby(indf2,var), nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
+    odf = combine(groupby(indf2,var,sort=sort), nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
     rownames = vcat(string.(odf[!,var]),"Total")
     tdf = DataFrame(n = nrow(indf2), mean = mean(indf2[!,sumvar]), sd = std(indf2[!,sumvar]))
     odf = vcat(odf[!,2:end],tdf)
