@@ -183,7 +183,7 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20)
     end
 end
 
-function _tab1summarize(indf,var,sumvar; skipmissing = true, sort = false)
+function _tab1summarize(indf,var,sumvar; skipmissing = false, sort = false)
 
     if skipmissing == true
         ba = completecases(indf[!, [var, sumvar]])
@@ -202,7 +202,7 @@ function _tab1summarize(indf,var,sumvar; skipmissing = true, sort = false)
         row_label_column_title=string(var),
         header=["N","Mean","StDev"],
         crop=:none,
-        hlines=vcat([0, 1], nrow(odf)+1),
+        hlines=vcat([0, 1], nrow(odf), nrow(odf) + 1),
         vlines=[1])
 end
 
