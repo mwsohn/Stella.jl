@@ -32,7 +32,7 @@ function tab(indf,var::Union{Symbol,String}; skipmissing=true, sort=false, summa
         return nothing
     end
     if summarize != nothing
-        _tab1summarize(indf,var,summarize)
+        _tab1summarize(indf,var,summarize, skipmissing=skipmissing, sort = sort)
     end
     _tab1(freqtable(indf,var, skipmissing=skipmissing); sort=sort)
 end
@@ -183,8 +183,16 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20)
     end
 end
 
-function _tab1summarize(indf,var,sumvar)
-    ba = completecases(indf[!, [var, sumvar]])
+function _tab1summarize(indf,var,sumvar; skipmissing = true, sort = false)
+
+    if skipmissing = true
+        ba = completecases(indf[!, [var, sumvar]])
+    else
+        ba = completecases(indf[!,[var]])
+    end
+    if sort = true
+        sort!(indf, var)
+    end
     odf = combine(groupby(indf[ba,[var,sumvar]],var), nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
     rownames = vcat(string.(odf[!,var]),"Total")
     tdf = DataFrame(n = nrow(indf[ba,:]), mean = mean(indf[ba,sumvar]), sd = std(indf[ba,sumvar]))
@@ -194,8 +202,6 @@ function _tab1summarize(indf,var,sumvar)
         row_label_column_title=string(var),
         header=["N","Mean","StDev"],
         crop=:none,
-        max_num_of_rows=maxrows,
-        max_num_of_columns=maxcols,
         hlines=vcat([0, 1], nrow(odf)+1),
         vlines=[1])
 end
