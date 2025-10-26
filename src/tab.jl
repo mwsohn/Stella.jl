@@ -26,20 +26,20 @@ function tab(na::NamedArray; skipmissing=true)
         error("Crosstabs for more than 3 variables are not currently supported.")
     end
 end
-function tab(indf,var::Union{Symbol,String}; decimals=3, skipmissing=true, sort=false, summarize=nothing)
+function tab(indf,var::Union{Symbol,String}; skipmissing=true, sort=false, summarize=nothing)
     if in(string(var),names(indf)) == false
         throw(ArgumentError("$var is not found in the input DataFrame."))
         return nothing
     end
     if summarize != nothing
-        return tabstat(indf, summarize, var)
+        _tab1summarize(indf,var,summarize)
     end
-    _tab1(freqtable(indf,var, skipmissing=skipmissing); decimals=decimals, sort=sort)
+    _tab1(freqtable(indf,var, skipmissing=skipmissing); sort=sort)
 end
-function tab(ivar::AbstractVector; decimals=4, skipmissing=true, sort=false)
-    _tab1(freqtable(ivar, skipmissing=skipmissing); decimals=decimals, sort=sort)
+function tab(ivar::AbstractVector; skipmissing=true, sort=false)
+    _tab1(freqtable(ivar, skipmissing=skipmissing); sort=sort)
 end
-function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows = -1, maxcols = 20, decimals=3, skipmissing=true, summarize = nothing)
+function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows = -1, maxcols = 20, skipmissing=true, summarize = nothing)
     if summarize != nothing && isa(indf[:,summarize], CategoricalArray)
         throw(ArgumentError("$summarize cannot be a CategoricalArray."))
         return nothing
@@ -53,13 +53,13 @@ function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows
         return nothing
     end
     if summarize == nothing
-        return _tab2(freqtable(indf, var1, var2, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols, decimals=decimals)
+        return _tab2(freqtable(indf, var1, var2, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols)
     end
 
-    _tab2summarize(indf, var1, var2, summarize; maxrows=-1, maxcols=20, decimals=4)
+    _tab2summarize(indf, var1, var2, summarize; maxrows=-1, maxcols=20)
 end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String},var3::Union{Symbol,String};
-    maxrows=-1, maxcols=20, decimals=4, skipmissing=true, summarize=nothing)
+    maxrows=-1, maxcols=20, skipmissing=true, summarize=nothing)
     for v in (var1,var2,var3)
         if in(string(v), names(indf)) == false
             println("$v is not found in the input DataFrame.")
@@ -95,8 +95,7 @@ function tabi(a::AbstractArray)
     error("Input array must be 2x2 and have at least two levels on each dimension.")
 end
 
-
-function _tab1(na::NamedArray; decimals = 4, sort = false)
+function _tab1(na::NamedArray; sort = false)
  
     # do not output rows with zeros
     z = findall(x -> x != 0, na.array)
@@ -184,6 +183,22 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20)
     end
 end
 
+function _tab1summarize(indf,var,sumvar)
+    ba = completecases(indf[!, [var, sumvar]])
+    odf = combine(groupby(indf[ba,[var,sumvar]],var), nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
+    mdf = DataFrame(:n => nrow(indf[ba,:]), sumvar => mean => :mean, sumvar => std => sd)
+    odf = vcat(odf,mdf)
+    pretty_table(odf,
+        row_labels=odf[!,sumvar],
+        row_label_column_title=string(sumvar),
+        header=["N","Mean","StDev"],
+        crop=:none,
+        max_num_of_rows=maxrows,
+        max_num_of_columns=maxcols,
+        hlines=vcat([0, 1], nrows(odf)+1),
+        vlines=[1])
+end
+
 function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20)
     ba = completecases(indf[!,[var1,var2,sumvar]])
     na = freqtable(indf[ba,:], var1, var2)
@@ -247,19 +262,6 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20)
         vlines=[1])
 
 end
-
-# function _tab3(na::NamedArray; maxrows = -1, maxcols = 20, decimals=4)
-
-#     # stratify the var3 (na.dimnames[3])
-#     n3 = size(na,3)
-#     vals = na.dicts[3].keys
-
-#     for i in 1:n3
-#         println("\n\n",na.dimnames[3], " = ", vals[i] ,"\n")
-
-#         _tab2(na[:,:,i]; maxrows = maxrows, maxcols = maxcols, decimals=decimals)
-#     end
-# end
 
 """
     chi2(m::AbstractMatrix{Integer})
