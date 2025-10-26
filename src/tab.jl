@@ -185,12 +185,12 @@ end
 
 function _tab1summarize(indf,var,sumvar; skipmissing = true, sort = false)
 
-    if skipmissing = true
+    if skipmissing == true
         ba = completecases(indf[!, [var, sumvar]])
     else
         ba = completecases(indf[!,[var]])
     end
-    if sort = true
+    if sort == true
         sort!(indf, var)
     end
     odf = combine(groupby(indf[ba,[var,sumvar]],var), nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
