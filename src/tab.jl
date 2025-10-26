@@ -186,8 +186,8 @@ end
 function _tab1summarize(indf,var,sumvar)
     ba = completecases(indf[!, [var, sumvar]])
     odf = combine(groupby(indf[ba,[var,sumvar]],var), nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
-    mdf = DataFrame(:n => nrow(indf[ba,:]), sumvar => mean => :mean, sumvar => std => sd)
-    odf = vcat(odf,mdf)
+    tdf = DataFrame(n = nrow(indf[ba,:]), mean = mean(indf[ba,:]), sd = std(indf[ba,sumvar]))
+    odf = vcat(odf,tdf)
     pretty_table(odf,
         row_labels=odf[!,sumvar],
         row_label_column_title=string(sumvar),
