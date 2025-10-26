@@ -32,7 +32,7 @@ function tab(indf,var::Union{Symbol,String}; skipmissing=true, sort=false, summa
         return nothing
     end
     if summarize != nothing
-        _tab1summarize(indf,var,summarize, skipmissing=skipmissing, sort = sort)
+        return _tab1summarize(indf,var,summarize, skipmissing=skipmissing, sort = sort)
     end
     _tab1(freqtable(indf,var, skipmissing=skipmissing); sort=sort)
 end
