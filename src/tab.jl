@@ -183,7 +183,7 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20)
     end
 end
 
-function _tab1summarize(indf,var,sumvar; skipmissing = false, sort = false)
+function _tab1summarize(indf,var,sumvar; skipmissing = false)
 
     if skipmissing == true
         ba = completecases(indf[!, [var, sumvar]])
@@ -192,7 +192,7 @@ function _tab1summarize(indf,var,sumvar; skipmissing = false, sort = false)
     end
     indf2 = indf[ba,[var,sumvar]]
 
-    odf = combine(groupby(indf2,var,sort=sort), nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
+    odf = combine(groupby(indf2,var,sort=true), nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
     rownames = vcat(string.(odf[!,var]),"Total")
     tdf = DataFrame(n = nrow(indf2), mean = mean(indf2[!,sumvar]), sd = std(indf2[!,sumvar]))
     odf = vcat(odf[!,2:end],tdf)
