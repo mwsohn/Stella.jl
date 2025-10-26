@@ -196,7 +196,7 @@ function _tab1summarize(indf,var,sumvar)
         crop=:none,
         max_num_of_rows=maxrows,
         max_num_of_columns=maxcols,
-        hlines=vcat([0, 1], nrows(odf)+1),
+        hlines=vcat([0, 1], nrow(odf)+1),
         vlines=[1])
 end
 
