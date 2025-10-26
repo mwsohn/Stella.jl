@@ -190,12 +190,14 @@ function _tab1summarize(indf,var,sumvar; skipmissing = false, sort = false)
     else
         ba = completecases(indf[!,[var]])
     end
+    indf2 = indf[ba,[var,sumvar]]
+
     if sort == true
-        sort!(indf, var)
+        sort!(indf2, var)
     end
-    odf = combine(groupby(indf[ba,[var,sumvar]],var), nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
+    odf = combine(groupby(indf2,var), nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
     rownames = vcat(string.(odf[!,var]),"Total")
-    tdf = DataFrame(n = nrow(indf[ba,:]), mean = mean(indf[ba,sumvar]), sd = std(indf[ba,sumvar]))
+    tdf = DataFrame(n = nrow(indf2), mean = mean(indf2[!,sumvar]), sd = std(indf2[!,sumvar]))
     odf = vcat(odf[!,2:end],tdf)
     pretty_table(odf,
         row_labels=rownames,
