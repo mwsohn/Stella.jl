@@ -1,6 +1,6 @@
 """
-    tab(df::DataFrame,vars::Symbol...; maxrows = -1, maxcols = 20, decimals=4, sort = true, skipmissing=true)
-    tab(na::NamedArray; maxrows = -1, maxcols = 20, decimals=3)
+    tab(df::DataFrame,vars::Symbol...; maxrows = -1, maxcols = 20, sort = true, skipmissing=true)
+    tab(na::NamedArray; maxrows = -1, maxcols = 20)
 
 Produce an one-way or two-way frequency table from a DataFrame or a NamedArray obtained from
 freqtable function. `tab` is mainly a wrapper for the excellent `FreqTables` package.
@@ -126,7 +126,7 @@ function _tab1(na::NamedArray; sort = false)
 
     PrettyTables.pretty_table(ar, 
         header=[na.dimnames[1],"Counts"," Percent","Cum Pct"],
-        formatters = ft_round(decimals,[3,4]),
+        formatters = ft_round(4,[3,4]),
         crop = :none,
         hlines=[0,1,length(rownames),length(rownames)+1],
         vlines=[1])
