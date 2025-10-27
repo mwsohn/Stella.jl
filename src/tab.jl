@@ -217,7 +217,7 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
     var1df = combine(groupby(indf2, var1, sort = true), nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
     nrows = nrow(var1df)
 
-    var2df = combine(gdf=groupby(indf2, var2, sort = true), nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
+    var2df = combine(groupby(indf2, var2, sort = true), nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
     ncols = nrow(var2df)
 
     # cell stats
