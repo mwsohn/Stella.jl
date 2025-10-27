@@ -214,14 +214,14 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
     indf2 = indf[ba,[var1,var2,sumvar]]
 
     # margin stats
-    var1df = combine(groupby(indf2, var1, sort = true), nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
+    var1df = combine(groupby(indf2, var1, sort = true), sumvar => mean => :mean, sumvar => std => :sd, nrow => :n)
     nrows = nrow(var1df)
 
-    var2df = combine(groupby(indf2, var2, sort = true), nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
+    var2df = combine(groupby(indf2, var2, sort=true), sumvar => mean => :mean, sumvar => std => :sd, nrow => :n)
     ncols = nrow(var2df)
 
     # cell stats
-    outdf = combine(groupby(indf2, [var1, var2], sort = true), nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
+    outdf = combine(groupby(indf2, [var1, var2], sort=true), sumvar => mean => :mean, sumvar => std => :sd, nrow => :n)
 
     # value labels and "Total"
     rownames = vcat(string.(var1df[!,var1]), "Total")
@@ -231,17 +231,8 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
     colnames = vcat(string.(var2df[!,var2]), "Total")
 
     # combine stats
-    # d = Any[outdf.mean outdf.sd outdf.n]'
     d = vec(Matrix{Any}(outdf[!,3:end])')
     e = reshape(d,nrows*3,ncols)
-    # for i = 1:nrows
-    #     idx = (i - 1) * ncols + 1
-    #     if i == 1
-    #         e = d[1:3, 1:ncols]
-    #     else
-    #         e = vcat(e, d[1:3, idx:idx+ncols-1])
-    #     end
-    # end
 
     # row margins
     e = hcat(e, Any[var1df.mean var1df.sd var1df.n]'[:])
