@@ -394,6 +394,11 @@ function duplicates(df::DataFrame, args::Union{Symbol,String}... ; cmd::Symbol =
     # if cmd == :drop
     return select(keepfirst(df,collect(args)),Not(:__dups__))
 end
+function duplicates(df::DataFrame, vars::Vector{Union{Symbol,String}}; cmd::Symbol = :report)
+    args = tuple(vars...)
+    duplicates(df,args...,cmd = cmd)
+end
+
 
 """
     sample(df::AbstractDataFrame,num::Real)
