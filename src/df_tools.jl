@@ -354,6 +354,7 @@ end
 
 """
     duplicates(df::DataFrame, args::Symbol...; cmd::Symbol = :report)
+    duplicates(df::DataFrame, args::Vector{Symbol}; cmd::Symbol = :report)
 
 Reports, tags, or deletes duplicates in a DataFrame for one or more columns. Use `cmd` to
 request one of the actions:
@@ -391,8 +392,7 @@ function duplicates(df::DataFrame, args::Union{Symbol,String}... ; cmd::Symbol =
     end
 
     # if cmd == :drop
-    ba = [x == 1 ? true : false for x in pickone(df,collect(args))]
-    return select(df[ba,:],Not(:__dups__))
+    return select(keepfirst(df,collect(args)),Not(:__dups__))
 end
 
 """
