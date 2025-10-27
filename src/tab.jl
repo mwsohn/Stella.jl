@@ -231,8 +231,7 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
     colnames = vcat(string.(var2df[!,var2]), "Total")
 
     # combine stats
-    d = vec(Matrix{Any}(outdf[!,3:end])')
-    e = reshape(d,nrows*3,ncols)
+    e = interleave(outdf)
 
     # row margins
     e = hcat(e, Any[var1df.mean var1df.sd var1df.n]'[:])
@@ -260,6 +259,20 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
         max_num_of_columns=maxcols,
         hlines=vcat([0, 1], [x * 3 + 1 for x in 1:(nrows + 1)]),
         vlines=[1])
+end
+
+function interleave(df)
+
+    var2 = propertynames(df)[2]
+    rows = sort(unique(df[!, 1]))
+    cols = sort(unique(df[!, 2]))
+
+    e = Matrix{Any}(undef, length(rows) * 3, length(cols))
+    for (i, v) in enumerate(cols)
+        df2 = filter(x -> x[var2] == v, df)
+        e[:, i] = vec(transpose(Matrix{Any}(df2[!, 3:5])))
+    end
+    return e
 end
 
 """
