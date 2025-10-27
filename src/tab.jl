@@ -212,20 +212,16 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
         ba = completecases(indf[!,[sumvar]])
     end
     indf2 = indf[ba,[var1,var2,sumvar]]
-    # na = freqtable(indf2, var1, var2)
 
     # margin stats
-    gdf = groupby(indf2, var1)
-    var1df = combine(gdf, nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
+    var1df = combine(groupby(indf2, var1, sort = true), nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
     nrows = nrow(var1df)
 
-    gdf = groupby(indf2, var2)
-    var2df = combine(gdf, nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
+    var2df = combine(gdf=groupby(indf2, var2, sort = true), nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
     ncols = nrow(var2df)
 
     # cell stats
-    gdf = groupby(indf2,[var1,var2])
-    outdf = combine(gdf, nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
+    outdf = combine(groupby(indf2, [var1, var2], sort = true), nrow => :n, sumvar => mean => :mean, sumvar => std => :sd)
 
     # value labels and "Total"
     rownames = vcat(string.(var1df[!,var1]), "Total")
@@ -235,15 +231,17 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
     colnames = vcat(string.(var2df[!,var2]), "Total")
 
     # combine stats
-    d = Any[outdf.mean outdf.sd outdf.n]'
-    for i = 1:nrows
-        idx = (i - 1) * ncols + 1
-        if i == 1
-            e = d[1:3, 1:ncols]
-        else
-            e = vcat(e, d[1:3, idx:idx+ncols-1])
-        end
-    end
+    # d = Any[outdf.mean outdf.sd outdf.n]'
+    d = vec(Matrix{Any}(outdf[!,3:end])')
+    e = reshape(d,nrows*3,ncols)
+    # for i = 1:nrows
+    #     idx = (i - 1) * ncols + 1
+    #     if i == 1
+    #         e = d[1:3, 1:ncols]
+    #     else
+    #         e = vcat(e, d[1:3, idx:idx+ncols-1])
+    #     end
+    # end
 
     # row margins
     e = hcat(e, Any[var1df.mean var1df.sd var1df.n]'[:])
@@ -252,9 +250,9 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
     cm = Any[var2df.mean var2df.sd var2df.n]'[:]
 
     # grand total
-    push!(cm, mean(indf[ba,sumvar]))
-    push!(cm, std(indf[ba, sumvar]))
-    push!(cm, size(indf[ba, sumvar],1))
+    push!(cm, mean(indf2[!,sumvar]))
+    push!(cm, std(indf2[!, sumvar]))
+    push!(cm, size(indf2[!, sumvar],1))
 
     cm = reshape(cm,(3,ncols + 1))
 
@@ -271,7 +269,6 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
         max_num_of_columns=maxcols,
         hlines=vcat([0, 1], [x * 3 + 1 for x in 1:(nrows + 1)]),
         vlines=[1])
-
 end
 
 """
