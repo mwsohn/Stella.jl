@@ -170,7 +170,7 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20)
         crop = :none, 
         max_num_of_rows = maxrows,
         max_num_of_columns = maxcols,
-        hlines=vcat([0, 1], [x * 3 + 1 for x in 1:(nrow+1)]),
+        hlines=vcat([0, 1], [x * 4 + 1 for x in 1:(nrow+1)]),
         vlines = [1])
 
     testarray = na.array[rz[1:end-1],cz[1:end-1]]
