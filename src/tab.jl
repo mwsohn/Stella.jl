@@ -154,15 +154,15 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, pct = :rce)
     # row and column percentages
     combined = Any[counts]
     cnt = 1
-    if "r" in string(pct)
+    if occursin("r", string(pct))
         combined = hcat(combined, 100 .* counts ./ counts[:,end])
         cnt += 1
     end
-    if "c" in string(pct)
+    if occursin("c", string(pct))
         combined = hcat(combined, 100 .* counts' ./ counts[end,:])
         cnt += 1   
     end
-    if "e" in string(pct)
+    if occursin("e", string(pct))
         combined = hcat(combined, 100 .* counts ./ counts[end, end])
         cnt += 1
     end
