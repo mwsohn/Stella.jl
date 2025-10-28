@@ -132,8 +132,8 @@ function _tab1(na::NamedArray; sort = false)
         vlines=[1])
 end
 
-function _tab2(na::NamedArray; maxrows = -1, maxcols = 20)
-  
+function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, pct = :rce)
+    
     # counts
     counts = na.array
     counts = vcat(counts,sum(counts,dims=1)) # column sum
@@ -152,15 +152,26 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20)
     colnames = vcat(names(na)[2], "Total")[cz]
 
     # row and column percentages
-    rowpct = round.(100 .* counts ./ counts[:,end], digits=3)
-    colpct = round.(100 .* counts' ./ counts[end,:], digits=3)
-    cellpct = round.(100 .* counts ./ counts[end, end], digits=3)
+    combined = Any[counts]
+    cnt = 1
+    if "r" in string(pct)
+        combined = hcat(combined, 100 .* counts ./ counts[:,end])
+        cnt += 1
+    end
+    if "c" in string(pct)
+        combined = hcat(combined, 100 .* counts' ./ counts[end,:])
+        cnt += 1   
+    end
+    if "e" in string(pct)
+        combined = hcat(combined, 100 .* counts ./ counts[end, end])
+        cnt += 1
+    end
 
     # interleave them 
-    d = reshape(Any[counts rowpct colpct cellpct]'[:],(ncol,(nrow)*4))'
+    d = reshape(combined'[:],(ncol,(nrow)*cnt))'
 
-    # add two blank cells
-    rownames2 = vcat([ [x, " ", " ", " "] for x in rownames ]...)
+    # add blank cells
+    rownames2 = vcat([ vcat(x, fill(" ", cnt)) for x in rownames ]...)
 
     pretty_table(d,
         row_labels = rownames2,
@@ -169,7 +180,7 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20)
         crop = :none,
         max_num_of_rows = maxrows,
         max_num_of_columns = maxcols,
-        hlines=vcat([0, 1], [x * 4 + 1 for x in 1:(nrow+1)]),
+        hlines=vcat([0, 1], [x * cnt + 1 for x in 1:(nrow+1)]),
         vlines = [1])
 
     testarray = na.array[rz[1:end-1],cz[1:end-1]]
