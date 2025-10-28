@@ -138,6 +138,8 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20)
     counts = na.array
     counts = vcat(counts,sum(counts,dims=1)) # column sum
     counts = hcat(counts,sum(counts,dims=2)) # row sum
+
+    # margin totals
     rz = findall(x -> x != 0, counts[:, end]) # find all columns with non-zero totals
     cz = findall(x -> x != 0, counts[end, :]) # find all rows with non-zero totals
     counts = counts[rz,cz]
@@ -152,12 +154,13 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20)
     # row and column percentages
     rowpct = 100 .* counts ./ counts[:,end]
     colpct = (100 .* counts' ./ counts[end,:])'
+    cellpct = 100 .* counts ./ counts[end, end]
 
     # interleave them 
-    d = reshape(Any[counts rowpct colpct]'[:],(ncol,(nrow)*3))'
+    d = reshape(Any[counts rowpct colpct cellpct]'[:],(ncol,(nrow)*4))'
 
     # add two blank cells
-    rownames2 = vcat([ [x, " ", " "] for x in rownames ]...)
+    rownames2 = vcat([ [x, " ", " ", " "] for x in rownames ]...)
 
 
     pretty_table(d,
