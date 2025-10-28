@@ -152,9 +152,9 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20)
     colnames = vcat(names(na)[2], "Total")[cz]
 
     # row and column percentages
-    rowpct = round.(100 .* counts ./ counts[:,end], digits=2)
-    colpct = round.(100 .* counts' ./ counts[end,:], digits=2)
-    cellpct = round.(100 .* counts ./ counts[end, end], digits=2)
+    rowpct = round.(100 .* counts ./ counts[:,end], digits=3)
+    colpct = round.(100 .* counts' ./ counts[end,:], digits=3)
+    cellpct = round.(100 .* counts ./ counts[end, end], digits=3)
 
     # interleave them 
     d = reshape(Any[counts rowpct colpct cellpct]'[:],(ncol,(nrow)*4))'
