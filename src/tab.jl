@@ -257,19 +257,15 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
         row_label_column_title=string(var1, " / ", var2),
         header=colnames,
         crop=:none,
-        formatters=[(x,i,j) -> isa(x, AbstractFloat) ? @sprintf("%.2f", x) : string(x)],
+        # formatters=[(x,i,j) -> isa(x, AbstractFloat) ? @sprintf("%.2f", x) : string(x)],
+        formatters = [ (v,i,j) -> mod(i,4) == 1 && isa(v,AbstractFloat)? string(v) : @sprintf("%.2f",v) ],
         max_num_of_rows=maxrows,
         max_num_of_columns=maxcols,
         hlines=vcat([0, 1], [x * 3 + 1 for x in 1:(nrows + 1)]),
         vlines=[1])
 end
 
-f__formatter = x -> isa(x, AbstractFloat) ? @sprintf("%.2f", float(x)) : string(x)
-
-
-
 function interleave(df)
-
     var2 = propertynames(df)[2]
     rows = sort(unique(df[!, 1]))
     cols = sort(unique(df[!, 2]))
