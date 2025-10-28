@@ -207,7 +207,8 @@ function _tab1summarize(indf,var,sumvar; skipmissing = false)
         vlines=[1])
 end
 
-function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmissing=nothing)
+function _tab2summarize(indf, var1, var2, sumvar; pct = :rce, maxrows=-1, maxcols=20, skipmissing=nothing)
+    
     if skipmissing == true
         ba = completecases(indf[!,[var1,var2,sumvar]])
     else
@@ -257,8 +258,7 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
         row_label_column_title=string(var1, " / ", var2),
         header=colnames,
         crop=:none,
-        # formatters=[(x,i,j) -> isa(x, AbstractFloat) ? @sprintf("%.2f", x) : string(x)],
-        formatters = [ (v,i,j) -> mod(i,4) == 1 ? string(v) : @sprintf("%.2f",v) ],
+        # formatters = [ (v,i,j) -> mod(i,4) == 1 ? string(v) : @sprintf("%.2f",v) ],
         max_num_of_rows=maxrows,
         max_num_of_columns=maxcols,
         hlines=vcat([0, 1], [x * 3 + 1 for x in 1:(nrows + 1)]),
