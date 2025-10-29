@@ -171,6 +171,7 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, pct = :rce)
     cnt = length(pctstr) + 1
     d = Matrix{Any}(undef,nrow*cnt,ncol)
     for i in 1:nrow
+        r = i + (i - 1)*cnt
         for j in 1:ncol
 
             # counts
