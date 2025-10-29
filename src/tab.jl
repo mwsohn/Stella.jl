@@ -152,7 +152,7 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, pct = :rce)
     colnames = vcat(names(na)[2], "Total")[cz]
 
     # row and column percentages
-    combined = Any[counts]
+    combined = counts
     cnt = 1
     if occursin("r", string(pct))
         combined = hcat(combined, 100 .* counts ./ counts[:,end])
