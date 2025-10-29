@@ -153,22 +153,24 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, pct = :rce)
 
     # row and column percentages
     combined = Matrix{Any}(counts)
-    cnt = 1
-    if occursin("r", string(pct))
+    pctstr = string(pct)
+    cnt = length(pctstr) + 1
+    if occursin("r", pctstr)
         combined = hcat(combined, 100 .* counts ./ counts[:,end])
-        cnt += 1
     end
-    if occursin("c", string(pct))
+    if occursin("c", pctstr)
         combined = hcat(combined, 100 .* counts ./ counts[end,:])
-        cnt += 1   
     end
-    if occursin("e", string(pct))
+    if occursin("e", pctstr)
         combined = hcat(combined, 100 .* counts ./ counts[end, end])
-        cnt += 1
     end
 
     # interleave them 
-    d = reshape(combined'[:],(nrow*cnt,ncol))'
+    v = combined'[:]
+    println(v)
+    d = reshape(v,(ncol,nrow*cnt))'
+    # d = reshape(combined'[:],(ncol,nrow*cnt))'
+    println(size(d))
     println(d)
 
     # add blank cells
