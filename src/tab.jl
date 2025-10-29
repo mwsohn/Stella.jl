@@ -277,7 +277,7 @@ function _tab2summarize(indf, var1, var2, sumvar; pct = :rce, maxrows=-1, maxcol
         header=colnames,
         crop=:none,
         formatters = [ (v,i,_) -> mod(i,cnt) == 1 ? string(v) : @sprintf("%.3f",v) ],
-        # formatters = [ft__printf("%.3f", [Float64])],
+        formatters=(v, i, _) -> i % cnt == 1 ? @sprintf("%.0f", v) : @sprintf("%.3f", v),
         max_num_of_rows=maxrows,
         max_num_of_columns=maxcols,
         hlines=vcat([0, 1], [x * 3 + 1 for x in 1:(nrows + 1)]),
