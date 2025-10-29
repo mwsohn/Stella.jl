@@ -152,21 +152,42 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, pct = :rce)
     colnames = vcat(names(na)[2], "Total")[cz]
 
     # row and column percentages
-    combined = Matrix{Any}(counts)
+    # combined = Matrix{Any}(counts)
+    # pctstr = string(pct)
+    # cnt = length(pctstr) + 1
+    # if occursin("r", pctstr)
+    #     combined = hcat(combined, 100 .* counts ./ counts[:,ncol])
+    # end
+    # if occursin("c", pctstr)
+    #     combined = hcat(combined, 100 .* counts ./ counts[nrow,:])
+    # end
+    # if occursin("e", pctstr)
+    #     combined = hcat(combined, 100 .* counts ./ counts[nrow, ncol])
+    # end
+
+    # # interleave them 
+    # d = reshape(combined'[:], (ncol,nrow*cnt))'
     pctstr = string(pct)
     cnt = length(pctstr) + 1
-    if occursin("r", pctstr)
-        combined = hcat(combined, 100 .* counts ./ counts[:,ncol])
-    end
-    if occursin("c", pctstr)
-        combined = hcat(combined, 100 .* counts ./ counts[nrow,:])
-    end
-    if occursin("e", pctstr)
-        combined = hcat(combined, 100 .* counts ./ counts[nrow, ncol])
-    end
+    d = Matrix{Any}(undef,nrow*cnt,ncol)
+    for i in 1:nrow
+        for j in 1:ncol
 
-    # interleave them 
-    d = reshape(combined'[:], (ncol,nrow*cnt))'
+            # counts
+            d[i,j] = counts[i,j]
+
+            # percentages
+            for (k,v) in pctstr
+                if v == 'r' # row percents
+                    d[i+k,j] = 100 * counts[i,j] / counts[i,ncol]
+                elseif v == 'c' # column percents
+                    d[i+k,j] = 100 * counts[i,j] / counts[nrow,j]
+                elseif v == 'e' # cell percents
+                    d[i+k,j] = 100 * counts[i,j] / counts[nrow,ncol]
+                end
+            end
+        end
+    end
 
     # add blank cells
     rownames2 = vcat([ vcat(x, fill(" ", cnt-1)) for x in rownames ]...)
