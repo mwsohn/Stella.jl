@@ -166,7 +166,8 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, pct = :rce)
     end
 
     # interleave them 
-    v = combined'[:]
+    println(combined)
+    v = combined[:]
     println(v)
     d = reshape(v,(ncol,nrow*cnt))'
     # d = reshape(combined'[:],(ncol,nrow*cnt))'
