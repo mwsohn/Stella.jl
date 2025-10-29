@@ -13,15 +13,15 @@ ordered by the frequency by specifying `sort = true` as an option.
 For a two-way table, summary values of a continuous variable can be requested by specifying the variable name
 as an option `summrize = :var`.
 """
-function tab(na::NamedArray; skipmissing=true)
+function tab(na::NamedArray; skipmissing=true, pct = :rce)
     
     len = length(na.dimnames)
     if len == 1
         _tab1(na; skipmissing=skipmissing)
     elseif len == 2
-        _tab2(na; skipmissing=skipmissing)
+        _tab2(na; skipmissing=skipmissing, pct = pct)
     elseif len == 3
-        _tab3(na; skipmissing=skipmissing)
+        _tab3(na; skipmissing=skipmissing, pct = pct)
     else
         error("Crosstabs for more than 3 variables are not currently supported.")
     end
@@ -39,7 +39,7 @@ end
 function tab(ivar::AbstractVector; skipmissing=true, sort=false)
     _tab1(freqtable(ivar, skipmissing=skipmissing); sort=sort)
 end
-function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows = -1, maxcols = 20, skipmissing=true, summarize = nothing)
+function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; pct = :rce, maxrows = -1, maxcols = 20, skipmissing=true, summarize = nothing)
     if summarize != nothing && isa(indf[:,summarize], CategoricalArray)
         throw(ArgumentError("$summarize cannot be a CategoricalArray."))
         return nothing
@@ -53,13 +53,13 @@ function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String}; maxrows
         return nothing
     end
     if summarize == nothing
-        return _tab2(freqtable(indf, var1, var2, skipmissing=skipmissing); maxrows=maxrows, maxcols=maxcols)
+        return _tab2(freqtable(indf, var1, var2, skipmissing=skipmissing); pct = pct, maxrows=maxrows, maxcols=maxcols)
     end
 
     _tab2summarize(indf, var1, var2, summarize; maxrows=-1, maxcols=20)
 end
 function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String},var3::Union{Symbol,String};
-    maxrows=-1, maxcols=20, skipmissing=true, summarize=nothing)
+    pct = :rce, maxrows=-1, maxcols=20, skipmissing=true, summarize=nothing)
     for v in (var1,var2,var3)
         if in(string(v), names(indf)) == false
             println("$v is not found in the input DataFrame.")
@@ -76,7 +76,7 @@ function tab(indf,var1::Union{Symbol,String},var2::Union{Symbol,String},var3::Un
         for i in 1:n3
             println("\n\n", na.dimnames[3], " = ", vals[i], "\n")
 
-            _tab2(na[:, :, i]; maxrows=maxrows, maxcols=maxcols)
+            _tab2(na[:, :, i]; pct = pct, maxrows=maxrows, maxcols=maxcols)
         end
     else
         n3 = sort(unique(indf[!,var3]))
@@ -151,22 +151,7 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, pct = :rce)
     # colunm names
     colnames = vcat(names(na)[2], "Total")[cz]
 
-    # row and column percentages
-    # combined = Matrix{Any}(counts)
-    # pctstr = string(pct)
-    # cnt = length(pctstr) + 1
-    # if occursin("r", pctstr)
-    #     combined = hcat(combined, 100 .* counts ./ counts[:,ncol])
-    # end
-    # if occursin("c", pctstr)
-    #     combined = hcat(combined, 100 .* counts ./ counts[nrow,:])
-    # end
-    # if occursin("e", pctstr)
-    #     combined = hcat(combined, 100 .* counts ./ counts[nrow, ncol])
-    # end
-
-    # # interleave them 
-    # d = reshape(combined'[:], (ncol,nrow*cnt))'
+    # compute percentages
     pctstr = string(pct)
     cnt = length(pctstr) + 1
     d = Matrix{Any}(undef,nrow*cnt,ncol)
