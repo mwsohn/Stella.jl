@@ -166,15 +166,11 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, pct = :rce)
     end
 
     # interleave them 
-    v = combined'[:]
-    println(v)
-    d = reshape(v,(ncol,nrow*cnt))'
-    # d = reshape(combined'[:],(ncol,nrow*cnt))'
-    println(size(d))
-    println(d)
+    d = reshape(combined'[:], (ncol,nrow*cnt))'
 
     # add blank cells
     rownames2 = vcat([ vcat(x, fill(" ", cnt)) for x in rownames ]...)
+    println(size(rownames2))
 
     pretty_table(d,
         row_labels = rownames2,
