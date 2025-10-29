@@ -168,7 +168,7 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, pct = :rce)
     end
 
     # interleave them 
-    d = reshape(combined'[:],(ncol,nrow*cnt))'
+    d = reshape(combined'[:],(ncol,nrow*cnt))
     println(d)
 
     # add blank cells
