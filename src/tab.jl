@@ -169,6 +169,7 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, pct = :rce)
 
     # interleave them 
     d = reshape(combined'[:],(ncol,nrow*cnt))'
+    println(d)
 
     # add blank cells
     rownames2 = vcat([ vcat(x, fill(" ", cnt)) for x in rownames ]...)
