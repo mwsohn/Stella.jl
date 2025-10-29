@@ -175,16 +175,16 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, pct = :rce)
         for j in 1:ncol
 
             # counts
-            d[i,j] = counts[i,j]
+            d[r,j] = counts[i,j]
 
             # percentages
             for (k,v) in pctstr
                 if v == 'r' # row percents
-                    d[i+k,j] = 100 * counts[i,j] / counts[i,ncol]
+                    d[r+k,j] = 100 * counts[i,j] / counts[i,ncol]
                 elseif v == 'c' # column percents
-                    d[i+k,j] = 100 * counts[i,j] / counts[nrow,j]
+                    d[r+k,j] = 100 * counts[i,j] / counts[nrow,j]
                 elseif v == 'e' # cell percents
-                    d[i+k,j] = 100 * counts[i,j] / counts[nrow,ncol]
+                    d[r+k,j] = 100 * counts[i,j] / counts[nrow,ncol]
                 end
             end
         end
