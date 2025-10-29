@@ -169,9 +169,8 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, pct = :rce)
     d = reshape(combined'[:], (ncol,nrow*cnt))'
 
     # add blank cells
-    rownames2 = vcat([ vcat(x, fill(" ", cnt)) for x in rownames ]...)
-    println(size(rownames2))
-
+    rownames2 = vcat([ vcat(x, fill(" ", cnt-1)) for x in rownames ]...)
+    
     pretty_table(d,
         row_labels = rownames2,
         row_label_column_title=string(na.dimnames[1], " / ", na.dimnames[2]),
