@@ -156,13 +156,13 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, pct = :rce)
     pctstr = string(pct)
     cnt = length(pctstr) + 1
     if occursin("r", pctstr)
-        combined = hcat(combined, 100 .* counts ./ counts[:,end])
+        combined = hcat(combined, 100 .* counts ./ counts[:,ncol])
     end
     if occursin("c", pctstr)
-        combined = hcat(combined, 100 .* counts ./ counts[end,:])
+        combined = hcat(combined, 100 .* counts ./ counts[nrow,:])
     end
     if occursin("e", pctstr)
-        combined = hcat(combined, 100 .* counts ./ counts[end, end])
+        combined = hcat(combined, 100 .* counts ./ counts[nrow, ncol])
     end
 
     # interleave them 
