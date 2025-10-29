@@ -139,20 +139,22 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, pct = :rce)
     counts = vcat(counts,sum(counts,dims=1)) # column sum
     counts = hcat(counts,sum(counts,dims=2)) # row sum
 
-    # margin totals
+    # drop rows or columns whose margin totals == 0
     rz = findall(x -> x != 0, counts[:, end]) # find all columns with non-zero totals
     cz = findall(x -> x != 0, counts[end, :]) # find all rows with non-zero totals
     counts = counts[rz,cz]
     (nrow, ncol) = size(counts)
 
-    # value labels and "Total"
+    # row and column labels and "Total"
     rownames = vcat(names(na)[1], "Total")[rz]
-
-    # colunm names
     colnames = vcat(names(na)[2], "Total")[cz]
 
     # compute percentages
-    pctstr = string(pct)
+    if pct == nothing
+        pctstr = ""
+    else
+        pctstr = string(pct)
+    end
     cnt = length(pctstr) + 1
     d = Matrix{Any}(undef,nrow*cnt,ncol)
     for i in 1:nrow
@@ -282,7 +284,7 @@ function _tab2summarize(indf, var1, var2, sumvar; pct = :rce, maxrows=-1, maxcol
         vlines=[1])
 end
 
-function interleave(df)
+function interleave(df::AbstractDataFrame)
     var2 = propertynames(df)[2]
     rows = sort(unique(df[!, 1]))
     cols = sort(unique(df[!, 2]))
