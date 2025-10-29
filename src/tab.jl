@@ -178,7 +178,7 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, pct = :rce)
             d[r,j] = counts[i,j]
 
             # percentages
-            for (k,v) in pctstr
+            for (k,v) in enumerate(pctstr)
                 if v == 'r' # row percents
                     d[r+k,j] = 100 * counts[i,j] / counts[i,ncol]
                 elseif v == 'c' # column percents
