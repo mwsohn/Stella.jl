@@ -272,14 +272,14 @@ function _tab2summarize(indf, var1, var2, sumvar; pct = :rce, maxrows=-1, maxcol
 
     # output
     pretty_table(e,
-        # row_labels=rownames2,
-        # row_label_column_title=string(var1, " / ", var2),
-        # header=colnames,
-        # crop=:none,
-        # max_num_of_rows=maxrows,
-        # max_num_of_columns=maxcols,
-        # formatters=(v, i, _) -> i % cnt == 1 ? @sprintf("%.0f", v) : @sprintf("%.3f", v),
-        # hlines=vcat([0, 1], [x * 3 + 1 for x in 1:(nrows+1)]),
+        row_labels=rownames2,
+        row_label_column_title=string(var1, " / ", var2),
+        header=colnames,
+        crop=:none,
+        max_num_of_rows=maxrows,
+        max_num_of_columns=maxcols,
+        formatters=(v, i, _) -> i % cnt == 1 ? @sprintf("%.0f", v) : @sprintf("%.3f", v),
+        hlines=vcat([0, 1], [x * 3 + 1 for x in 1:(nrows+1)]),
         vlines=[1])
 end
 
