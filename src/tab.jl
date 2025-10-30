@@ -239,14 +239,14 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
     # margin stats
     var1df = combine(groupby(indf2, var1), sumvar .=> [mean, std] .=> [:mean, :sd], nrow => :n)
     nrows = nrow(var1df)
-    println(var1df)
 
     var2df = combine(groupby(indf2, var2), sumvar .=> [mean, std] .=> [:mean, :sd], nrow => :n)
     ncols = nrow(var2df)
 
     # cell stats
     outdf = combine(groupby(indf2, [var1, var2]), sumvar .=> [mean, std] .=> [:mean, :sd], nrow => :n)
-
+    println(outdf)
+    
     # value labels and "Total"
     rownames = vcat(string.(var1df[!,var1]), "Total")
     rownames = vcat([[x, " ", " "] for x in rownames]...)
