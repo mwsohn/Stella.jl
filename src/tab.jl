@@ -285,7 +285,7 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
         row_label_column_title=string(var1, " / ", var2),
         header=colnames,
         crop=:none,
-        formatters=(v, i, _) -> ismissing(v) ? print(".") : (i % 3 in (1, 2) ? @sprintf("%.3f", v) : @sprintf("%.0f", v)),
+        formatters=(v, i, _) -> v == nothing ? print(".") : (i % 3 in (1, 2) ? @sprintf("%.3f", v) : @sprintf("%.0f", v)),
         max_num_of_rows=maxrows,
         max_num_of_columns=maxcols,
         hlines=vcat([0, 1], [x * 3 + 1 for x in 1:(nrows+1)]),
