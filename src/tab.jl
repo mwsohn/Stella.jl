@@ -254,21 +254,13 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
     # colunm names
     colnames = vcat(string.(var2df[!,var2]), "Total")
 
-    # combine stats
-    e = interleave(outdf)
-
     # row margins
-    e = hcat(e, Any[var1df.mean var1df.sd var1df.n]'[:])
+    e = hcat(interleave(outdf), vec(Matrix{Any}(var1df[:, 2:end])'))
 
-    # column margins
-    cm = Any[var2df.mean var2df.sd var2df.n]'[:]
-
-    # grand total
-    push!(cm, mean(indf2[!,sumvar]))
-    push!(cm, std(indf2[!, sumvar]))
-    push!(cm, size(indf2[!, sumvar],1))
-
-    cm = reshape(cm,(3,ncols + 1))
+    # column margins, grand total
+    cm = vec(Matrix{Any}(var1df[:, 2:end])')
+    gt = Matrix{Any}(combine(indf2, sumvar .=> [mean, std] .=> [:mean, :sd]), nrow => :n)'
+    cm = reshape(vcat(cm,gt),(3,ncols + 1))
 
     # combine cell summary stats with column margin stats
     e = vcat(e,cm)
@@ -279,7 +271,7 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
         row_label_column_title=string(var1, " / ", var2),
         header=colnames,
         crop=:none,
-        formatters=(v, i, _) -> i % 3 in (1, 2) ? @sprintf("%.3f", v) : @sprintf("%.0f", v),
+        formatters=(v, i, _) -> ismissing(v) ? printf(".") : (i % 3 in (1, 2) ? @sprintf("%.3f", v) : @sprintf("%.0f", v)),
         max_num_of_rows=maxrows,
         max_num_of_columns=maxcols,
         hlines=vcat([0, 1], [x * 3 + 1 for x in 1:(nrows+1)]),
