@@ -236,37 +236,51 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
     end
     indf2 = sort(indf[ba,[var1,var2,sumvar]],[var1,var2])
 
-    # margin stats
-    var1df = combine(groupby(indf2, var1), sumvar .=> [mean, std] .=> [:mean, :sd], nrow => :n)
-    nrows = nrow(var1df)
+    na = freqtable(df2, var1, var2)
+    (nrows, ncols) = size(na)
+    rcvals = names(na)
 
-    var2df = combine(groupby(indf2, var2), sumvar .=> [mean, std] .=> [:mean, :sd], nrow => :n)
-    ncols = nrow(var2df)
+    # allocate memory for output matrix
+    omat = Matrix{Union{Missing,Any}}(undef, (nrows + 1) * 3, ncols + 1)
 
-    # cell stats
-    outdf = combine(groupby(indf2, [var1, var2]), sumvar .=> [mean, std] .=> [:mean, :sd], nrow => :n)
-    println(outdf)
-    
+    # all cells, row and column margins
+    e = combine(groupby(df2, [var1, var2]), sumvar .=> [mean, std] .=> [:mean, :sd])
+    rtotal = combine(groupby(df2, var1), sumvar .=> [mean, std] .=> [:mean, :sd])
+    ctotal = combine(groupby(df2, var2), sumvar .=> [mean, std] .=> [:mean, :sd])
+
+    for i = 1:nrows
+        r = i + (i - 1) * 2
+        for j = 1:ncols
+
+            dfr = findfirst(x -> x[var1] == rcvals[1][i] && x[var2] == rcvals[2][j], eachrow(e))
+            if dfr == nothing # no data for this group
+                omat[r:r+2, j] .= [missing, missing, 0]
+                continue
+            end
+
+            # mean, sd
+            omat[r:r+1, j] .= collect(e[dfr, [:mean, :sd]])
+
+            # n
+            omat[r+2, j] = na.array[i, j]
+        end
+
+        # row and column and grand totals
+        nn = nrows * 3
+        omat[1:nn, ncols+1] .= vec(hcat(Matrix{Any}(rtotal[:, 2:end]), sum(na, dims=2))')
+        omat[nn+1:nn+3, 1:ncols] .= vcat(Matrix{Any}(ctotal[:, 2:end])', sum(na, dims=1))
+        omat[nn+1:nn+3, ncols+1] .= [mean(df2[:, sumvar]), std(df2[:, sumvar]), sum(na)]
+    end
+
     # value labels and "Total"
-    rownames = vcat(string.(var1df[!,var1]), "Total")
+    rownames = vcat(string.(rcvals[1]), "Total")
     rownames = vcat([[x, " ", " "] for x in rownames]...)
 
     # colunm names
-    colnames = vcat(string.(var2df[!,var2]), "Total")
-
-    # row margins
-    e = hcat(interleave(outdf), vec(Matrix{Any}(var1df[:, 2:end])'))
-
-    # column margins, grand total
-    cm = vec(Matrix{Any}(var2df[:, 2:end])')
-    gt = Matrix{Any}(combine(indf2, sumvar .=> [mean, std] .=> [:mean, :sd]), nrow => :n)'
-    cm = reshape(vcat(cm,gt),(3,ncols + 1))
-
-    # combine cell summary stats with column margin stats
-    e = vcat(e,cm)
+    colnames = vcat(string.(rcvals[2]), "Total")
 
     # output
-    pretty_table(e,
+    pretty_table(omat,
         row_labels=rownames,
         row_label_column_title=string(var1, " / ", var2),
         header=colnames,
