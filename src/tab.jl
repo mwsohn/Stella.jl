@@ -227,24 +227,24 @@ function _tab1summarize(indf,var,sumvar; skipmissing = false)
         vlines=[1])
 end
 
-function _tab2summarize(indf, var1, var2, sumvar; pct = :rce, maxrows=-1, maxcols=20, skipmissing=nothing)
+function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmissing=nothing)
     
     if skipmissing == true
         ba = completecases(indf[!,[var1,var2,sumvar]])
     else
         ba = completecases(indf[!,[sumvar]])
     end
-    indf2 = indf[ba,[var1,var2,sumvar]]
+    indf2 = sort(indf[ba,[var1,var2,sumvar]],[var1,var2])
 
     # margin stats
-    var1df = combine(groupby(indf2, var1, sort = true), sumvar => mean => :mean, sumvar => std => :sd, nrow => :n)
+    var1df = combine(groupby(indf2, var1), sumvar .=> [mean, std] .=> :sd, nrow => :n)
     nrows = nrow(var1df)
 
-    var2df = combine(groupby(indf2, var2, sort=true), sumvar => mean => :mean, sumvar => std => :sd, nrow => :n)
+    var2df = combine(groupby(indf2, var2), sumvar .=> [mean, std] .=> :sd, nrow => :n)
     ncols = nrow(var2df)
 
     # cell stats
-    outdf = combine(groupby(indf2, [var1, var2], sort=true), sumvar => mean => :mean, sumvar => std => :sd, nrow => :n)
+    outdf = combine(groupby(indf2, [var1, var2]), sumvar .=> [mean, std] .=> :sd, nrow => :n)
 
     # value labels and "Total"
     rownames = vcat(string.(var1df[!,var1]), "Total")
@@ -278,6 +278,7 @@ function _tab2summarize(indf, var1, var2, sumvar; pct = :rce, maxrows=-1, maxcol
         row_label_column_title=string(var1, " / ", var2),
         header=colnames,
         crop=:none,
+        formatters=(v, i, _) -> i % 3 in (1, 2) ? @sprintf("%.3f", v) : @sprintf("%.0f", v),
         max_num_of_rows=maxrows,
         max_num_of_columns=maxcols,
         hlines=vcat([0, 1], [x * 3 + 1 for x in 1:(nrows+1)]),
@@ -292,7 +293,7 @@ function interleave(df::AbstractDataFrame)
     e = Matrix{Any}(undef, length(rows) * 3, length(cols))
     for (i, v) in enumerate(cols)
         df2 = filter(x -> x[var2] == v, df)
-        e[:, i] = vec(transpose(Matrix{Any}(df2[!, 3:5])))
+        e[!, i] = vec(transpose(Matrix{Any}(df2[!, 3:5])))
     end
     return e
 end
