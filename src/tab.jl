@@ -245,11 +245,10 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
 
     # cell stats
     outdf = combine(groupby(indf2, [var1, var2]), sumvar .=> [mean, std] .=> [:mean, :sd], nrow => :n)
-    outdf = coalesce(outdf,NaN)
 
     # value labels and "Total"
     rownames = vcat(string.(var1df[!,var1]), "Total")
-    rownames2 = vcat([[x, " ", " "] for x in rownames]...)
+    rownames = vcat([[x, " ", " "] for x in rownames]...)
 
     # colunm names
     colnames = vcat(string.(var2df[!,var2]), "Total")
@@ -264,10 +263,11 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
 
     # combine cell summary stats with column margin stats
     e = vcat(e,cm)
+    println(e, "\n",size(e))
 
     # output
     pretty_table(e,
-        row_labels=rownames2,
+        row_labels=rownames,
         row_label_column_title=string(var1, " / ", var2),
         header=colnames,
         crop=:none,
