@@ -293,7 +293,7 @@ function interleave(df::AbstractDataFrame)
     e = Matrix{Any}(undef, length(rows) * 3, length(cols))
     for (i, v) in enumerate(cols)
         df2 = filter(x -> x[var2] == v, df)
-        e[!, i] = vec(transpose(Matrix{Any}(df2[!, 3:5])))
+        e[:, i] = vec(transpose(Matrix{Any}(df2[!, 3:5])))
     end
     return e
 end
