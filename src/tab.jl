@@ -126,7 +126,7 @@ function _tab1(na::NamedArray; sort = false)
 
     PrettyTables.pretty_table(ar, 
         header=[na.dimnames[1],"Counts"," Percent","Cum Pct"],
-        formatters = ft_round(3,[3,4]),
+        formatters = ft_printf("%.3f",[3,4]),
         crop = :none,
         hlines=[0,1,length(rownames),length(rownames)+1],
         vlines=[1])
