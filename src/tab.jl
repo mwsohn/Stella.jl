@@ -239,6 +239,7 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
     # margin stats
     var1df = combine(groupby(indf2, var1), sumvar .=> [mean, std] .=> [:mean, :sd], nrow => :n)
     nrows = nrow(var1df)
+    println(var1df)
 
     var2df = combine(groupby(indf2, var2), sumvar .=> [mean, std] .=> [:mean, :sd], nrow => :n)
     ncols = nrow(var2df)
@@ -255,7 +256,6 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
 
     # row margins
     e = hcat(interleave(outdf), vec(Matrix{Any}(var1df[:, 2:end])'))
-    println(size(e))
 
     # column margins, grand total
     cm = vec(Matrix{Any}(var2df[:, 2:end])')
