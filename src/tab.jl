@@ -234,7 +234,7 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
     else
         ba = completecases(indf[!,[sumvar]])
     end
-    indf2 = sort(indf[ba,[var1,var2,sumvar]],[var1,var2])
+    df2 = sort(indf[ba,[var1,var2,sumvar]],[var1,var2])
 
     na = freqtable(df2, var1, var2)
     (nrows, ncols) = size(na)
