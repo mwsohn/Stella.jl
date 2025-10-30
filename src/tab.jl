@@ -245,6 +245,7 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
 
     # cell stats
     outdf = combine(groupby(indf2, [var1, var2]), sumvar .=> [mean, std] .=> [:mean, :sd], nrow => :n)
+    outdf = coalesce(outdf,NaN)
 
     # value labels and "Total"
     rownames = vcat(string.(var1df[!,var1]), "Total")
