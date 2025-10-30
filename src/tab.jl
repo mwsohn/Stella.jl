@@ -220,6 +220,7 @@ function _tab1summarize(indf,var,sumvar; skipmissing = false)
     pretty_table(odf,
         row_labels=rownames,
         row_label_column_title=string(var),
+        formatters=ft_printf("%.3f", [3, 4]),
         header=["N","Mean","StDev"],
         crop=:none,
         hlines=vcat([0, 1], nrow(odf), nrow(odf) + 1),
