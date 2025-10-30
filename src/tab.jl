@@ -185,7 +185,8 @@ function _tab2(na::NamedArray; maxrows = -1, maxcols = 20, pct = :rce)
         row_label_column_title=string(na.dimnames[1], " / ", na.dimnames[2]),
         header=colnames,
         crop = :none,
-        max_num_of_rows = maxrows,
+        formatters=(v, i, _) -> i % cnt == 1 ? @sprintf("%.0f", v) : @sprintf("%.3f", v),
+        max_num_of_rows=maxrows,
         max_num_of_columns = maxcols,
         hlines=vcat([0, 1], [x * cnt + 1 for x in 1:(nrow+1)]),
         vlines = [1])
@@ -278,7 +279,6 @@ function _tab2summarize(indf, var1, var2, sumvar; pct = :rce, maxrows=-1, maxcol
         crop=:none,
         max_num_of_rows=maxrows,
         max_num_of_columns=maxcols,
-        formatters=(v, i, _) -> i % cnt == 1 ? @sprintf("%.0f", v) : @sprintf("%.3f", v),
         hlines=vcat([0, 1], [x * 3 + 1 for x in 1:(nrows+1)]),
         vlines=[1])
 end
