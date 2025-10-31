@@ -252,7 +252,8 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
         r = i + (i - 1) * 2
         for j = 1:ncols
 
-            dfr = findfirst(x -> x[var1] == rcvals[1][i] && x[var2] == rcvals[2][j], eachrow(e))
+            dfr = findfirst(x -> (ismissing(x[var1]) || x[var1] == rcvals[1][i]) && 
+                (ismissing(x[var2]) || x[var2] == rcvals[2][j], eachrow(e)))
             if dfr == nothing # no data for this group
                 omat[r:r+2, j] .= [missing, missing, 0]
                 continue
