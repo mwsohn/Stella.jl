@@ -251,15 +251,12 @@ function _tab2summarize(indf, var1, var2, sumvar; maxrows=-1, maxcols=20, skipmi
     function eqtest(v1,v2)
         if ismissing(v1) && ismissing(v2)
             return true
-        elseif ismissing(v1) && !ismissing(v2)
+        elseif ismissing(v1) || ismissing(v2)
             retrun false
-        elseif !ismissing(v1) && ismissing(v2)
-            return false
         elseif v1 == v2
             return true
-        else
-            return false
-        end        
+        end
+        return false
     end
 
     for i = 1:nrows
