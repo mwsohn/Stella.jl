@@ -9,14 +9,13 @@ module Stella
 using DataFrames, DataAPI, Distributions, StatsBase, StatsAPI, GLM, Survival, 
         NamedArrays, HypothesisTests, DataStructures, FreqTables, 
         LinearAlgebra, Printf, Glob, Dates, Arrow, CategoricalArrays, 
-        PooledArrays, PrettyTables, JLD2, Reexport, Plots,
-        LogisticROC
+        PooledArrays, PrettyTables, JLD2, Reexport, Plots
 
-@reexport import StataFiles
-@reexport import LogisticROC
-@reexport import TableMetadataTools
-@reexport import AnalysisOfVariance
-@reexport import FreqTools
+@reexport using StataFiles
+@reexport using LogisticROC
+@reexport using TableMetadataTools
+@reexport using AnalysisOfVariance
+@reexport using FreqTools
 
 
 ##############################################################################
