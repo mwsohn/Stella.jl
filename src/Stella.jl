@@ -35,8 +35,6 @@ export  dfcompress, # compress DF
         filter2,     # returns a boolean vector for use in selecting rows from a DataFrame
         dfsample,    # select a sample from a df
         univariate, univ, # univariate statistics
-        tab,         # n-way freq table based on FreqTables, NAs are allowed now
-        tabi,        # immediate tab for 2x2 array
         tabstat,     # unviariate statistics by subgroups
         xtile,       # create variable that classify a column into percentiles
         strval,      # convert floats or ints to strings
@@ -62,7 +60,6 @@ export  dfcompress, # compress DF
         ds,         # filenames according to type, length, or regex
         # getmaxwidth, # maximum length of a string variable
         eltype2,
-        # rowpct, colpct, cellpct, chi2, # freqtable functions
         categorical!, uncategorical!, uncategorical, # functions to create CategoricalArrays or reverse them to their original values
         # identify_condition, identify_condition2, # used to identify conditions in claims files
         # stats for variables on the same row
@@ -90,7 +87,6 @@ abstract type Formula end
 include("stella_tools.jl")
 include("df_tools.jl")
 include("labels.jl")
-# include("tab.jl")
 include("t-test.jl")
 include("other.jl")
 
