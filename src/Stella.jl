@@ -10,12 +10,14 @@ using DataFrames, DataAPI, Distributions, StatsBase, StatsAPI, GLM, Survival,
         NamedArrays, HypothesisTests, DataStructures, FreqTables, 
         LinearAlgebra, Printf, Glob, Dates, Arrow, CategoricalArrays, 
         PooledArrays, PrettyTables, JLD2, Reexport, Plots,
-        LogisticROC, TableMetadataTools, SweepOperator, StataFiles, AnalysisOfVariance
+        LogisticROC, TableMetadataTools, StataFiles, AnalysisOfVariance,
+        FreqTools
 
 @reexport import StataFiles
 @reexport import LogisticROC
 @reexport import TableMetadataTools
 @reexport import AnalysisOfVariance
+@reexport import FreqTools
 
 
 ##############################################################################
@@ -60,7 +62,7 @@ export  dfcompress, # compress DF
         ds,         # filenames according to type, length, or regex
         # getmaxwidth, # maximum length of a string variable
         eltype2,
-        rowpct, colpct, cellpct, chi2, # freqtable functions
+        # rowpct, colpct, cellpct, chi2, # freqtable functions
         categorical!, uncategorical!, uncategorical, # functions to create CategoricalArrays or reverse them to their original values
         # identify_condition, identify_condition2, # used to identify conditions in claims files
         # stats for variables on the same row
@@ -88,7 +90,7 @@ abstract type Formula end
 include("stella_tools.jl")
 include("df_tools.jl")
 include("labels.jl")
-include("tab.jl")
+# include("tab.jl")
 include("t-test.jl")
 include("other.jl")
 
