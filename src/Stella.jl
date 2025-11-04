@@ -10,8 +10,7 @@ using DataFrames, DataAPI, Distributions, StatsBase, StatsAPI, GLM, Survival,
         NamedArrays, HypothesisTests, DataStructures, FreqTables, 
         LinearAlgebra, Printf, Glob, Dates, Arrow, CategoricalArrays, 
         PooledArrays, PrettyTables, JLD2, Reexport, Plots,
-        LogisticROC, TableMetadataTools, StataFiles, AnalysisOfVariance,
-        FreqTools
+        LogisticROC
 
 @reexport import StataFiles
 @reexport import LogisticROC
@@ -38,7 +37,7 @@ export  dfcompress, # compress DF
         tabstat,     # unviariate statistics by subgroups
         xtile,       # create variable that classify a column into percentiles
         strval,      # convert floats or ints to strings
-        chi2test, chi2,    # compute chisquare statistics from na.array
+        chi2test,    # compute chisquare statistics from na.array
         # prepend_spaces, append_spaces, # create fixed length strings
         smallest, largest, # list smallest and largest values in a DA
         pickone,     # create a binary variable that identifies one record in a subgroup
