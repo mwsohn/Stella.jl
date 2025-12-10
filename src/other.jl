@@ -104,6 +104,38 @@ function kaplanmeier(df, event, by=nothing)
     return plt
 end
 
+function nelsonaalen(df, event, by=nothing)
+
+    plt = nothing
+    if by == nothing
+        km = fit(NelsonAalen, df[:, event])
+        plot(vcat(0, km.events.time), vcat(1.0, km.survival), linetype=:steppost, ylims=(0, 1))
+    else
+        kvec = []
+
+        for (i, v) in enumerate(sort(unique(skipmissing(df[:, by]))))
+            df2 = filter(x -> !ismissing(x[by]) && x[by] == v, df)
+            push!(kvec, fit(NelsonAalen, df2[!, event]))
+            if i == 1
+                plt = Plots.plot(vcat(0, kvec[1].events.time),
+                    vcat(1.0, kvec[1].survival),
+                    linetype=:steppost,
+                    ylims=(0, 1),
+                    xlabel="Analysis time",
+                    ylabel="Cumulative hazard rate",
+                    label=string(v))
+            else
+                Plots.plot!(plt, vcat(0, kvec[i].events.time),
+                    vcat(1.0, kvec[i].survival),
+                    linetype=:steppost,
+                    ylims=(0, 1),
+                    label=string(v))
+
+            end
+        end
+    end
+    return plt
+end
 
 # struct LogRank
 #     observed::Vector{Int64}()
