@@ -111,7 +111,7 @@ function nelsonaalen(df, event, by=nothing)
         na = fit(NelsonAalen, df[:, event])
         plot(vcat(0, na.events.time), vcat(1.0, na.chaz), linetype=:steppost, ylims=(0, 1))
     else
-        kvec = []
+        navec = []
 
         for (i, v) in enumerate(sort(unique(skipmissing(df[:, by]))))
             df2 = filter(x -> !ismissing(x[by]) && x[by] == v, df)
