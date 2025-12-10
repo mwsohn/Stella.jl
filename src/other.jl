@@ -118,7 +118,7 @@ function nelsonaalen(df, event, by=nothing)
             push!(navec, fit(NelsonAalen, df2[!, event]))
             if i == 1
                 plt = Plots.plot(vcat(0, navec[1].events.time),
-                    vcat(1.0, kvec[1].chaz),
+                    vcat(1.0, navec[1].chaz),
                     linetype=:steppost,
                     ylims=(0, 1),
                     xlabel="Analysis time",
@@ -126,7 +126,7 @@ function nelsonaalen(df, event, by=nothing)
                     label=string(v))
             else
                 Plots.plot!(plt, vcat(0, navec[i].events.time),
-                    vcat(1.0, kvec[i].chaz),
+                    vcat(1.0, navec[i].chaz),
                     linetype=:steppost,
                     ylims=(0, 1),
                     label=string(v))
