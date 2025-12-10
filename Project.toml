@@ -54,7 +54,7 @@ AnalysisOfVariance = "^0.1"
 StataFiles = "^0.1"
 Survival = "^0.3"
 DataStructures = "^0.19"
-ReadStat = "^0.34"
+ReadStat = "^0.34,1.0"
 
 
 [extras]
