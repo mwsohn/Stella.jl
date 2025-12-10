@@ -1,6 +1,6 @@
 name = "Stella"
 uuid = "b1cd83c4-5688-5aa2-8927-7445e86cd0e2"
-version = ""
+version = "v0.2.0"
 
 [deps]
 # Arrow ="69666777-d1a9-59fb-9406-91d4454c9d45"
