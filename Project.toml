@@ -36,26 +36,7 @@ StataFiles = "4250fffb-2d87-4dab-9cf8-12ba0ef8cdb9"
 AnalysisOfVariance = "01c9c671-d471-43d2-8b89-3af15e6b824d" 
 
 [compat]
-julia = "^1.6"
-DataFrames = "^1.7"
-DataAPI = "^1"
-FreqTables = "^0.1,1.0"
-FreqTools = "^0.1"
-NamedArrays = "^0.1,0.10"
-Printf = "^1.0"
-PrettyTables = "^0.1, 1, 2, 3"
-TableMetadataTools = "^0.1"
-Reexport = "^1.0"
-Statistics = "^1.0"
-StatsAPI = "^1.0"
-StatsBase = "^0.34"
-HypothesisTests = "^0.11"
-AnalysisOfVariance = "^0.1"
-StataFiles = "^0.1"
-Survival = "^0.3"
-DataStructures = "^0.19"
-ReadStat = "^0.34,1.0"
-Dates = "^1.0"
+
 
 
 [extras]
