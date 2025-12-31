@@ -63,7 +63,6 @@ JLD2 = "0"
 Reexport = "0,1"
 ROCAnalysis = "0"
 Plots = "0,1"
-LogisticROC = "0"
 
 [extras]
 
