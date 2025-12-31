@@ -11,7 +11,7 @@ using DataFrames, DataAPI, Distributions, StatsBase, StatsAPI, GLM, Survival,
         LinearAlgebra, Printf, Glob, Dates, CategoricalArrays, 
         PrettyTables, JLD2, Reexport, Plots
 
-@reexport using StataFiles
+# @reexport using StataFiles
 @reexport using LogisticROC
 @reexport using TableMetadataTools
 @reexport using AnalysisOfVariance
