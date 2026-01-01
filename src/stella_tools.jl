@@ -254,37 +254,6 @@ Is an alias of `size(x,1)`.
 """
 N(x) = size(x,1)
 
-#----------------------------------------------------------------------------
-# eform
-#----------------------------------------------------------------------------
-# function eform(glmout::StatsModels.RegressionModel)
-
-#     # family and link function
-#     if isa(glmout.model,GeneralizedLinearModel)
-#         distrib = glmout.model.rr.d
-#         linkfun = GLM.Link(glmout.model.rr)
-#     else
-#         error("GLM model is required as the argument")
-#     end
-
-# 	coeftable2 = coeftable(glmout)
-
-# 	# estimates
-# 	coeftable2.cols[1] = exp.(coeftable2.cols[1])
-
-# 	# standard errors
-# 	coeftable2.cols[2] = coeftable2.cols[1] .* coeftable2.cols[2]
-							
-# 	# 95% CI
-#     	coeftable2.cols[5] = exp.(coeftable2.cols[5])
-#     	coeftable2.cols[6] = exp.(coeftable2.cols[6])
-
-# 	# rename column1 to OR
-#     coeftable2.colnms[1] = coeflab(distrib,linkfun)
-
-# 	return coeftable2
-# end
-
 """
     eform(glmout::StatsModels.RegressionModel)
 
