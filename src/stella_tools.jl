@@ -117,31 +117,6 @@ function univ(df::AbstractDataFrame,s::Union{Symbol,String}; table=true)
     univ(df[!,s]; table=table)
 end
 
-
-function strval(val::AbstractFloat)
-  return @sprintf("%.2f",val)
-end
-function strval(val::AbstractFloat, decimals::Int)
-    if decimals == 1
-        return @sprintf("%.1f",val)
-    elseif decimals == 2
-        return @sprintf("%.2f",val)
-    elseif decimals == 3
-        return @sprintf("%.3f",val)
-    elseif decimals == 4
-        return @sprintf("%.4f",val)
-    elseif decimals == 5
-        return @sprintf("%.5f",val)
-    elseif decimals == 6
-        return @sprintf("%.6f",val)
-    else
-        return @sprintf("%f",val)
-    end
-end
-function strval(val::Integer)
-  return @sprintf("%.0d",val)
-end
-
 function getdictval(dt::Dict,val)
     return haskey(dt,val) ? dt[val] : val
 end
@@ -408,9 +383,9 @@ end
 Produces a pairwise (n x n) correlation matrix that contain correlation coefficients
 between all `n` columns. It also displays the number of observations used for computing
 each correlation coefficient and a p-value for testing H₀: r = 0. The number of digits
-after the decimal point can be specified by `decimals` option (default = 4).
+after the decimal point can be specified by `digits` option (default = 4).
 """
-function pwcorr(indf::DataFrame, args::Vector{Symbol}; decimals=4, html=false)
+function pwcorr(indf::DataFrame, args::Vector{Symbol}; digits=4, html=false)
 
     a = indf[!,args]
     colnames = names(a)
@@ -445,7 +420,7 @@ function pwcorr(indf::DataFrame, args::Vector{Symbol}; decimals=4, html=false)
     outmat = collect(reshape([r N pval]'[:], cols, cols*3)')
 
     # decimals
-    fmt = string("%.",decimals,"f")
+    fmt = string("%.",digits,"f")
 
     # row formatter
     nrow = size(outmat,1)
