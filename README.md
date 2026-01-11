@@ -41,7 +41,7 @@ Here's the list of functions. Documentation for individual functions can be acce
 - rowpctile - Returns the percentile value of non-missing values (default: `p = 0.5`)
 - rowtotal - Returns the sum of non-missing values
 
-### Sub functions that work on a subgroup vector in a grouped data. A variable is automatically created with "_total", "_mean", "_sd", etc, appended after the `statvar`.
+### SubDataFrame functions that work on a subgroup vector in a grouped data. A variable is automatically created with "_total", "_mean", "_sd", etc, appended after the variable to generate statistics for.
 
 - subfirst! - Returns the first non-missing value
 - sublast! - Returns the last non-missing value
