@@ -477,22 +477,23 @@ struct PWCOR
 end
 function format_matrix(c)
     fmt = Printf.Format("%.$(c.digits)f")
+    M = copy(c.M)
     for i = 1:size(c.M, 1)
         for j = 1:i
-            ismissing(c.M[i, j]) && continue
-            (r, p, n) = c.M[i, j]
+            ismissing(M[i, j]) && continue
+            (r, p, n) = M[i, j]
             if c.pvalue && c.nobs
-                c.M[i, j] = string(Printf.format(fmt, r), "\n", ismissing(p) ? "" : Printf.format(fmt, p), "\n", n, "\n")
+                M[i, j] = string(Printf.format(fmt, r), "\n", ismissing(p) ? "" : Printf.format(fmt, p), "\n", n, "\n")
             elseif c.pvalue
-                c.M[i, j] = string(Printf.format(fmt, r), "\n", ismissing(p) ? "" : Printf.format(fmt, p), "\n")
+                M[i, j] = string(Printf.format(fmt, r), "\n", ismissing(p) ? "" : Printf.format(fmt, p), "\n")
             elseif c.nobs
-                c.M[i, j] = string(Printf.format(fmt, r), "\n", n, "\n")
+                M[i, j] = string(Printf.format(fmt, r), "\n", n, "\n")
             else
-                c.M[i, j] = Printf.format(fmt, r)
+                M[i, j] = Printf.format(fmt, r)
             end
         end
     end
-    return c.M
+    return M
 end
 function Base.show(io::IO, c::PWCOR)
     pretty_table(io, format_matrix(c),
