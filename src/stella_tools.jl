@@ -478,7 +478,7 @@ end
 function format_matrix(c)
     fmt = Printf.Format("%.$(c.digits)f")
     M = copy(c.M)
-    for i = 1:size(c.M, 1)
+    for i = 1:size(M, 1)
         for j = 1:i
             ismissing(M[i, j]) && continue
             (r, p, n) = M[i, j]
