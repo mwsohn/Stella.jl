@@ -426,75 +426,79 @@ function interleave(args::AbstractMatrix...)
     dd
 end
 
+
+
 """
-    pwcorr(df::DataFrame, args::Symbol...; decimals = 4)
-    pwcorr(df::DataFrame, args::Vector{Symbol}; decimals = 4)
+    pwcorr(df::DataFrame, args::Symbol...; digits = 4, nobs = true, pvalue = true)
+    pwcorr(df::DataFrame, args::Vector{Symbol}; digits = 4, nobs = true, pvalue = true)
 
 Produces a pairwise (n x n) correlation matrix that contain correlation coefficients
 between all `n` columns. It also displays the number of observations used for computing
 each correlation coefficient and a p-value for testing H₀: r = 0. The number of digits
-after the decimal point can be specified by `digits` option (default = 4).
+after the decimal point can be specified by `digits` option (default = 4). You can output
+the number of observations used in the calculation, provide an option `nobs = true`. P-values
+for each correlation coefficients can be output with `pvalue = true`. If you want
+to have just the correlation coefficents, set `nobs = false` and `pvalue = false`.
 """
-function pwcorr(indf::DataFrame, args::Vector{Symbol}; digits=4, html=false)
+function pwcorr(indf::DataFrame, args::Vector{Symbol}; digits=4, nobs=false, pvalue=false)
 
-    a = indf[!,args]
+    a = indf[!, args]
     colnames = names(a)
     cols = length(colnames)
-    N = Array{Union{Missing,Int64}}(missing, cols, cols)
-    r = Array{Union{Missing,Float64}}(missing, cols, cols)
-    pval = Array{Union{Missing,Float64}}(missing, cols, cols)
+    M = Matrix{Union{Missing,Any}}(missing, cols, cols)
 
-    for j = 1:cols
-        var1 = colnames[j]
-        for i = j:cols
-            var2 = colnames[i]
-            if i != j
-                b = dropmissing(a[:,[var1, var2]]) # a[completecases(indf[!,[var1,var2]]), [var1, var2]]
-                if size(b,1) == 0
-                    error("No usable common observations in ", colnames[i], " and ", colnames[j])
-                end
-                ret = HypothesisTests.CorrelationTest(b[!,var1], b[!,var2])
-                n = N[i,j] = N[j,i] = ret.n
-                rr = r[i,j] = r[j,i] = ret.r
-                t = ret.t
-                pval[i,j] = pval[j,i] = 2*min(ccdf(TDist(n - 2),t),ccdf(TDist(n - 2),-t))
-
-            else
-                N[i,i] = length(collect(skipmissing(a[!,colnames[i]])))
-                r[i,i] = 1.0
+    for i = 1:cols
+        var1 = colnames[i]
+        for j = 1:i
+            if i == j
+                M[i, i] = tuple(1.0, missing, nrow(dropmissing(a[!, [colnames[j]]])))
+                continue
             end
+            var2 = colnames[j]
+            b = dropmissing(a[:, [var1, var2]])
+            if size(b, 1) == 0
+                error("No usable common observations in ", colnames[i], " and ", colnames[j])
+            end
+            ret = HypothesisTests.CorrelationTest(b[!, var1], b[!, var2])
+            pval = 2 * min(ccdf(TDist(ret.n - 2), ret.t), ccdf(TDist(ret.n - 2), -ret.t))
+            M[i, j] = tuple(ret.r, pval, ret.n)
         end
     end
 
-    # interleave the three arrays 
-    outmat = collect(reshape([r N pval]'[:], cols, cols*3)')
-
-    # decimals
-    fmt = string("%.",digits,"f")
-
-    # row formatter
-    nrow = size(outmat,1)
-    r_printf = (v,i,j) -> (mod(i,3) == 2 ? split(v,".")[1] : v)
-
-    # pretty_table
-    if html
-        pretty_table(outmat,
-            backend=Val(:html),
-            header = colnames, 
-            row_labels = vcat([[x,"",""] for x in colnames]...),
-            formatters = (ft_nomissing, ft_printf(fmt),r_printf))
-    else
-        pretty_table(outmat,
-            crop = :none,
-            header = colnames, 
-            row_labels = vcat([[x,"",""] for x in colnames]...),
-            formatters = (ft_nomissing, ft_printf(fmt),r_printf),
-            hlines = vcat([0, 1], [x*3 + 1 for x in 1:cols]),
-	    vlines = [1])
+    fmt = Printf.Format("%.$(digits)f")
+    for i = 1:size(M, 1)
+        for j = 1:i
+            ismissing(M[i, j]) && continue
+            (r, p, n) = M[i, j]
+            if pvalue && nobs
+                M[i, j] = string(Printf.format(fmt, r), "\n", ismissing(p) ? "" : Printf.format(fmt, p), "\n", n, "\n")
+            elseif pvalue
+                M[i, j] = string(Printf.format(fmt, r), "\n", ismissing(p) ? "" : Printf.format(fmt, p), "\n")
+            elseif nobs
+                M[i, j] = string(Printf.format(fmt, r), "\n", n, "\n")
+            else
+                M[i, j] = Printf.format(fmt, r)
+            end
+        end
     end
+    return PWCOR(M, colnames)
 end
-pwcorr(a::DataFrame, args::Symbol...; decimals = 4) = pwcorr(a, [args...]; decimals = decimals)
-
+pwcorr(a::DataFrame, args::Symbol...; digits=4, nobs=false, pvalue=false) = pwcorr(a, [args...]; digits=digits, nobs=nobs, pvalue=pvalue)
+struct PWCOR
+    M::Matrix
+    colnames::Vector
+end
+function Base.show(io::IO, c::PWCOR)
+    pretty_table(io, c.M,
+        linebreaks=true,
+        crop=:none,
+        header=c.colnames,
+        row_labels=c.colnames,
+        formatters=(v, i, j) -> ismissing(v) ? "" : v,
+        max_num_of_rows=10,
+        hlines=[0, 1],
+        vlines=[1])
+end
 
 
 #--------------------------------------------------------------------------
