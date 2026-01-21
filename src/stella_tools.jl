@@ -465,31 +465,36 @@ function pwcorr(indf::DataFrame, args::Vector{Symbol}; digits=4, nobs=false, pva
         end
     end
 
-    fmt = Printf.Format("%.$(digits)f")
-    for i = 1:size(M, 1)
+    return PWCOR(M, colnames, digits, nobs, pvalue)
+end
+pwcorr(a::DataFrame, args::Symbol...; digits=4, nobs=false, pvalue=false) = pwcorr(a, [args...]; digits=digits, nobs=nobs, pvalue=pvalue)
+struct PWCOR
+    M::Matrix
+    colnames::Vector
+    digits::Int8
+    nobs::Bool
+    pvalue::Bool
+end
+function format_matrix(c)
+    fmt = Printf.Format("%.$(c.digits)f")
+    for i = 1:size(c.M, 1)
         for j = 1:i
-            ismissing(M[i, j]) && continue
-            (r, p, n) = M[i, j]
-            if pvalue && nobs
+            ismissing(c.M[i, j]) && continue
+            (r, p, n) = c.M[i, j]
+            if c.pvalue && c.nobs
                 M[i, j] = string(Printf.format(fmt, r), "\n", ismissing(p) ? "" : Printf.format(fmt, p), "\n", n, "\n")
-            elseif pvalue
+            elseif c.pvalue
                 M[i, j] = string(Printf.format(fmt, r), "\n", ismissing(p) ? "" : Printf.format(fmt, p), "\n")
-            elseif nobs
+            elseif c.nobs
                 M[i, j] = string(Printf.format(fmt, r), "\n", n, "\n")
             else
                 M[i, j] = Printf.format(fmt, r)
             end
         end
     end
-    return PWCOR(M, colnames)
-end
-pwcorr(a::DataFrame, args::Symbol...; digits=4, nobs=false, pvalue=false) = pwcorr(a, [args...]; digits=digits, nobs=nobs, pvalue=pvalue)
-struct PWCOR
-    M::Matrix
-    colnames::Vector
 end
 function Base.show(io::IO, c::PWCOR)
-    pretty_table(io, c.M,
+    pretty_table(io, format_matrix(c),
         linebreaks=true,
         crop=:none,
         header=c.colnames,
