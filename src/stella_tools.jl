@@ -482,16 +482,17 @@ function format_matrix(c)
             ismissing(c.M[i, j]) && continue
             (r, p, n) = c.M[i, j]
             if c.pvalue && c.nobs
-                M[i, j] = string(Printf.format(fmt, r), "\n", ismissing(p) ? "" : Printf.format(fmt, p), "\n", n, "\n")
+                c.M[i, j] = string(Printf.format(fmt, r), "\n", ismissing(p) ? "" : Printf.format(fmt, p), "\n", n, "\n")
             elseif c.pvalue
-                M[i, j] = string(Printf.format(fmt, r), "\n", ismissing(p) ? "" : Printf.format(fmt, p), "\n")
+                c.M[i, j] = string(Printf.format(fmt, r), "\n", ismissing(p) ? "" : Printf.format(fmt, p), "\n")
             elseif c.nobs
-                M[i, j] = string(Printf.format(fmt, r), "\n", n, "\n")
+                c.M[i, j] = string(Printf.format(fmt, r), "\n", n, "\n")
             else
-                M[i, j] = Printf.format(fmt, r)
+                c.M[i, j] = Printf.format(fmt, r)
             end
         end
     end
+    return c.M
 end
 function Base.show(io::IO, c::PWCOR)
     pretty_table(io, format_matrix(c),
