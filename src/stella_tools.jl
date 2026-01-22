@@ -426,8 +426,6 @@ function interleave(args::AbstractMatrix...)
     dd
 end
 
-
-
 """
     pwcorr(df::DataFrame, args::Symbol...; digits = 4, nobs = true, pvalue = true)
     pwcorr(df::DataFrame, args::Vector{Symbol}; digits = 4, nobs = true, pvalue = true)
