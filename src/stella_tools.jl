@@ -451,15 +451,15 @@ function pwcorr(indf::DataFrame, args::Vector{Symbol}; digits=4, nobs=false, pva
         var1 = colnames[i]
         for j = 1:i
             if i == j
-                M[i, i] = tuple(1.0, missing, nrow(dropmissing(a[!, [colnames[j]]])))
+                M[i, i] = tuple(1.0, missing, sum(completecases(a[!, [colnames[j]]])))
                 continue
             end
             var2 = colnames[j]
-            b = dropmissing(a[:, [var1, var2]])
-            if size(b, 1) == 0
+            ba = completecases(a[:, [var1, var2]])
+            if sum(ba) == 0
                 error("No usable common observations in ", colnames[i], " and ", colnames[j])
             end
-            ret = HypothesisTests.CorrelationTest(b[!, var1], b[!, var2])
+            ret = HypothesisTests.CorrelationTest(a[ba, var1], a[ba, var2])
             pval = 2 * min(ccdf(TDist(ret.n - 2), ret.t), ccdf(TDist(ret.n - 2), -ret.t))
             M[i, j] = tuple(ret.r, pval, ret.n)
         end
