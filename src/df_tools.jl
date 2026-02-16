@@ -133,7 +133,7 @@ function etype(df::DataFrame,v::Union{Symbol,String}; strlength = true)
         eltyp = string(eltype2(df[!,v]))
         if in(eltyp,["String","AbstractString"])
             if strlength
-                eltyp = string("Str",getmaxwidth(df[!,v]))
+                eltyp = string("Str",getmaxwidth(df[!,v].pool.levels))
             else
                 elttyp = "String"
             end
