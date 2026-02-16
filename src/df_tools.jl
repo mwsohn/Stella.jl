@@ -127,7 +127,7 @@ function etype(df::DataFrame,v::Union{Symbol,String}; strlength = true)
     if typeof(df[!,v]) <: CategoricalArray
         eltyp = string(eltype(df[!,v].pool.levels))
         if in(eltyp,["String","AbstractString"])
-            eltyp = string("Str",getmaxwidth(levels(df[!,v])))
+            eltyp = string("Str",getmaxwidth(df[!,v].pool.levels))
         end
     else
         eltyp = string(eltype2(df[!,v]))
