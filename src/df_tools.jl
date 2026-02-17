@@ -167,7 +167,7 @@ eltypes(df::AbstractDataFrame) = map(x -> nonmissingtype(eltype(x)), eachcol(df)
 Displays variables in a dataframe much like `showcols`. It can display variable labels and value labels.
 It mimics Stata's `describe` command. 
 """
-function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = true, max_varlen = 15, max_descr = 40, strlength = false)
+function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varlen = 15, max_descr = 40, strlength = false)
 
     cutlen(str, len) = (length(str) > len ? string(str[1:len - 6],"~", str[len - 3:end]) : str)
 
