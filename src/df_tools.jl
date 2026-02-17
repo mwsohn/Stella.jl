@@ -127,13 +127,13 @@ function etype(df::DataFrame,v::Union{Symbol,String}; strlength = true)
     if typeof(df[!,v]) <: CategoricalArray
         eltyp = string(eltype(df[!,v].pool.levels))
         if in(eltyp,["String","AbstractString"])
-            eltyp = string("Str",getmaxwidth(df[!,v].pool.levels))
+            eltyp = string("Str",getmaxwidth(df[!,v]))
         end
     else
         eltyp = string(eltype2(df[!,v]))
         if in(eltyp,["String","AbstractString"])
             if strlength
-                eltyp = string("Str",getmaxwidth(df[!,v].pool.levels))
+                eltyp = string("Str",getmaxwidth(df[!,v]))
             else
                 elttyp = "String"
             end
