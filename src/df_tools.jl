@@ -127,7 +127,7 @@ function etype(df::DataFrame,v::Union{Symbol,String}; strlength = true)
     if typeof(df[!,v]) <: CategoricalArray
         eltyp = string(eltype(df[!,v].pool.levels))
         if in(eltyp,["String","AbstractString"])
-            eltyp = string("Str",getmaxwidth(df[!,v]))
+            eltyp = string("Str",getmaxwidth(df[!,v].pool.levels))
         end
     else
         eltyp = string(eltype2(df[!,v]))
@@ -227,10 +227,6 @@ function nmissing(s::AbstractArray)
 end
 
 function getmaxwidth(s::AbstractArray)
-    if isa(s, CategoricalArray) && nonmissingtype(eltype(s)) <: CategoricalString
-	    return maximum(length.(s.pool.levels))
-    end
-	
     return  maximum(length.(collect(skipmissing(s))))
 end
 
