@@ -217,7 +217,6 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
         header=header,
         crop=:none,
         vlines = [1],
-        # formatters = (ft_nomissing),
         show_row_number = true,
         row_number_column_title = "Column")
 end
