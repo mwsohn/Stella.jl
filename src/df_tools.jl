@@ -967,3 +967,56 @@ function subnonmiss!(df::AbstractDataFrame, byvar, statvar::Union{Symbol,String}
     newdf = combine(groupby(df[cc, :], byvar), statvar => nonmissing => Symbol(string(statvar, "_nonmiss")))
     leftjoin!(df, newdf, on=byvar, matchmissing=:equal, makeunique=:true)
 end
+
+"""
+    dfwide(df::AbstractDataFrame,id, stub, val)
+
+Converts a `long` data to a `wide` data in which one record is kept for one `id` value and
+multiple variables created with variable names having `val` as the stem and 
+unique values in `stub` as the ending. This function mimics the functionality of the `reshape wide`
+in stata where `id` and `stub` are equivalent to `i` and `j`.
+"""
+function dfwide(df::AbstractDataFrame, id, stub::Union{Symbol,String}, val::Vector{Union{Symbol,String}})
+    odf = sort(unique(df[!, [id]]))
+    stubvars = sort(unique(df[!, stub]))
+
+    for s in stubvars
+        for vv in val
+            odf[!, string(vv, s)] = Vector{Union{Missing,nonmissingtype(eltype(df[!, vv]))}}(missing, nrow(odf))
+        end
+    end
+
+    gdf = groupby(df, id, sort=true)
+    for (i, subdf) in enumerate(gdf)
+        for vv in val
+            vval = string.(vv, subdf[:, stub])
+            odf[i, vval] .= collect(subdf[:, vv])
+        end
+    end
+    return odf
+end
+function dfwide(df::AbstractDataFrame, id, stub::Union{Symbol,String}, val::Union{Symbol,String})
+    return dfwide(df,id,stub,[val])
+end
+
+"""
+    dflong(df::AbstractDataFrame, id, stub, val)
+
+Converts a `wide` data to a `long` data. This function mimics the functionality of the `reshape long`
+in stata where `id` and `stub` are equivalent to `i` and `j`. `val` should be a vector of column names,
+either in Symbols or strings.
+"""
+function dflong(df::AbstractDataFrame, id, stub::String, val::Vector)
+
+    vval = longest_common_prefix(string.(val))
+    len = length(vval)
+    vv = [x[len+1:end] for x in string.(val)]
+    if all(all.(isdigit, vv))
+        vv = parse.(Int64, vv)
+    end
+    odf = DataFrame(id=repeat(df[:, id], inner=length(vv)),
+        __stub=repeat(vv, outer=nrow(df)),
+        __vval=vec(Matrix(df[:, val])'))
+
+    return rename(odf, :__stub => stub, :__vval => vval)
+end
