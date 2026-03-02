@@ -32,6 +32,7 @@ export  dfcompress, # compress DF
         lift,        # converts missing values to false in a Boolean array
         filter2,     # returns a boolean vector for use in selecting rows from a DataFrame
         dfsample,    # select a sample from a df
+        dfwide, dflong, # functions to convert long to wide formats and vice versa
         univariate, univ, # univariate statistics
         tabstat,     # unviariate statistics by subgroups
         xtile,       # create variable that classify a column into percentiles
