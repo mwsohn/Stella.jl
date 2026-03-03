@@ -1008,7 +1008,7 @@ either in Symbols or strings.
 """
 function dflong(df::AbstractDataFrame, id, stub::String, val::Vector)
 
-    vval = longest_common_prefix(string.(val))
+    vval = Stella.longest_common_prefix(string.(val))
     len = length(vval)
     vv = [x[len+1:end] for x in string.(val)]
     if all(all.(isdigit, vv))
@@ -1019,4 +1019,24 @@ function dflong(df::AbstractDataFrame, id, stub::String, val::Vector)
         __vval=vec(Matrix(df[:, val])'))
 
     return rename(odf, :__stub => stub, :__vval => vval)
+end
+
+function longest_common_prefix(strings::Vector)
+    if isempty(strings)
+        return ""
+    end
+
+    first_str = strings[1]
+    prefix = ""
+
+    for (i, char) in enumerate(first_str)
+        for j in 2:length(strings)
+            if i > length(strings[j]) || strings[j][i] != char
+                return prefix
+            end
+        end
+        prefix *= string(char)
+    end
+
+    return prefix
 end
