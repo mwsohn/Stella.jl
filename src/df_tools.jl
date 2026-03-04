@@ -1007,18 +1007,15 @@ in stata where `id` and `stub` are equivalent to `i` and `j`. `val` should be a 
 either in Symbols or strings.
 """
 function dflong(df::AbstractDataFrame, id, stub::String, val::Vector)
-
     vval = Stella.longest_common_prefix(string.(val))
     len = length(vval)
     vv = [x[len+1:end] for x in string.(val)]
     if all(all.(isdigit, vv))
         vv = parse.(Int64, vv)
     end
-    odf = DataFrame(id=repeat(df[:, id], inner=length(vv)),
-        __stub=repeat(vv, outer=nrow(df)),
-        __vval=vec(Matrix(df[:, val])'))
-
-    return rename(odf, :__stub => stub, :__vval => vval)
+    return DataFrame([repeat(df[:, id], inner=length(vv)),
+            repeat(vv, outer=nrow(df)),
+            vec(Matrix(df[:, val])')], ["$id", "$stub", "$vval"])
 end
 
 function longest_common_prefix(strings::Vector)
