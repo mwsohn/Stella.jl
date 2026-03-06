@@ -130,49 +130,47 @@ of the `varname` column in the `df`. The following are computed: `N` (total non-
 `median` (median), `p75` (75th percentile), and `max` (maximum). If `table` is set to `false`,
 the output will be returned as a DataFrame.
 """
-function tabstat(indf::AbstractDataFrame, 
-    var1::Union{String,Symbol}, 
-    groupvar::Union{String,Symbol};
-    s = Function[mean,sd,minimum,p25,median,p75,maximum], 
-    skipmissing = true, 
-    table = true)
+function tabstat(indf::AbstractDataFrame, var1::Union{String,Symbol}, groupvar::Union{String,Symbol};
+    s=Function[mean, sd, minimum, p25, median, p75, maximum], skipmissing=true, digits=2)
 
-    if length(s) == 0
-        error("No statistic functions were specified.")
-    end
+    indf2 = filter(x -> !ismissing(x[var1]), indf[:, [var1, groupvar]])
+    outdf = combine(groupby(indf2, groupvar, skipmissing=skipmissing),
+        nrow => :n, var1 .=> s .=> Symbol.(s))
 
-    # strip prepended "Stella." from the function list
-    namevec = [Symbol(replace(string(x),r"(Stella|Statistics)\." => "")) for x in s]
+    omat = Matrix{Any}(outdf[:, 2:end])
+    rownames = outdf[:, 1]
+    colnames = names(outdf[:, 2:end])
 
-    # missing values in var1
-    indf = indf[ismissing.(indf[!,var1]) .== false, :]
+    anov = AnalysisOfVariance.anova(indf2, var1, groupvar)
 
-    # grouped df
-    gdf = groupby(indf, groupvar, skipmissing = skipmissing)
+    return TABSTAT(omat, rownames, colnames, string(groupvar), anov.df[1], anov.df[3], anov.F[1], anov.pvalue[1], digits)
+end
+function Base.show(io::IO, t::TABSTAT)
+    fmt = Printf.Format("%.$(t.digits)f")
+    PrettyTables.pretty_table(io,
+        t.omat,
+        row_labels=t.rownames,
+        stubhead_label=t.rowheader,
+        column_labels=t.colnames,
+        formatters=[(v, i, j) -> typeof(v) <: Integer ? string(v) : Printf.format(fmt, v)],
+        table_format=TextTableFormat(;
+            @text__no_vertical_lines,
+            horizontal_lines_at_column_labels=[1],
+            vertical_line_after_row_label_column=true)
+    )
 
-    # groupvar and N
-    outdf = combine(gdf, nrow => :n)
-
-    # stats
-    for j = 1:length(namevec) 
-        outdf[!,namevec[j]] = [s[j](x[!,var1]) for x in gdf] 
-    end
-
-    # identify only rows with non-zero counts
-    nz = outdf.n .!= 0
-
-    if table
-        pretty_table(outdf[nz, 2:end], 
-        row_labels = outdf[nz,groupvar],
-        row_label_column_title = label(indf,groupvar),
-		show_subheader = false,
-		vlines=[1])
-        
-        # anov = anova(indf, var1, groupvar)
-        # println("One-way ANOVA: F(",anov.df[1],", ",anov.df[3],") = ",@sprintf("%.5f",anov.F[1]),", ", anov.pvalue[1] < 0.00001 ? "P < 0.00001" : @sprintf("P = %.5f",anov.pvalue[1]))
-    else
-        return outdf[nz,:]
-    end
+    println(io, "One-way ANOVA: F(", t.df1, ", ", t.df2, ") = ", @sprintf("%.5f", t.F), ", ", t.pvalue < 0.0001 ? "P < 0.0001" : @sprintf("P = %.5f", t.pvalue))
+end
+struct TABSTAT
+    omat::Matrix
+    rownames::Vector
+    colnames::Vector
+    rowheader::String
+    df1::Int64
+    df2::Int64
+    F::Float64
+    pvalue::Float64
+    digits::Int64
 end
 
 #----------------------------------------------------------------------------
