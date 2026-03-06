@@ -501,7 +501,7 @@ function Base.show(io::IO, c::PWCOR)
         crop=:none,
         column_labels=c.colnames,
         row_labels=c.colnames,
-        formatters=(v, i, j) -> ismissing(v) ? "" : v,
+        formatters=[(v, i, j) -> ismissing(v) ? "" : v],
         max_num_of_rows=10,
         table_format=TextTableFormat(;
             @text__no_vertical_lines,
