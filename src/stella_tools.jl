@@ -499,12 +499,15 @@ function Base.show(io::IO, c::PWCOR)
     pretty_table(io, format_matrix(c),
         linebreaks=true,
         crop=:none,
-        header=c.colnames,
+        column_labels=c.colnames,
         row_labels=c.colnames,
         formatters=(v, i, j) -> ismissing(v) ? "" : v,
         max_num_of_rows=10,
-        hlines=[0, 1],
-        vlines=[1])
+        table_format=TextTableFormat(;
+            @text__no_vertical_lines,
+            horizontal_lines_at_column_labels=[1],
+            vertical_line_after_row_label_column=true)
+    )
 end
 
 
