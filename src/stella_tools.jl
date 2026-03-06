@@ -497,6 +497,7 @@ function format_matrix(c)
 end
 function Base.show(io::IO, c::PWCOR)
     pretty_table(io, format_matrix(c),
+        line_breaks = true,
         column_labels=c.colnames,
         row_labels=c.colnames,
         formatters=[(v, i, j) -> ismissing(v) ? "" : v],
