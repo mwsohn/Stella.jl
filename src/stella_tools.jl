@@ -497,12 +497,10 @@ function format_matrix(c)
 end
 function Base.show(io::IO, c::PWCOR)
     pretty_table(io, format_matrix(c),
-        linebreaks=true,
-        crop=:none,
         column_labels=c.colnames,
         row_labels=c.colnames,
         formatters=[(v, i, j) -> ismissing(v) ? "" : v],
-        max_num_of_rows=10,
+        maximum_number_of_rows=10,
         table_format=TextTableFormat(;
             @text__no_vertical_lines,
             horizontal_lines_at_column_labels=[1],
