@@ -214,11 +214,14 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
     
     pretty_table(data,
         alignment=alignment,
-        header=header,
-        crop=:none,
-        vlines = [1],
+        column_labels=header,
         show_row_number = true,
-        row_number_column_title = "Column")
+        row_number_column_title = "Column",
+        table_format=TextTableFormat(;
+            @text__no_vertical_lines,
+            horizontal_lines_at_column_labels=[1],
+            vertical_line_after_row_label_column=true)
+        )
 end
 
 function nmissing(s::AbstractArray)
