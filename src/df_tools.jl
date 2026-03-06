@@ -216,7 +216,6 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
         alignment=alignment,
         column_labels=header,
         show_row_number = true,
-        row_number_column_title = "Column",
         table_format=TextTableFormat(;
             @text__no_vertical_lines,
             horizontal_lines_at_column_labels=[1],
