@@ -145,6 +145,19 @@ function tabstat(indf::AbstractDataFrame, var1::Union{String,Symbol}, groupvar::
 
     return TABSTAT(omat, rownames, colnames, string(groupvar), anov.df[1], anov.df[3], anov.F[1], anov.pvalue[1], digits)
 end
+
+struct TABSTAT
+    omat::Matrix
+    rownames::Vector
+    colnames::Vector
+    rowheader::String
+    df1::Int64
+    df2::Int64
+    F::Float64
+    pvalue::Float64
+    digits::Int64
+end
+
 function Base.show(io::IO, t::TABSTAT)
     fmt = Printf.Format("%.$(t.digits)f")
     PrettyTables.pretty_table(io,
@@ -161,17 +174,8 @@ function Base.show(io::IO, t::TABSTAT)
 
     println(io, "One-way ANOVA: F(", t.df1, ", ", t.df2, ") = ", @sprintf("%.5f", t.F), ", ", t.pvalue < 0.0001 ? "P < 0.0001" : @sprintf("P = %.5f", t.pvalue))
 end
-struct TABSTAT
-    omat::Matrix
-    rownames::Vector
-    colnames::Vector
-    rowheader::String
-    df1::Int64
-    df2::Int64
-    F::Float64
-    pvalue::Float64
-    digits::Int64
-end
+
+
 
 #----------------------------------------------------------------------------
 # stats by subdataframe - begin
