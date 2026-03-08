@@ -30,7 +30,7 @@ in the input DataArray), `N_Missing` (number of rows with missing values), `N_Us
 """
 function univariate(da::AbstractVector)
 
-    da2 = dropmissing(da)
+    da2 = collect(skipmissing(da))
 
 	return DataFrame(
 		Statistic = [Symbol("N Total"),
