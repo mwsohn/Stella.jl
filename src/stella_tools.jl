@@ -500,7 +500,7 @@ function Base.show(io::IO, c::PWCOR)
         line_breaks = true,
         column_labels=c.colnames,
         row_labels=c.colnames,
-        formatters=[(v, i, j) -> ismissing(v) ? "" : v],
+        formatters=[(v, i, j) -> (ismissing(v)) ? "" : v],
         maximum_number_of_rows=10,
         table_format=TextTableFormat(;
             @text__no_vertical_lines,
