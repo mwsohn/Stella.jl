@@ -1000,7 +1000,7 @@ function dfwide(df::AbstractDataFrame, id, stub::Union{Symbol,String}, val::Vect
     return odf
 end
 function dfwide(df::AbstractDataFrame, id, stub::Union{Symbol,String}, val::Union{Symbol,String})
-    return dfwide(df,id,stub,[val])
+    return Stella.dfwide(df,id,stub,[val])
 end
 
 """
