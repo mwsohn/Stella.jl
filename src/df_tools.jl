@@ -221,7 +221,7 @@ function descr(df::DataFrame,varnames::Symbol...; nmiss::Bool = false, max_varle
             @text__no_vertical_lines,
             horizontal_lines_at_column_labels=[1],
             vertical_line_after_row_label_column=true),
-        limit_printing=false
+        display_size=(-1,-1)
         )
 end
 
