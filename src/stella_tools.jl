@@ -108,7 +108,13 @@ function univ(v::AbstractVector; table=true)
 
     #@show output
     if table
-        pretty_table(output, header = ["Statistic","","Percentile",""],hlines=[0,1,16],vlines=:none)
+        pretty_table(output, 
+            column_labels = ["Statistic","","Percentile",""], 
+            TextTableFormat(;
+                @text__no_vertical_lines,
+                horizontal_lines_at_column_labels = [1,16]
+            )
+        )
         return nothing
     end
     return output
