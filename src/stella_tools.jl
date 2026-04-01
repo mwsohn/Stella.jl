@@ -110,7 +110,7 @@ function univ(v::AbstractVector; table=true)
     if table
         pretty_table(output, 
             column_labels = ["Statistic","","Percentile",""], 
-            TextTableFormat(;
+            table_format = TextTableFormat(;
                 @text__no_vertical_lines,
                 horizontal_lines_at_column_labels = [1,16]
             )
