@@ -14,7 +14,7 @@ using DataFrames, DataAPI, Distributions, StatsBase, StatsAPI, GLM, Survival,
 # @reexport using StataFiles
 @reexport using LogisticROC
 @reexport using TableMetadataTools
-@reexport using AnalysisOfVariance
+# @reexport using AnalysisOfVariance
 @reexport using FreqTools
 
 
