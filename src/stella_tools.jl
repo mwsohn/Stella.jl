@@ -114,8 +114,7 @@ function univ(v::AbstractVector; table=true)
                 @text__no_vertical_lines,
                 horizontal_line_at_beginning = true,
                 horizontal_line_after_column_labels = true,
-                horizontal_line_after_data_rows = true,
-                first_line_merged_column_label = crayon"underline"
+                horizontal_line_after_data_rows = true
             )
         )
         return nothing
