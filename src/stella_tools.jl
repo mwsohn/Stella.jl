@@ -112,7 +112,9 @@ function univ(v::AbstractVector; table=true)
             column_labels = [MultiColumn(2, "Statistics", :c), MultiColumn(2, "Percentile", :c)], 
             table_format = TextTableFormat(;
                 @text__no_vertical_lines,
-                horizontal_lines_at_column_labels = [1,16]
+                horizontal_line_at_beginning = true,
+                horizontal_line_after_column_labels = true,
+                horizontal_line_after_data_rows = true
             )
         )
         return nothing
