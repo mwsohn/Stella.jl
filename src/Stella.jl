@@ -14,8 +14,8 @@ using DataFrames, DataAPI, Distributions, StatsBase, StatsAPI, GLM, Survival,
 # @reexport using StataFiles
 @reexport using LogisticROC
 @reexport using TableMetadataTools
-@reexport using AnalysisOfVariance
-@reexport using FreqTools
+# @reexport using AnalysisOfVariance
+# @reexport using FreqTools
 
 
 ##############################################################################
@@ -34,11 +34,9 @@ export  dfcompress, # compress DF
         dfsample,    # select a sample from a df
         dfwide, dflong, # functions to convert long to wide formats and vice versa
         univariate, univ, # univariate statistics
-        tabstat,     # unviariate statistics by subgroups
         xtile,       # create variable that classify a column into percentiles
         strval,      # convert floats or ints to strings
         chi2test,    # compute chisquare statistics from na.array
-        # prepend_spaces, append_spaces, # create fixed length strings
         smallest, largest, # list smallest and largest values in a DA
         pickone,     # create a binary variable that identifies one record in a subgroup
         keepfirst, keeplast,     # creates a DF that contain one record from a subgroup
@@ -57,7 +55,6 @@ export  dfcompress, # compress DF
         ttest,       # t-test
         dir,        # directory listing
         ds,         # filenames according to type, length, or regex
-        # getmaxwidth, # maximum length of a string variable
         eltype2,
         categorical!, uncategorical!, uncategorical, # functions to create CategoricalArrays or reverse them to their original values
         # identify_condition, identify_condition2, # used to identify conditions in claims files
