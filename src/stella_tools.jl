@@ -109,7 +109,7 @@ function univ(v::AbstractVector; table=true)
     #@show output
     if table
         pretty_table(output, 
-            column_labels = [MultiColumn(2, "Statistics", :c), MultiColumn(2, "Percentile", :c)], 
+            column_labels = ["Statistics","","Percentile",""], #[MultiColumn(2, "Statistics", :c), MultiColumn(2, "Percentile", :c)], 
             table_format = TextTableFormat(;
                 @text__no_vertical_lines,
                 horizontal_line_at_beginning = true,
