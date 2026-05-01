@@ -305,8 +305,8 @@ ICD-10 diagnostic codes.
 """
 function elixhauser!(df, icdvars::Vector)
     elixdata = load(joinpath(@__DIR__,"..","data", "elixhauser_data.jld2"))
-    dd = elixdata[5]
-    condnm = elixdata[2]
+    dd = elixdata["dd"]
+    condnm = elixdata["condnm"]
     for v in condnm
         df[:, v] = zeros(Int8, nrow(df))
     end
