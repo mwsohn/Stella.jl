@@ -304,7 +304,7 @@ Elixhauser Comorbidity Index. `icdvars` are a vector of variable names that cont
 ICD-10 diagnostic codes. 
 """
 function elixhauser!(df, icdvars::Vector)
-    elixdata = load("data/elixhauser_data.jld2")
+    elixdata = load(joinpath(@__DIR__,"..","data", "elixhauser_data.jld2"))
     dd = elixdata[5]
     condnm = elixdata[2]
     for v in condnm
