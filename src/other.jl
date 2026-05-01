@@ -311,11 +311,14 @@ function elixhauser!(df, icdvars::Vector)
         df[:, v] = zeros(Int8, nrow(df))
     end
 
-    for icd in icdvars
-        if haskey(dd, icd)
-            idx = dd[icd]
-            vars = condnm[idx]
-            df[:, vars] .= 1
+    for i in 1:nrow(df)
+        for icd in df[i,icdvars]
+            if haskey(dd, icd)
+                # find the index for the ICD-10 code
+                idx = dd[icd]
+                vv = condnm[idx]
+                df[i, vv] .= 1
+            end
         end
     end
 end
