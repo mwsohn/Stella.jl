@@ -307,7 +307,7 @@ function elixhauser!(df, icdvars::Vector)
     elixdata = load(joinpath(@__DIR__,"..","data", "elixhauser_data.jld2"))
     dd = elixdata["dd"]
     condnm = elixdata["condnm"]
-    description = elixdata["description"]
+    description = elixdata["desc"]
     for (i,v) in enumerate(condnm)
         df[:, v] = zeros(Int8, nrow(df))
         label!(df,v, description[i])
