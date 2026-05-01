@@ -296,3 +296,26 @@ function st2ncc(df::AbstractDataFrame, ev; ncontrol=1, matchvars=nothing)
     return sort(df2, [:_set, :_case])
 end
 
+"""
+    elixhauser(df, icdvars::Vector)
+
+Produces 39 variables of Int8 type that identifies comorbidities in the
+Elixhauser Comorbidity Index. `icdvars` are a vector of variable names that contain
+ICD-10 diagnostic codes. 
+"""
+function elixhauser!(df, icdvars::Vector)
+    elixdata = load("../data/elixhauser_data.jld2")
+    dd = elixdata[5]
+    condnm = elixdata[2]
+    for v in condnm
+        df[:, v] = zeros(Int8, nrow(df))
+    end
+
+    for icd in icdvars
+        if haskey(dd, icd)
+            idx = dd[icd]
+            vars = condnm[idx]
+            df[:, vars] .= 1
+        end
+    end
+end
