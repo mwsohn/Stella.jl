@@ -870,6 +870,11 @@ Produces a subset of data containing the first `n` records from the input DataFr
 sorted by `groupvars`.
 """
 function keepfirst(df::AbstractDataFrame, groupvars; n=1)
+    if issorted(df,groupvars)
+        return combine(groupby(df, groupvars)) do subdf
+            first(subdf, n)
+        end    
+    end
     return combine(groupby(sort(df, groupvars), groupvars)) do subdf
         first(subdf, n)
     end
@@ -883,6 +888,11 @@ sorted by `groupvars`.
 """
 
 function keeplast(df::AbstractDataFrame, groupvars; n=1)
+    if isorted(df, groupvars)
+        return combine(groupby(df, groupvars)) do subdf
+            last(subdf, n)
+        end
+    end
     return combine(groupby(sort(df, groupvars), groupvars)) do subdf
         last(subdf, n)
     end
