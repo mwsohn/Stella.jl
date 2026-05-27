@@ -297,32 +297,130 @@ function st2ncc(df::AbstractDataFrame, ev; ncontrol=1, matchvars=nothing)
 end
 
 """
-    elixhauser(df, icdvars::Vector)
+    elixhauser(df, icdvars::Vector; poa = [], icdver = nothing)
 
 Produces 39 variables of Int8 type that identifies comorbidities in the
-Elixhauser Comorbidity Index. `icdvars` are a vector of variable names that contain
-ICD-10 diagnostic codes. 
+Elixhauser Comorbidity Index. 
+
+- `icdvars` are a vector of variable names that contain ICD-10 diagnostic codes. 
+
+- `poa` indicates whether a condition was present on admission. If specified, these variables must
+match the number of `icdvars`. This program assumes that the order of `icdvars` and `poa`
+variables are identical so that the first ICD variable uses the first POA indicator, etc.
+
+- `icdver` is the indicator variable of the ICD-10 version. This program supports version 33 through 43.
+This variable should contain numeric version number (33 - 43). If not specified, the program will assume version 43.
+You can create the ICD-10 version based on the date of the record using the `icd10version` function.
 """
-function elixhauser!(df, icdvars::Vector)
-    elixdata = load(joinpath(@__DIR__,"..","data", "elixhauser_data.jld2"))
-    dd = elixdata["dd"]
-    condnm = elixdata["condnm"]
-    description = elixdata["desc"]
+function elixhauser10!(df, icdvars::Vector; poa = [], icdver = nothing)
+    POA = length(poa) == length(icdvars) ? true : false
+
+    # recode POA vars to 1 or zero
+    if POA
+        poavars = falses(Int8, length(poa))
+    end
+
+    # load ICD-10 data
+    elixdata = load(joinpath(@__DIR__,"..","data", "elixhauser_v10.jld2"))
+    dd = elixdata["dd"] # ICD to disease mapping
+    condnm = elixdata["condnm"] # condition names
+    description = elixdata["desc"] # condition descriptions
+    poaexempt = elixdata["poaexempt"] # 20 POA exempt conditions (1,2,4,6,7,8,9,10,14,15,16,17,18,20,21,24,28,30,35,36)
+    if icdver == nothing
+        poaxmpt_codes = elixdata["poaxmpt_codes"]["v43"] # POA exempt ICD-10 codes
+    end
     for (i,v) in enumerate(condnm)
         df[:, v] = zeros(Int8, nrow(df))
         label!(df,v, description[i])
     end
 
     for i in 1:nrow(df)
-        for icd in df[i,icdvars]
+        if idver != nothing && df[i,idver] != 43
+            poaxmpt_codes = elixdata["poaxmpt_codes"][string("v", df[i,idver])]
+        end
+        if POA
+            poavars = [ !ismissing(x) || in(x, ["Y","W",1,true]) ? true : false for x in df[i,poa]] 
+        end
+        for (k,icd) in enumerate(df[i,icdvars])
+            if ismissing(icd) || icd in (""," ")
+                continue
+            end
             if haskey(dd, icd)
                 # find the index for the ICD-10 code
-                idx = dd[icd]
+                idx = dd[icd] # an ICD code can be mapped to 2 conditions
                 for j in idx
-                    vv = condnm[j]
-                    df[i, vv] = 1
+                    # if POA is not specified (e.g., outpatient data do not have POA codes)
+                    # or if the condition is POA exempt (20 conditions are POA exempt)
+                    # or if the ICD-10 code is POA exempt (255 codes are POA exempt)
+                    # or if the ICD-10 code has a matching POA code showing the condition was present on admission
+                    if any(POA, poaexempt[j], in(icd,poaxmpt_codes), poavars[k])
+                        vv = condnm[j]
+                        df[i, vv] = 1
+                    end
                 end
             end
         end
+        # mutually exclusive conditions (CBVD is not coded)
+        if df[i, :diab_cx] == 1
+            df[i, :diabimcx] = 0
+        end
+        if df[i, :htn_cx] == 1
+            df[i, :htn_uncx] = 0
+        end
+        if df[i,:cancer_mets] == 1
+            df[i,:cancer_solid] = 0
+            df[i,:cancer_nsitu] = 0
+        end
+        if df[i,:cancer_solid] == 1
+            df[i,:cancer_nsitu] = 0
+        end
+        if df[i, :liver_sev] == 1
+            df[i,:liver_mld] = 0
+        end
+        if df[i,:renlfl_sev] == 1
+            df[i,:renlfl_mod] = 0
+        end
     end
 end
+
+"""
+    icd10version(rdates::Vector{Dates.Date})
+
+Returns ICD-10 version number inferred based on the servicde date.
+"""
+function icd10version(rdates::Vector{Dates.Date})
+    rvec = zeros(Union{Int8,Missing}, length(rdates))
+    for i in 1:length(rdates)
+        if ismissing(rdates[i])
+            rvec[i] = missing
+            continue
+        end
+        t = year(rdates[i]) * 10 + quarterofyear(rdates[i])
+        if t in (20154, 20161, 20162, 20163)
+            rvec[i] = 33
+        elseif t in (20164, 20171, 20172, 20173)
+            rvec[i] = 34
+        elseif t in (20174, 20181, 20182, 20183)
+            rvec[i] = 35
+        elseif t in (20184, 20191, 20192, 20193)
+            rvec[i] = 36
+        elseif t in (20194, 20201, 20202, 20203)
+            rvec[i] = 37
+        elseif t in (20204, 20211, 20212, 20213)
+            rvec[i] = 38
+        elseif t in (20214, 20221, 20222, 20223)
+            rvec[i] = 39
+        elseif t in (20224, 20231, 20232, 20233)
+            rvec[i] = 40
+        elseif t in (20234, 20241, 20242, 20243)
+            rvec[i] = 41
+        elseif t in (20244, 20251, 20252, 20253)
+            rvec[i] = 42
+        elseif t in (20254, 20261, 20262, 20263)
+            rvec[i] = 43
+        end
+    end
+    return rvec
+end
+
+
