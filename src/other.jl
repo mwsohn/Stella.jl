@@ -315,31 +315,36 @@ You can create the ICD-10 version based on the date of the record using the `icd
 function elixhauser10!(df, icdvars::Vector; poa = [], icdver = nothing)
     POA = length(poa) == length(icdvars) ? true : false
 
-    # recode POA vars to 1 or zero
+    # create a POA vector
     if POA
         poavars = falses(Int8, length(poa))
+        cmr_cbvd_npoa = 0
+        cmr_cbvd = 0
     end
 
     # load ICD-10 data
     elixdata = load(joinpath(@__DIR__,"..","data", "elixhauser_v10.jld2"))
-    dd = elixdata["dd"] # ICD to disease mapping
-    condnm = elixdata["condnm"] # condition names
-    description = elixdata["desc"] # condition descriptions
-    poaexempt = elixdata["poaexempt"] # 20 POA exempt conditions (1,2,4,6,7,8,9,10,14,15,16,17,18,20,21,24,28,30,35,36)
+    # dd = elixdata["dd"] # ICD to disease mapping
+    # condnm = elixdata["conddesc"] # condition names
+    # description = elixdata["desc"] # condition descriptions
+    # poaexempt = elixdata["poaexempt"] # 20 POA exempt conditions (1,2,4,6,7,8,9,10,14,15,16,17,18,20,21,24,28,30,35,36)
     if icdver == nothing
         poaxmpt_codes = elixdata["poaxmpt_codes"]["v43"] # POA exempt ICD-10 codes
     end
-    for (i,v) in enumerate(condnm)
+    for v in condnm
         df[:, v] = zeros(Int8, nrow(df))
-        label!(df,v, description[i])
+        label!(df, v, dondesc[v])
     end
 
+    # iterate over all source records
     for i in 1:nrow(df)
         if idver != nothing && df[i,idver] != 43
             poaxmpt_codes = elixdata["poaxmpt_codes"][string("v", df[i,idver])]
         end
         if POA
             poavars = [ !ismissing(x) || in(x, ["Y","W",1,true]) ? true : false for x in df[i,poa]] 
+            cmr_cbvd_npoa = 0
+            cmr_cbvd = 0
         end
         for (k,icd) in enumerate(df[i,icdvars])
             if ismissing(icd) || icd in (""," ")
@@ -347,15 +352,18 @@ function elixhauser10!(df, icdvars::Vector; poa = [], icdver = nothing)
             end
             if haskey(dd, icd)
                 # find the index for the ICD-10 code
-                idx = dd[icd] # an ICD code can be mapped to 2 conditions
+                idx = dd[icd] # an ICD code can be mapped to 2 conditions so we need to iterate the returned tuple
                 for j in idx
                     # if POA is not specified (e.g., outpatient data do not have POA codes)
                     # or if the condition is POA exempt (20 conditions are POA exempt)
                     # or if the ICD-10 code is POA exempt (255 codes are POA exempt)
                     # or if the ICD-10 code has a matching POA code showing the condition was present on admission
-                    if any(POA, poaexempt[j], in(icd,poaxmpt_codes), poavars[k])
+                    if j < 39 && any(POA, poaexempt[j], in(icd,poaxmpt_codes), poavars[k])
                         vv = condnm[j]
                         df[i, vv] = 1
+                    else
+                        # these are 
+
                     end
                 end
             end
@@ -389,7 +397,7 @@ end
 Returns ICD-10 version number inferred based on the servicde date.
 """
 function icd10version(rdates::Vector{Dates.Date})
-    rvec = zeros(Union{Int8,Missing}, length(rdates))
+    rvec = Vector{Union{Missing,Int8}}(missinng, length(rdates))
     for i in 1:length(rdates)
         if ismissing(rdates[i])
             rvec[i] = missing
