@@ -517,6 +517,40 @@ function Base.show(io::IO, c::PWCOR)
     )
 end
 
+function means(df, vars; stats=[])
+    if length(stats) == 0
+        stats = Function[N, sum, mean, std, minimum, maximum]
+    end
+
+    omat = Matrix{Any}(undef, length(vars), length(stats) + 1)
+    for (i, v) in enumerate(vars)
+        omat[i, 1] = string(v)
+        for j in 1:length(stats)
+            omat[i, j+1] = stats[j](df[:, v])
+        end
+    end
+    return MEANS(omat[:, 2:end], omat[:, 1], uppercasefirst.(string.(stats)))
+end
+
+struct MEANS
+    omat::Matrix
+    varname::Vector{String}
+    header::Vector{String}
+end
+function Base.show(io::IO, m::MEANS)
+    pretty_table(io,
+        m.omat,
+        row_labels=m.varname,
+        stubhead_label="Variables",
+        column_labels=m.header,
+        table_format=TextTableFormat(;
+            @text__no_vertical_lines,
+            vertical_line_after_row_label_column=true
+        )
+    )
+end
+
+
 
 #--------------------------------------------------------------------------
 # ranksum(), signrank(), signtest()
