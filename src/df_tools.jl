@@ -870,10 +870,7 @@ Produces a subset of data containing the first `n` records from the input DataFr
 sorted by `groupvars`.
 """
 function keepfirst(df::AbstractDataFrame, groupvars; n=1)
-    # if n == 1
-    #     return combine(first,groupby(sort!(df, groupvars), groupvars))
-    # end
-    return combine(groupby(df, groupvars), identity => (x -> first(x, min(n, nrow(x)))))
+    return combine(groupby(df, groupvars), x -> first(x, min(n, nrow(x))))
 end
 
 """
