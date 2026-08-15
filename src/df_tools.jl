@@ -873,7 +873,7 @@ function keepfirst(df::AbstractDataFrame, groupvars; n=1)
     if n == 1
         return combine(first,groupby(sort!(df, groupvars), groupvars))
     end
-    return combine(groupby(sort!(df, groupvars), groupvars), identity => (x -> first(x, min(2, nrow(x))))
+    return combine(groupby(sort!(df, groupvars), groupvars), identity => (x -> first(x, min(2, nrow(x)))))
 end
 
 """
