@@ -882,7 +882,7 @@ function keepfirst(df::AbstractDataFrame, groupvars; n=1)
     # iend = min.(n, gdf.ends .- gdf.starts + 1)
     ba = []
     for i = 1:gdf.ngroups
-        push!(ba, collect(gdf.starts[i]:(gdf.starts[i]+min(1, gdf.ends[i]-gdf.starts[i])))...)
+        push!(ba, collect(gdf.starts[i]:(gdf.starts[i]+min(n-1, gdf.ends[i]-gdf.starts[i])))...)
     end
 
     return df[ba, :]
@@ -896,14 +896,25 @@ sorted by `groupvars`.
 """
 
 function keeplast(df::AbstractDataFrame, groupvars; n=1)
-    if isorted(df, groupvars)
-        return combine(groupby(df, groupvars)) do subdf
-            last(subdf, n)
-        end
+    # if isorted(df, groupvars)
+    #     return combine(groupby(df, groupvars)) do subdf
+    #         last(subdf, n)
+    #     end
+    # end
+    # return combine(groupby(sort(df, groupvars), groupvars)) do subdf
+    #     last(subdf, n)
+    # end
+    gdf = groupby(df, gvars)
+    if n == 1
+        return df[gdf.ends, :]
     end
-    return combine(groupby(sort(df, groupvars), groupvars)) do subdf
-        last(subdf, n)
+
+    # iend = min.(n, gdf.ends .- gdf.starts + 1)
+    ba = []
+    for i = 1:gdf.ngroups
+        push!(ba, collect((gdf.ends[i] - min(n-1, gdf.ends[i]-gdf.starts[i])) : gdf.ends[i])...)
     end
+    return df[ba, :]
 end
 
 """
