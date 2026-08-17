@@ -866,14 +866,10 @@ end
 """
     keepfirst(::AbstractDataFrame, groupvars; n = 1)
 
-Produces a subset of data containing the first `n` records from the input DataFrame
-sorted by `groupvars`.
+Produces a subset of data containing the first `n` records from the input DataFrame.
+Input DataFrame is not sorted by the program.
 """
 function keepfirst(df::AbstractDataFrame, groupvars; n=1)
-    # if n == 1
-    #     return combine(first, groupby(df, groupvars))
-    # end
-    # return combine(groupby(df, groupvars, sort = true), x -> first(x, min(n, nrow(x))))
     gdf = groupby(df, groupvars)
     if n == 1
         return df[gdf.starts, :]
@@ -890,19 +886,11 @@ end
 """
     keeplast(::AbstractDataFrame, groupvars; n = 1)
 
-Produces a subset of data containing the last `n` records from the input DataFrame
-sorted by `groupvars`.
+Produces a subset of data containing the last `n` records from the input DataFrame.
+Input DataFrame is not sorted by the program.
 """
 
 function keeplast(df::AbstractDataFrame, groupvars; n=1)
-    # if isorted(df, groupvars)
-    #     return combine(groupby(df, groupvars)) do subdf
-    #         last(subdf, n)
-    #     end
-    # end
-    # return combine(groupby(sort(df, groupvars), groupvars)) do subdf
-    #     last(subdf, n)
-    # end
     gdf = groupby(df, groupvars)
     if n == 1
         return df[gdf.ends, :]
