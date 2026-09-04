@@ -497,71 +497,141 @@ function elixhauser10!(df, icdvars::Vector; poa = [], icdver = nothing)
 
     # load ICD-10 data
     elixdata = load(joinpath(@__DIR__,"..","data", "elixhauser_v10.jld2"))
-    dd = elixdata["dd"] # ICD to disease mapping
-    condnm = elixdata["conddesc"] # condition names
-    description = elixdata["desc"] # condition descriptions
-    poaexempt = elixdata["poaexempt"] # 20 POA exempt conditions (1,2,4,6,7,8,9,10,14,15,16,17,18,20,21,24,28,30,35,36)
+    dd = elixdata["icd10map"] # ICD to disease mapping
+    condnm = elixdata["condnm"] # condition names
+    description = elixdata["conddesc"] # condition descriptions
+    poaex = elixdata["poaex2"] # 20 POA exempt conditions (1,2,4,6,7,8,9,10,14,15,16,17,18,20,21,24,28,30,35,36)
+
+    # keys not in condnm
+    condtmp = sort(collect(filter(x -> !in(x, condnm), keys(dd))))
+
     if icdver == nothing
         poaxmpt_codes = elixdata["poaxmpt_codes"]["v43"] # POA exempt ICD-10 codes
     end
     for v in condnm
         df[:, v] = zeros(Int8, nrow(df))
-        label!(df, v, dondesc[v])
+        if v in condnm
+            label!(df, v, description[v])
+        end
     end
 
     # iterate over all source records
+    oldicdval = 0 # ICD version number from the previous record
     for i in 1:nrow(df)
-        if idver != nothing && df[i,idver] != 43
-            poaxmpt_codes = elixdata["poaxmpt_codes"][string("v", df[i,idver])]
+
+        # POA exempt codes
+        # if icdver variable is specified, load the appropriate data
+        if icdver != nothing && !ismissing(df[i, icdver])
+            icdval = df[i, icdver]
+            if icdval != oldicdval && df[i, icdver] < 43 && df[i, icdver] >= 33
+                poaxmpt_codes = elixdata["poaxmpt_codes"][string("v", icdval)]
+                oldicdval = icdval
+            end
         end
+
+        # POA exclusions - code them into BOOLeans
         if POA
-            poavars = [ !ismissing(x) || in(x, ["Y","W",1,true]) ? true : false for x in df[i,poa]] 
-            cmr_cbvd_npoa = 0
-            cmr_cbvd = 0
+            poavars = [!ismissing(x) || in(x, ["Y", "y", "W", "w", 1, true]) ? true : false for x in df[i, poa]]
         end
-        for (k,icd) in enumerate(df[i,icdvars])
-            if ismissing(icd) || icd in (""," ")
+
+        # go through all ICD10 variables
+        for (k, icd) in enumerate(df[i, icdvars])
+
+            # if missing or empty
+            if ismissing(icd) || icd in ("", " ")
                 continue
             end
+
+            # check if the ICD10 values is found as a key in dd
             if haskey(dd, icd)
                 # find the index for the ICD-10 code
-                idx = dd[icd] # an ICD code can be mapped to 2 conditions so we need to iterate the returned tuple
-                for j in idx
-                    # if POA is not specified (e.g., outpatient data do not have POA codes)
-                    # or if the condition is POA exempt (20 conditions are POA exempt)
-                    # or if the ICD-10 code is POA exempt (255 codes are POA exempt)
-                    # or if the ICD-10 code has a matching POA code showing the condition was present on admission
-                    if j < 39 && any(POA, poaexempt[j], in(icd,poaxmpt_codes), poavars[k])
-                        vv = condnm[j]
-                        df[i, vv] = 1
-                    else
-                        # these are 
+                j = dd[icd]
 
-                    end
+                if j < 39 &&
+                   ((POA == false) # no POA
+                    ||
+                    (POA && any([poavars[k], poaex[j], in(icd, poaxmpt_codes)])))
+                    # if POA is specified (e.g., outpatient data do not have POA codes) AND
+                    # the ICD-10 code has a matching POA code showing the condition was present on admission
+                    # or the condition is POA excluded (20 conditions are POA excluded)
+                    # or the ICD-10 code is POA exempt (255 codes are POA exempt)
+                    df[i, condall[j]] = 1
+                elseif j >= 39
+                    df[i, condall[j]] = 1
                 end
             end
         end
-        # mutually exclusive conditions (CBVD is not coded)
+
+        # POA exempt or POA == 1
+        if df[i, :drug_abusepsychoses] == 1
+            df[i, :psychoses] = 1
+            df[i, :drug_abuse] = 1
+        end
+        if df[i, :hfhtn_cx] == 1
+            df[i, :hf] = 1
+            df[i, :htn_cx] = 1
+        end
+        if df[i, :htn_cxrenlfl_sev] == 1
+            df[i, :htn_cx] = 1
+            df[i, :renlfl_sev] = 1
+        end
+        if df[i, :hfhtn_cxrenlfl_sev] == 1
+            df[i, :hf] = 1
+            df[i, :htn_cx] = 1
+            df[i, :renlfl_sev] = 1
+        end
+        if df[i, :cbvd_sqlaparalysis] == 1
+            df[i, :paralysis] = 1
+            df[i, :cbvd_sqla] = 1
+        end
+        if df[i, :alcoholliver_mld] == 1
+            df[i, :alcohol] = 1
+            df[i, :liver_mld] = 1
+        end
+        if df[i, :valve_autoimmune] == 1
+            df[i, :autoimmune] = 1
+            df[i, :valve] = 1
+        end
+        if df[i, :liver_mld_neuro] == 1
+            df[i, :liver_mld] = 1
+            df[i, :neuro_seiz] = 1
+        end
+        if df[i, :neuro_oth_seiz] == 1
+            df[i, :neuro_oth] = 1
+            df[i, :neuro_seiz] = 1
+        end
+        if df[i, :liver_mld_pulmcirc] == 1
+            df[i, :liver_mld] = 1
+            df[i, :pulmcirc] = 1
+        end
+        if df[i, :cbvd_poa] == 1 || (df[i, :cbvd_poa] == 0 && (POA == false && df[i, :cbvd_poa] == 1) && df[i, :cbvd_sqla] == 1)
+            df[i, :cbvd] = 1
+        end
+
+        # mutually exclusive conditions
         if df[i, :diab_cx] == 1
-            df[i, :diabimcx] = 0
+            df[i, :diab_uncx] = 0
         end
         if df[i, :htn_cx] == 1
             df[i, :htn_uncx] = 0
         end
-        if df[i,:cancer_mets] == 1
-            df[i,:cancer_solid] = 0
-            df[i,:cancer_nsitu] = 0
+        if df[i, :cancer_mets] == 1
+            df[i, :cancer_solid] = 0
+            df[i, :cancer_nsitu] = 0
         end
-        if df[i,:cancer_solid] == 1
-            df[i,:cancer_nsitu] = 0
+        if df[i, :cancer_solid] == 1
+            df[i, :cancer_nsitu] = 0
         end
         if df[i, :liver_sev] == 1
-            df[i,:liver_mld] = 0
+            df[i, :liver_mld] = 0
         end
-        if df[i,:renlfl_sev] == 1
-            df[i,:renlfl_mod] = 0
+        if df[i, :renlfl_sev] == 1
+            df[i, :renlfl_mod] = 0
         end
     end
+
+    # drop temporary condition variables
+    select!(df, Not(condtmp))
 end
 
 """
