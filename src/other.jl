@@ -461,9 +461,9 @@ function elixhauser9!(df, icdvars::Vector; drg=nothing)
         end
 
         # htn_c
-        if htn == 1 || htncx == 1
-            df[i, :htn_c] = 1
-        end
+        # if htn == 1 || htncx == 1
+        #     df[i, :htnc] = 1
+        # end
     end
 end
 
