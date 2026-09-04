@@ -297,7 +297,181 @@ function st2ncc(df::AbstractDataFrame, ev; ncontrol=1, matchvars=nothing)
 end
 
 """
-    elixhauser(df, icdvars::Vector; poa = [], icdver = nothing)
+    elixhauser9!(df, icdvars::Vector; drg = nothing)
+
+Creates 30 variables in the `df` that indicates presence (1 or 0 otherwise) of 30 comorbidities in the
+Elixhauser comorbidity index. This program is based on the SAS version of the AHRQ HCUP comorbidity
+software version 3.6 using ICD-9 DX codes and MS-DRG V28. The program takes the following arguments:
+
+- df - DataFrame that contains claims records
+
+- icdvars - a vectors of variables of type Symbol or String that contain ICD-9 diagnostic codes. If you are computing comorbidities based on an inpatient dataset, you may want to omit the "principal diagnosis" variable and specify the `drg` variable (see below).
+
+- drg - a variable name of type Symbol or String that contain DRG codes
+"""
+function elixhauser9!(df, icdvars::Vector; drg=nothing)
+
+    # load data
+    # elixdata = JLD2.load("e:\\Julia\\Elixhauser\\elixhauser_v9.jld2")
+    elixdata = JLD2.load(joinpath(@__DIR__, "..", "data", "elixhauser_v9.jld2"))
+    icd9map = elixdata["icd9map"]
+    condmap = elixdata["condmap"]
+    drgmaptmp = elixdata["drgmap"]
+    tmpmap = elixdata["tmpmap"]
+    description = elixdata["description"]
+
+    # drg - change datatype for DRG values according to the type in the DF
+    if drg != nothing
+        drgtype = nonmissingtype(eltype(df[:, drg]))
+        if drgtype == String
+            drgmap = drgmaptmp
+        else
+            drgmap = Dict(parse.(Int16, keys(drgmaptmp)) .=> values(drgmaptmp))
+        end
+    end
+
+    # create comorbidity variables
+    for i in 1:30
+        df[:, condmap[i]] = zeros(Int8, nrow(df))
+        label!(df, condmap[i], description[i])
+    end
+
+    for i in 1:nrow(df)
+
+        # initialize tmpflags and htn variables
+        tmpflg = falses(10)
+        htn = 0
+        htncx = 0
+
+        # ICD-9 codes
+        for icdvar in icdvars
+
+            icd = df[i, icdvar]
+            if ismissing(icd) || icd in ("", " ")
+                continue
+            end
+            if haskey(dd, icd)
+                # find the index for the ICD-10 code
+                idx = icd9map[icd] # an ICD code can be mapped to 2 conditions
+                vv = condmap[idx]
+                df[i, vv] = 1
+            end
+
+            # temporary formats for HTNCX, CHF, RENLFAIL 
+            if haskey(tmpmap, icd)
+                tmpflg[tmpmap[icd]] = 1
+            end
+        end
+
+        # temporary formats for HTNCX, CHF, RENLFAIL
+        if any(tmpflg)
+            htncx = 1
+            if tmpflg[3] || tmpoflg[7]
+                df[i, :chf] = 1
+            elseif tmpflg[5] || tmpoflg[8]
+                df[i, :renlfail] = 1
+            elseif tmpflg[9]
+                df[i, :chf] = 1
+                df[i, :renlfail] = 1
+            end
+        end
+
+        # Exclusions according to DRG
+        if drg != nothing
+            drgflg = drgmap[df[i, drg]]
+            if drgflg == 1 # CARDDRG
+                df[i, [:chf, :valve, :pulmcirc, :perivasc]] .= 0
+                htn = 0
+
+                # if htncx was coded with any of these tmpflg values, reset it to 0
+                if any(x -> tmpflg[x], [2, 3, 6, 7, 8, 9, 10])
+                    htncx = 0
+                end
+
+                # if chf was coded with tmpflg == 3
+                if any(x -> tmpflg[x], [3, 7, 9])
+                    df[i, :chf] = 0
+                end
+            elseif drgflg == 2 # PERIDRG
+                df[i, :perivasc] = 0
+            elseif drgflg == 3 # RENALDRG
+                if any(x -> tmpflg[x], [4, 6, 7, 10])
+                    htncx = 0
+                end
+                if any(x -> tmpflg[x], [5, 8, 9])
+                    htncx = 0
+                    df[i, :renlfail] = 0
+                end
+            elseif drgflg == 4 # NERVDRG
+                df[i, :neuro] = 0
+            elseif drgflg == 5 # CEREDRG
+                df[i, :para] = 0
+            elseif drgflag == 6 # PULMDRG
+                df[i, :chrnlung] = 0
+                df[i, :pulmcirc] = 0
+            elseif drgflag == 7 # DIABDRG
+                df[i, :dm] = 0
+                df[i, :dmcx] = 0
+            elseif drgflag == 8 # HYPODRG
+                df[i, :hypothy] = 0
+            elseif drgflag == 9 # RENFDRG
+                df[i, :renlfail] = 0
+            elseif drgflg == 10 # LIVERDRG
+                df[i, :liver] = 0
+            elseif drgflg == 11 # ULCEDRG
+                df[i, :ulcer] = 0
+            elseif drgflg == 12 # HIVDRG
+                df[i, :aids] = 0
+            elseif drgflg == 13 # LEUKDRG
+                df[i, :lymph] = 0
+            elseif drgflg == 14 # CANCDRG
+                df[i, :tumor] = 0
+            elseif drgflg == 15 # ARTHDRG
+                df[i, :arth] = 0
+            elseif drgflg == 16 # NUTRDRG
+                df[i, :wghtloss] = 0
+                df[i, :obese] = 0
+                df[i, :wghtloss] = 0
+                df[i, :lytes] = 0
+            elseif drgflg == 17 # ANEMDRG
+                df[i, :bldloss] = 0
+                df[i, :anemdef] = 0
+            elseif drgflg == 18 # ALCDRG
+                df[i, :alcohol] = 0
+                df[i, :drug] = 0
+            elseif drgflg == 20 # HTNCXDRG
+                htncx = 0
+            elseif drgflg == 22 # PSYDRG
+                df[i, :psych] = 0
+            elseif drgflg == 23 # OBESEDRG
+                df[i, :obese] = 0
+            elseif drgflg == 24 # DEPRSDRG
+                df[i, :depress] = 0
+            end
+        end
+
+        # mutually exclusive conditions
+        if htncx == 1
+            htn = 0
+        end
+        if df[i, :mets] == 1
+            df[i, :tumor] = 0
+        end
+        if df[i, :dmcx] == 1
+            df[i, :dm] = 0
+        end
+
+        # htn_c
+        if htn == 1 || htncx == 1
+            df[i, :htn_c] = 1
+        end
+    end
+end
+
+
+
+"""
+    elixhauser10!(df, icdvars::Vector; poa = [], icdver = nothing)
 
 Produces 39 variables of Int8 type that identifies comorbidities in the
 Elixhauser Comorbidity Index. 
@@ -431,4 +605,37 @@ function icd10version(rdates::Vector{Dates.Date})
     return rvec
 end
 
+function elixhauser_combine(df, id, condvars::Vector)
+
+    # create output dataset
+    uniqid = sort(unique(df[:, id]))
+    odf = DataFrame(id=uniqid)
+    rename!(odf, id => id)
+
+    # create comorbidity variables
+    for v in condvars
+        odf[i, v] = zeros(Int8, nrow(odf))
+    end
+
+    # summarize the patient records
+    # DO NOT SORT. FOR LARGE DATASETS, IT MAY TAKE TOO MUCH TIME
+    for subdf in groupby(df, id)
+
+        pid = subdf[1, id]
+        i = findfirst(x -> x == pid, uniqid)
+        for v in condvars
+            odf[i, v] = maximum(skipmissing(subdf[:, v]))
+        end
+    end
+
+    # attach variable labels
+    labels = Dict(names(df) .=> labels(df))
+    for v in names(odf)
+        if haskey(labels, v)
+            label!(odf, v, labels[v])
+        end
+    end
+
+    return odf
+end
 
