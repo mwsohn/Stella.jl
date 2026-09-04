@@ -312,7 +312,6 @@ software version 3.6 using ICD-9 DX codes and MS-DRG V28. The program takes the 
 function elixhauser9!(df, icdvars::Vector; drg=nothing)
 
     # load data
-    # elixdata = JLD2.load("e:\\Julia\\Elixhauser\\elixhauser_v9.jld2")
     elixdata = JLD2.load(joinpath(@__DIR__, "..", "data", "elixhauser_v9.jld2"))
     icd9map = elixdata["icd9map"]
     condmap = elixdata["condmap"]
@@ -350,8 +349,8 @@ function elixhauser9!(df, icdvars::Vector; drg=nothing)
             if ismissing(icd) || icd in ("", " ")
                 continue
             end
-            if haskey(dd, icd)
-                # find the index for the ICD-10 code
+            if haskey(icd9map, icd)
+                # find the index for the ICD-9 code
                 idx = icd9map[icd] # an ICD code can be mapped to 2 conditions
                 vv = condmap[idx]
                 df[i, vv] = 1
