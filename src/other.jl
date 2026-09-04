@@ -365,9 +365,9 @@ function elixhauser9!(df, icdvars::Vector; drg=nothing)
         # temporary formats for HTNCX, CHF, RENLFAIL
         if any(tmpflg)
             htncx = 1
-            if tmpflg[3] || tmpoflg[7]
+            if tmpflg[3] || tmpflg[7]
                 df[i, :chf] = 1
-            elseif tmpflg[5] || tmpoflg[8]
+            elseif tmpflg[5] || tmpflg[8]
                 df[i, :renlfail] = 1
             elseif tmpflg[9]
                 df[i, :chf] = 1
