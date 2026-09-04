@@ -497,10 +497,10 @@ function elixhauser10!(df, icdvars::Vector; poa = [], icdver = nothing)
 
     # load ICD-10 data
     elixdata = load(joinpath(@__DIR__,"..","data", "elixhauser_v10.jld2"))
-    # dd = elixdata["dd"] # ICD to disease mapping
-    # condnm = elixdata["conddesc"] # condition names
-    # description = elixdata["desc"] # condition descriptions
-    # poaexempt = elixdata["poaexempt"] # 20 POA exempt conditions (1,2,4,6,7,8,9,10,14,15,16,17,18,20,21,24,28,30,35,36)
+    dd = elixdata["dd"] # ICD to disease mapping
+    condnm = elixdata["conddesc"] # condition names
+    description = elixdata["desc"] # condition descriptions
+    poaexempt = elixdata["poaexempt"] # 20 POA exempt conditions (1,2,4,6,7,8,9,10,14,15,16,17,18,20,21,24,28,30,35,36)
     if icdver == nothing
         poaxmpt_codes = elixdata["poaxmpt_codes"]["v43"] # POA exempt ICD-10 codes
     end
