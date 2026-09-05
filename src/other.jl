@@ -491,8 +491,8 @@ function elixhauser10!(df, icdvars::Vector; poa = [], icdver = nothing)
     # create a POA vector
     if POA
         poavars = falses(Int8, length(poa))
-        cmr_cbvd_npoa = 0
-        cmr_cbvd = 0
+        # cmr_cbvd_npoa = 0
+        # cmr_cbvd = 0
     end
 
     # load ICD-10 data
@@ -555,9 +555,9 @@ function elixhauser10!(df, icdvars::Vector; poa = [], icdver = nothing)
                     # the ICD-10 code has a matching POA code showing the condition was present on admission
                     # or the condition is POA excluded (20 conditions are POA excluded)
                     # or the ICD-10 code is POA exempt (255 codes are POA exempt)
-                    df[i, condall[j]] = 1
+                    df[i, condnm[j]] = 1
                 elseif j >= 39
-                    df[i, condall[j]] = 1
+                    df[i, condnm[j]] = 1
                 end
             end
         end
