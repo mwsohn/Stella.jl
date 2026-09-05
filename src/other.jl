@@ -503,7 +503,7 @@ function elixhauser10!(df, icdvars::Vector; poa = [], icdver = nothing)
     poaex = elixdata["poaex2"] # 20 POA exempt conditions (1,2,4,6,7,8,9,10,14,15,16,17,18,20,21,24,28,30,35,36)
 
     # keys not in condnm
-    condtmp = sort(collect(filter(x -> !in(x, condnm), keys(dd))))
+    # condtmp = sort(collect(filter(x -> !in(x, condnm), keys(dd))))
 
     if icdver == nothing
         poaxmpt_codes = elixdata["poaxmpt_codes"]["v43"] # POA exempt ICD-10 codes
@@ -634,7 +634,7 @@ function elixhauser10!(df, icdvars::Vector; poa = [], icdver = nothing)
     end
 
     # drop temporary condition variables
-    select!(df, Not(condtmp))
+    # select!(df, Not(condtmp))
 end
 
 """
