@@ -562,51 +562,51 @@ function elixhauser10!(df, icdvars::Vector; poa = [], icdver = nothing)
             end
         end
 
-        # POA exempt or POA == 1
-        if df[i, :drug_abusepsychoses] == 1
-            df[i, :psychoses] = 1
-            df[i, :drug_abuse] = 1
-        end
-        if df[i, :hfhtn_cx] == 1
-            df[i, :hf] = 1
-            df[i, :htn_cx] = 1
-        end
-        if df[i, :htn_cxrenlfl_sev] == 1
-            df[i, :htn_cx] = 1
-            df[i, :renlfl_sev] = 1
-        end
-        if df[i, :hfhtn_cxrenlfl_sev] == 1
-            df[i, :hf] = 1
-            df[i, :htn_cx] = 1
-            df[i, :renlfl_sev] = 1
-        end
-        if df[i, :cbvd_sqlaparalysis] == 1
-            df[i, :paralysis] = 1
-            df[i, :cbvd_sqla] = 1
-        end
-        if df[i, :alcoholliver_mld] == 1
-            df[i, :alcohol] = 1
-            df[i, :liver_mld] = 1
-        end
-        if df[i, :valve_autoimmune] == 1
-            df[i, :autoimmune] = 1
-            df[i, :valve] = 1
-        end
-        if df[i, :liver_mld_neuro] == 1
-            df[i, :liver_mld] = 1
-            df[i, :neuro_seiz] = 1
-        end
-        if df[i, :neuro_oth_seiz] == 1
-            df[i, :neuro_oth] = 1
-            df[i, :neuro_seiz] = 1
-        end
-        if df[i, :liver_mld_pulmcirc] == 1
-            df[i, :liver_mld] = 1
-            df[i, :pulmcirc] = 1
-        end
-        if df[i, :cbvd_poa] == 1 || (df[i, :cbvd_poa] == 0 && (POA == false && df[i, :cbvd_poa] == 1) && df[i, :cbvd_sqla] == 1)
-            df[i, :cbvd] = 1
-        end
+        # # POA exempt or POA == 1
+        # if df[i, :drug_abusepsychoses] == 1
+        #     df[i, :psychoses] = 1
+        #     df[i, :drug_abuse] = 1
+        # end
+        # if df[i, :hfhtn_cx] == 1
+        #     df[i, :hf] = 1
+        #     df[i, :htn_cx] = 1
+        # end
+        # if df[i, :htn_cxrenlfl_sev] == 1
+        #     df[i, :htn_cx] = 1
+        #     df[i, :renlfl_sev] = 1
+        # end
+        # if df[i, :hfhtn_cxrenlfl_sev] == 1
+        #     df[i, :hf] = 1
+        #     df[i, :htn_cx] = 1
+        #     df[i, :renlfl_sev] = 1
+        # end
+        # if df[i, :cbvd_sqlaparalysis] == 1
+        #     df[i, :paralysis] = 1
+        #     df[i, :cbvd_sqla] = 1
+        # end
+        # if df[i, :alcoholliver_mld] == 1
+        #     df[i, :alcohol] = 1
+        #     df[i, :liver_mld] = 1
+        # end
+        # if df[i, :valve_autoimmune] == 1
+        #     df[i, :autoimmune] = 1
+        #     df[i, :valve] = 1
+        # end
+        # if df[i, :liver_mld_neuro] == 1
+        #     df[i, :liver_mld] = 1
+        #     df[i, :neuro_seiz] = 1
+        # end
+        # if df[i, :neuro_oth_seiz] == 1
+        #     df[i, :neuro_oth] = 1
+        #     df[i, :neuro_seiz] = 1
+        # end
+        # if df[i, :liver_mld_pulmcirc] == 1
+        #     df[i, :liver_mld] = 1
+        #     df[i, :pulmcirc] = 1
+        # end
+        # if df[i, :cbvd_poa] == 1 || (df[i, :cbvd_poa] == 0 && (POA == false && df[i, :cbvd_poa] == 1) && df[i, :cbvd_sqla] == 1)
+        #     df[i, :cbvd] = 1
+        # end
 
         # mutually exclusive conditions
         if df[i, :diab_cx] == 1
