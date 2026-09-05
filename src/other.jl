@@ -546,9 +546,12 @@ function elixhauser10!(df, icdvars::Vector; poa = [], icdver = nothing)
             if haskey(dd, icd)
                 # find the index for the ICD-10 code
                 j = dd[icd]
+                if j == nothing
+                    continue
+                end
 
                 if j < 39 &&
-                   ((POA == false) # no POA
+                    ((POA == false) # no POA
                     ||
                     (POA && any([poavars[k], poaex[j], in(icd, poaxmpt_codes)])))
                     # if POA is specified (e.g., outpatient data do not have POA codes) AND
