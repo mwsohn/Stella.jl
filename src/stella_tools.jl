@@ -279,7 +279,6 @@ function eform(glmout::StatsModels.TableRegressionModel)
 	# standard errors
 	coeftable2.cols[2] = coeftable2.cols[1] .* coeftable2.cols[2]
 
-
 	# rename column1 to OR
 	if cox
 	   coeftable2.colnms[1] = "HR"
@@ -297,16 +296,6 @@ function eform(glmout::StatsModels.TableRegressionModel)
         else
             (varname,value) = (coeftable2.rownms[i],"")
         end
-
-        # If value is 1 and value label is Yes, it is a binary variable
-        # do not print
-    #     if value == 1 && ismatch(r"^ *yes *$"i,vlabel)
-    #         coeftable2.rownms[i] = varlabel
-    #     elseif value != ""
-    #         coeftable2.rownms[i] = string(varlabel, ": ", vlabel)
-    #     else
-    #         coeftable2.rownms[i] = varlabel
-    #     end
     end
     
 	return coeftable2
@@ -320,7 +309,7 @@ function coeflab(d,l)
     elseif isa(d,Poisson) && isa(l,LogLink)
         return "IRR"
     else
-        return "exp(Est)"
+        return "exp(Coef.)"
     end
 end
 
