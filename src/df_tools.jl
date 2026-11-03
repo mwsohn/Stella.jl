@@ -427,47 +427,43 @@ function dfsample(df::AbstractDataFrame, n::Integer)
     return df[rand(1:nrow(df), n), :]
 end
 
-function get_class(val::Real,thresholds::Vector,lower::Bool)
-    if lower == false
-        for i = 1:length(thresholds)
-            if i == 1 && val < thresholds[1]
-                return 1
-            elseif i > 1 && thresholds[i-1] <= val < thresholds[i]
-                return i
-            end
-        end
-    else
-        for i = 1:length(thresholds)
-            if i == 1 && val <= thresholds[1]
-                return 1
-            elseif i > 1 && thresholds[i-1] < val <= thresholds[i]
-                return i
-            end
-        end
-    end
-    return length(thresholds)+1
-end
-
 """
-    classify(da::AbstractVector,thresholds::Vector; lower::Bool = false)
+    classify(v::AbstractVector,thresholds::Vector; lower::Bool = false)
 
 Produces a categorical variable based on a data array and a vector of thresholds.
 Use `lower = true` to classify the threshold value to the lower class.
 """
-function classify(da::AbstractVector,thresholds::Vector; lower::Bool = false)
-    da2 = Vector{Union{Missing,Int8}}(undef,length(da))
-    if length(thresholds) > 100
-        throw(ArgumentError("Cannot use more than 100 threshold values."))
-    end
+function classify(v, cutoffs; lower = false)
+    vv = Vector{Union{Missing,Int64}}(missing,length(v))
 
-    for i = 1:size(da,1)
-        if ismissing(da[i])
-            da2[i] = missing
-        else
-            da2[i] = get_class(da[i],thresholds,lower)
-        end
+    cutoffs = vcat(-Inf, cutoffs, Inf)
+    cmp = lower ? [ <=, < ] : [ <, <= ] 
+
+    for i in 2:length(cutoffs)
+        vv[ coalesce.(cmp[1].(cutoffs[i-1], v) .& cmp[2].(v, cutoffs[i]), 0) ] .= i - 1
     end
-    return da2
+    return vv
+end
+
+"""
+    xtile(v::AbstractVector;nq::Int = 4, lower::Bool = true)
+
+Create a vector that identifies `nq` categories based on values in `v`.
+The default `nq` is 4. `cutoffs` vector can be provided to make custom categories.
+`cutoffs` vector is expected to contain `nq - 1` elements. The minimum and maximum values
+will be computed. `lower = true` will make the threshold values to go in the lower category (default: false).
+
+```
+julia> df[:agecat] = xtile(df[:age], nq = 3)
+```
+"""
+function xtile(v; nq=4, lower=false)
+    if nq <= 1
+        throw(ArgumentError("`nq` should be bigger than 1."))
+    end
+    nqval = 1 / nq
+    nqvec = collect(nqval:nqval:(1-nqval))
+    return classify(v, nqvec, lower=lower)
 end
 
 """
@@ -630,71 +626,58 @@ function destring!(df::DataFrame,strvars; newvars::Vector{Symbol} = [], force=fa
     end
 end
 
-"""
-    xtile(da::AbstractArray;nq::Int = 4, lower::Bool = true, cutoffs::Union{Nothing,AbstractVector} = nothing)
-    xtile(df::DataFrame,varname::Symbol;nq::Int = 4, lower::Bool = true, cutoffs::Union{Nothing,AbstractVector} = nothing)
+# function xtile(da::AbstractArray ; nq::Int = 4, lower::Bool = true)
 
-Create a DataArray{Int8,1} that identifies `nq` categories based on values in `da`.
-The default `nq` is 4. `cutoffs` vector can be provided to make custom categories.
-`cutoffs` vector is expected to contain `nq - 1` elements. The minimum and maximum values
-will be computed. `lower = true` will make the threshold values to go in the lower category (default: false).
+#     if nq == 1
+#         error("`nq` must be greater than 1")
+#     end
 
-```
-julia> df[:agecat] = xtile(df[:age], nq = 3)
-```
-"""
-function xtile(da::AbstractArray ; nq::Int = 4, lower::Bool = true, cutoffs::Union{Nothing,AbstractVector} = nothing)
+#     da2 = collect(skipmissing(da))
+#     if cutoffs == nothing
+# 	    cutoffs = nquantile(da2,nq)
+#     elseif length(cutoffs) == nq - 1
+#         cutoffs = vcat(minimum(da2), cutoffs, maximum(da2))
+#     else
+#         error("`cutoffs` vector length is not consistent with `nq`. It must be 1 greater or 1 less than `nq`.")
+#     end
 
-    if nq == 1
-        error("`nq` must be greater than 1")
-    end
+#     if lower
+#         return [ismissing(x) ? missing : qval_low(x,cutoffs) for x in da2]
+#     else
+#         return [ismissing(x) ? missing : qval_high(x,cutoffs) for x in da2]
+#     end
+# end
+# xtile(df::DataFrame,arg::Symbol; nq::Int = 4, cutoffs::Union{Nothing,AbstractVector} = nothing) = xtile(df[!,arg], nq = nq, cutoffs = cutoffs)
 
-    da2 = collect(skipmissing(da))
-    if cutoffs == nothing
-	    cutoffs = nquantile(da2,nq)
-    elseif length(cutoffs) == nq - 1
-        cutoffs = vcat(minimum(da2), cutoffs, maximum(da2))
-    else
-        error("`cutoffs` vector length is not consistent with `nq`. It must be 1 greater or 1 less than `nq`.")
-    end
+# function qval_high(val::Real,cut::Vector)
+#     cl = length(cut)
 
-    if lower
-        return [ismissing(x) ? missing : qval_low(x,cutoffs) for x in da2]
-    else
-        return [ismissing(x) ? missing : qval_high(x,cutoffs) for x in da2]
-    end
-end
-xtile(df::DataFrame,arg::Symbol; nq::Int = 4, cutoffs::Union{Nothing,AbstractVector} = nothing) = xtile(df[!,arg], nq = nq, cutoffs = cutoffs)
+#     for i in 2:cl-1
+#         if i == 2 && val < cut[i]
+#             return 1
+#         elseif i == cl-1 && cut[i] <= val
+#             return i
+#         elseif cut[i] <= val < cut[i+1]
+#             return i
+#         end
+#     end
+#     warn("Error - check qval function")
+# end
 
-function qval_high(val::Real,cut::Vector)
-    cl = length(cut)
+# function qval_low(val::Real,cut::Vector)
+#     cl = length(cut)
 
-    for i in 2:cl-1
-        if i == 2 && val < cut[i]
-            return 1
-        elseif i == cl-1 && cut[i] <= val
-            return i
-        elseif cut[i] <= val < cut[i+1]
-            return i
-        end
-    end
-    warn("Error - check qval function")
-end
-
-function qval_low(val::Real,cut::Vector)
-    cl = length(cut)
-
-    for i in 2:cl-1
-        if i == 2 && val <= cut[i]
-            return 1
-        elseif i == cl-1 && cut[i] <= val
-            return i
-        elseif cut[i] < val <= cut[i+1]
-            return i
-        end
-    end
-    warn("Error - check qval function")
-end
+#     for i in 2:cl-1
+#         if i == 2 && val <= cut[i]
+#             return 1
+#         elseif i == cl-1 && cut[i] <= val
+#             return i
+#         elseif cut[i] < val <= cut[i+1]
+#             return i
+#         end
+#     end
+#     warn("Error - check qval function")
+# end
 
 """
 	categorical!(df::AbstractDataFrame,vv::Union{Symbol,Vector{Symbol}})
