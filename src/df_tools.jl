@@ -399,39 +399,6 @@ end
 
 
 """
-    sample(df::AbstractDataFrame,num::Real)
-
-Creates an Int8 array that identifies a randomly selected sample (1 = sample; 0 otherwise) from the input dataframe. `num`
-specifies the sample size. If `num` is an integer, it indicates the number of rows to be selected.
-If it is a float, it indicates the percentage of the input dataframe to be randomly selected.
-Use `Random.seed!()` to set a seed before using `sample()`.
-
-##Example
-To select 100 rows, use
-
-```
-julia> df[!,:sample] = sample(df,100)
-```
-
-To select 20% of the original dataframe, use
-
-```
-julia> df[!,:sample2] = sample(df,.2)
-```
-
-"""
-function sample(df::AbstractDataFrame,n::Real)
-    len = size(df,1)
-    asamp = zeros(Int8,len)
-    if isa(n,AbstractFloat)
-        asamp[randsubseq(collect(1:len),n)] .= 1
-    else
-        asamp[randperm(len)[1:n]] .= 1
-    end
-    return asamp
-end
-
-"""
     dfsample(df::AbstractDataFrame,num::Real)
 
 Creates a dataframe with a randomly selected sample from the input dataframe. `num`
@@ -453,8 +420,11 @@ julia> df2 = dfsample(df,.2)
 ```
 
 """
-function dfsample(df::AbstractDataFrame,num::Real)
-    return df[sample(df,num) .== 1,:]
+function dfsample(df::AbstractDataFrame, p::AbstractFloat)
+    return dfsample(df, trunc(Int64, nrow(df) * p))
+end
+function dfsample(df::AbstractDataFrame, n::Integer)
+    return df[rand(1:nrow(df), n), :]
 end
 
 function get_class(val::Real,thresholds::Vector,lower::Bool)
@@ -487,7 +457,7 @@ Use `lower = true` to classify the threshold value to the lower class.
 function classify(da::AbstractVector,thresholds::Vector; lower::Bool = false)
     da2 = Vector{Union{Missing,Int8}}(undef,length(da))
     if length(thresholds) > 100
-        error("Cannot use more than 100 threshold values.")
+        throw(ArgumentError("Cannot use more than 100 threshold values."))
     end
 
     for i = 1:size(da,1)
