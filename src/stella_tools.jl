@@ -55,8 +55,8 @@ end
 
 """
     univariate(da::AbstractVector)
-    univariate(df::AbstractDataFrame,varname::Symbol)
-    univariate(df::AbstractDataFrame, varnames::Vector{Symbol})
+    univariate(df::AbstractDataFrame,varname)
+    univariate(df::AbstractDataFrame, varnames::AbstractVector})
 
 Produces univariate statistics from the `da` and return a DataFrame with two columns,
 :Statistic and :Value. Computed statistics include `N_Total` (number of rows
@@ -71,7 +71,7 @@ function univariate(da::AbstractVector)
 		Value = __univariate(da)
 	)
 end
-function univariate(df::AbstractDataFrame, vars::Vector)
+function univariate(df::AbstractDataFrame, vars::AbstractVector)
 
     _odf = DataFrame(
         Statistic=__STATISTIC
@@ -81,7 +81,7 @@ function univariate(df::AbstractDataFrame, vars::Vector)
     end
     return _odf
 end
-univariate(df::AbstractDataFrame, var::Symbol) = univariate(df, [var])
+univariate(df::AbstractDataFrame, var::Union{String,Symbol}) = univariate(df, [var])
 
 """
     univ(vec::AbstractVector)
