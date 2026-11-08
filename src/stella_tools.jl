@@ -33,6 +33,26 @@ __STATISTIC = [Symbol("N Total"),
             :Skewness,
 			:Kurtosis]
 
+function __univariate(v::AbstractVector)
+    vv = collect(skipmissing(v))
+    nmiss = sum(ismissing.(v))
+    return Any[
+        length(v),
+        nmiss,
+        length(v)-nmiss,
+        sum(vv),
+        mean(vv),
+        sqrt(var(vv)),
+        var(vv),
+        minimum(vv),
+        quantile(vv, 0.25),
+        quantile(vv, 0.5),
+        quantile(vv, 0.75),
+        maximum(vv),
+        skewness(vv),
+        kurtosis(vv)]
+end
+
 """
     univariate(da::AbstractVector)
     univariate(df::AbstractDataFrame,varname::Symbol)
@@ -46,25 +66,9 @@ in the input DataArray), `N_Missing` (number of rows with missing values), `N_Us
 `Skewness` (skewness), and `Kurtosis` (kurtosis).
 """
 function univariate(da::AbstractVector)
-
-    da2 = collect(skipmissing(da))
-
 	return DataFrame(
 		Statistic = __STATISTIC,
-		Value = [size(da,1),
-			size(da,1) - size(da2,1),
-			size(da2,1),
-			sum(da2),
-			mean(da2),
-			sqrt(var(da2)),
-			var(da2),
-			minimum(da2),
-			quantile(da2,0.25),
-			quantile(da2,0.5),
-			quantile(da2,0.75),
-			maximum(da2),
-			skewness(da2),
-			kurtosis(da2)]
+		Value = __univariate(da)
 	)
 end
 function univariate(df::AbstractDataFrame, vars::Vector)
@@ -73,23 +77,7 @@ function univariate(df::AbstractDataFrame, vars::Vector)
         Statistic=__STATISTIC
     )
     for v in vars
-        vv = collect(skipmissing(df[!, v]))
-        nmiss = sum(ismissing.(df[!, v]))
-        _odf[!, v] = Any[
-            nrow(df),
-            nmiss,
-            length(df[!, v])-nmiss,
-            sum(vv),
-            mean(vv),
-            sqrt(var(vv)),
-            var(vv),
-            minimum(vv),
-            quantile(vv, 0.25),
-            quantile(vv, 0.5),
-            quantile(vv, 0.75),
-            maximum(vv),
-            skewness(vv),
-            kurtosis(vv)]
+        _odf[!, v] = __univariate(df[:, v])
     end
     return _odf
 end
