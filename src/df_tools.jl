@@ -350,7 +350,6 @@ function ds(df::DataFrame,re::Regex)
 end
 
 
-
 """
     duplicates(df::DataFrame, args::Symbol...; cmd::Symbol = :report)
     duplicates(df::DataFrame, args::Vector{Symbol}; cmd::Symbol = :report)
