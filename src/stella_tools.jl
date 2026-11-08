@@ -19,9 +19,11 @@ end
 largest(df::DataFrame,varname::Symbol; n = 5) = largest(df[!,varname], n = n)
 
 """
-    univariate(da::AbstractArray) or univariate(df::DataFrame,varname::Symbol)
+    univariate(da::AbstractVector)
+    univariate(df::AbstractDataFrame,varname::Symbol)
+    univariate(df::AbstractDataFrame, varnames::Vector{Symbol})
 
-Produce univariate statistics from the `da` and return a DataFrame with two columns,
+Produces univariate statistics from the `da` and return a DataFrame with two columns,
 :Statistic and :Value. Computed statistics include `N_Total` (number of rows
 in the input DataArray), `N_Missing` (number of rows with missing values), `N_Used` (number of non-missing rows),
 `Sum` (sum), `Mean` (mean), `SD` (standard deviation), `Var` (variance), `Min` (minimum),
@@ -39,13 +41,13 @@ function univariate(da::AbstractVector)
 			:Sum,
 			:Mean,
 			:SD,
-			:Var,
-			:Min,
-			:P25,
-			:Median,
-			:P75,
-			:Max,
-			:Skewness,
+            :Variance,
+            :Minimum,
+            :P25,
+            :Median,
+            :P75,
+            :Maximum,
+            :Skewness,
 			:Kurtosis],
 		Value = [size(da,1),
 			size(da,1) - size(da2,1),
@@ -63,8 +65,46 @@ function univariate(da::AbstractVector)
 			kurtosis(da2)]
 	)
 end
-univariate(df::AbstractDataFrame,var::Symbol) = univariate(df[!,var])
+function univariate(df::AbstractDataFrame, vars::Vector)
 
+    _odf = DataFrame(
+        Statistic=[Symbol("N Total"),
+            Symbol("N Missing"),
+            Symbol("N Used"),
+            :Sum,
+            :Mean,
+            :SD,
+            :Variance,
+            :Minimum,
+            :P25,
+            :Median,
+            :P75,
+            :Maximum,
+            :Skewness,
+            :Kurtosis]
+    )
+    for v in vars
+        vv = collect(skipmissing(df[!, v]))
+        nmiss = sum(ismissing.(df[!, v]))
+        _odf[!, v] = Any[
+            nrow(df),
+            nmiss,
+            length(df[!, v])-nmiss,
+            sum(vv),
+            mean(vv),
+            sqrt(var(vv)),
+            var(vv),
+            minimum(vv),
+            quantile(vv, 0.25),
+            quantile(vv, 0.5),
+            quantile(vv, 0.75),
+            maximum(vv),
+            skewness(vv),
+            kurtosis(vv)]
+    end
+    return _odf
+end
+univariate(df::AbstractDataFrame, var::Symbol) = univariate(df, [var])
 
 """
     univ(vec::AbstractVector)
