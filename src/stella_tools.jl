@@ -18,6 +18,21 @@ function largest(da::AbstractArray; n::Int = 5)
 end
 largest(df::DataFrame,varname::Symbol; n = 5) = largest(df[!,varname], n = n)
 
+__STATISTIC = [Symbol("N Total"),
+			Symbol("N Missing"),
+			Symbol("N Used"),
+			:Sum,
+			:Mean,
+			:SD,
+            :Variance,
+            :Minimum,
+            :P25,
+            :Median,
+            :P75,
+            :Maximum,
+            :Skewness,
+			:Kurtosis]
+
 """
     univariate(da::AbstractVector)
     univariate(df::AbstractDataFrame,varname::Symbol)
@@ -35,20 +50,7 @@ function univariate(da::AbstractVector)
     da2 = collect(skipmissing(da))
 
 	return DataFrame(
-		Statistic = [Symbol("N Total"),
-			Symbol("N Missing"),
-			Symbol("N Used"),
-			:Sum,
-			:Mean,
-			:SD,
-            :Variance,
-            :Minimum,
-            :P25,
-            :Median,
-            :P75,
-            :Maximum,
-            :Skewness,
-			:Kurtosis],
+		Statistic = __STATISTIC,
 		Value = [size(da,1),
 			size(da,1) - size(da2,1),
 			size(da2,1),
@@ -68,20 +70,7 @@ end
 function univariate(df::AbstractDataFrame, vars::Vector)
 
     _odf = DataFrame(
-        Statistic=[Symbol("N Total"),
-            Symbol("N Missing"),
-            Symbol("N Used"),
-            :Sum,
-            :Mean,
-            :SD,
-            :Variance,
-            :Minimum,
-            :P25,
-            :Median,
-            :P75,
-            :Maximum,
-            :Skewness,
-            :Kurtosis]
+        Statistic=__STATISTIC
     )
     for v in vars
         vv = collect(skipmissing(df[!, v]))
