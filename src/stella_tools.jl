@@ -73,9 +73,7 @@ function univariate(da::AbstractVector)
 end
 function univariate(df::AbstractDataFrame, vars::AbstractVector)
 
-    _odf = DataFrame(
-        Statistic=__STATISTIC
-    )
+    _odf = DataFrame(Statistic=__STATISTIC)
     for v in vars
         _odf[!, v] = __univariate(df[:, v])
     end
